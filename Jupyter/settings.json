@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "C:/Users/an053116/AppData/Local/anaconda3/envs/ged119/python.exe",
+    "python.terminal.activateEnvironment": true,
+    "jupyter.jupyterServerType": "local",
+    "jupyter.askForKernelRestart": false
+}
