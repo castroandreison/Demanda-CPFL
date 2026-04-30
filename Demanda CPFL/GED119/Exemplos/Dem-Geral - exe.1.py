@@ -10,7 +10,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ---------------------------------------------------------
 
 conn = sqlite3.connect(
-    r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\GED119\DB\databaseCPFLGed119.db"
+    r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\GED119\DB119\databaseCPFLGed119.db"
 )
 
 cursor = conn.cursor()

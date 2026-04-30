@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-
 import sqlite3
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-# ---------------------------------------------------------
+# ---------------------------------
 # CONEXÃO COM BANCO
-# ---------------------------------------------------------
+# ---------------------------------
 
-banco = r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\GED119\DB\databaseCPFLGed119.db"
+banco = r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\GED119\DB119\databaseCPFLGed119.db"
 
 conn = sqlite3.connect(banco)
 cursor = conn.cursor()
 
-# ---------------------------------------------------------
+# ---------------------------------
 # NORMALIZAÇÃO DE CV
-# ---------------------------------------------------------
+# ---------------------------------
 
 def normalizar_cv(cv):
 
@@ -51,9 +50,10 @@ def normalizar_cv(cv):
 
     return mapa.get(cv, cv)
 
-# ---------------------------------------------------------
-# BUSCAR kVA MOTOR
-# ---------------------------------------------------------
+
+# ---------------------------------
+# BUSCAR kVA DO MOTOR
+# ---------------------------------
 
 def cv_para_kva(cv):
 
@@ -70,12 +70,13 @@ def cv_para_kva(cv):
     if r:
         return r[0]
 
-    print(f"⚠ Motor {cv} CV não encontrado")
+    print(f"⚠ Motor {cv} CV não encontrado na tabela")
     return 0
 
-# ---------------------------------------------------------
+
+# ---------------------------------
 # DEMANDA MOTORES
-# ---------------------------------------------------------
+# ---------------------------------
 
 def demanda_motores(motores):
 
@@ -98,17 +99,17 @@ def demanda_motores(motores):
 
     D3 = (maior * 1.0) + (restantes * 0.5)
 
-    print(f"\nTotal : {total:.2f} kVA")
+    print(f"\nTotal: {total:.2f} kVA")
     print(f"Maior Motor: {maior:.2f} kVA")
-    print(f"Potência dos demais motores: {restantes:.2f} kVA")
-    print(f"D3 = ({maior:.2f} x 1,0) + ({restantes:.2f} x 0,5)")
+    print(f"Demais motores: {restantes:.2f} kVA")
     print(f"D3 = {D3:.2f} kVA")
 
     return D3
 
-# ---------------------------------------------------------
+
+# ---------------------------------
 # FATOR DEMANDA APARELHOS
-# ---------------------------------------------------------
+# ---------------------------------
 
 def fator_aparelho(coluna, qtd):
 
@@ -133,9 +134,10 @@ def fator_aparelho(coluna, qtd):
 
     return 1
 
-# ---------------------------------------------------------
+
+# ---------------------------------
 # FATOR SIMULTANEIDADE
-# ---------------------------------------------------------
+# ---------------------------------
 
 def fator_simultaneidade(qtd):
 
@@ -160,38 +162,35 @@ def fator_simultaneidade(qtd):
 
     return 1
 
-# ---------------------------------------------------------
+
+# ---------------------------------
 # DADOS DO EMPREENDIMENTO
-# ---------------------------------------------------------
+# ---------------------------------
 
 aptos = 20
 
-area_apto_m2 = 180
+area_apto_m2 = 160
 area_adm_m2 = 2884
 
 w_m2 = 5
 
-# cargas apartamento
+# cargas apartamento exemplo GED119
 
-iluminacao_w = 1200
-tomadas_w = 3000
+iluminacao_w = 3130
+tomadas_w = 1800
 
 chuveiro_kw = 5.4
-torneira_kw = 3.0
-lavar_louca_kw = 2.0
+lavar_louca_kw = 2.5
 secar_kw = 2.5
-
-chuveiros_por_apto = 4
-torneiras_por_apto = 1
 
 # administração
 
 chuveiros_admin = 5
 torneiras_admin = 2
 
-# ---------------------------------------------------------
+# ---------------------------------
 # 0 - CARGA INSTALADA APARTAMENTO
-# ---------------------------------------------------------
+# ---------------------------------
 
 print("\n0- Carga Instalada do Apartamento (Item 15.2.1 GED119)\n")
 
@@ -199,96 +198,85 @@ carga_ilum_tom = (iluminacao_w + tomadas_w) / 1000
 
 carga_instalada_apto = (
     carga_ilum_tom +
-    (chuveiros_por_apto * chuveiro_kw) +
-    (torneiras_por_apto * torneira_kw) +
+    chuveiro_kw +
     lavar_louca_kw +
     secar_kw
 )
 
 print(f"Iluminação = {iluminacao_w} W")
 print(f"Tomadas = {tomadas_w} W")
-
-print(f"{chuveiros_por_apto} Chuveiros = {chuveiros_por_apto * chuveiro_kw} kW")
-print(f"{torneiras_por_apto} Torneira elétrica = {torneiras_por_apto * torneira_kw} kW")
-
+print(f"Chuveiro = {chuveiro_kw} kW")
 print(f"Lava-louça = {lavar_louca_kw} kW")
 print(f"Secadora = {secar_kw} kW")
 
 print("\nCálculo:")
 
 print(f"({iluminacao_w}+{tomadas_w})/1000 + "
-      f"{chuveiros_por_apto}x{chuveiro_kw} + "
-      f"{torneiras_por_apto}x{torneira_kw} + "
-      f"{lavar_louca_kw} + {secar_kw}")
+      f"{chuveiro_kw} + {lavar_louca_kw} + {secar_kw}")
 
 print(f"\nCarga instalada apartamento = {carga_instalada_apto:.2f} kW")
 
 if carga_instalada_apto <= 25:
 
     print("\n✔ Carga ≤ 25 kW")
-    print("Não necessita cálculo de demanda.")
+    print("Não necessita cálculo de demanda individual.")
 
 else:
 
     print("\n✔ Carga > 25 kW")
-    print("Conforme GED119 deve-se calcular demanda pela GED13.")
+    print("Necessário cálculo de demanda.")
 
-# ---------------------------------------------------------
-# 1 - ILUMINAÇÃO
-# ---------------------------------------------------------
+# ---------------------------------
+# 1 - ILUMINAÇÃO E TOMADAS
+# ---------------------------------
 
 print("\n1- Demanda Referente à Iluminação e Tomadas de Uso Geral\n")
 
 D1a = (area_apto_m2 * aptos * w_m2) / 1000
 D1b = (area_adm_m2 * w_m2) / 1000
 
-print(f"D1a = {area_apto_m2} x {aptos} x {w_m2} /1000")
-print(f"D1a = {D1a:.2f} kVA\n")
-
-print(f"D1b = {area_adm_m2} x {w_m2} /1000")
-print(f"D1b = {D1b:.2f} kVA\n")
+print(f"D1a = {D1a:.2f} kVA")
+print(f"D1b = {D1b:.2f} kVA")
 
 D1 = D1a + D1b
 
 print(f"D1 = {D1:.2f} kVA")
 
-# ---------------------------------------------------------
+# ---------------------------------
 # 2 - APARELHOS
-# ---------------------------------------------------------
+# ---------------------------------
 
 print("\n2- Demanda Referente a Aparelhos\n")
 
-total_chuveiros = (aptos * chuveiros_por_apto) + chuveiros_admin + torneiras_admin
+total_chuveiros = aptos + chuveiros_admin + torneiras_admin
+total_lava = aptos
+total_sec = aptos
 
 f_ch = fator_aparelho("chuveiro_torneira_ferro", total_chuveiros)
+f_lava = fator_aparelho("maquinas_lavar_louca", total_lava)
+f_sec = fator_aparelho("maquina_secar_roupa", total_sec)
 
-D2a_chuveiro_apt = aptos * chuveiros_por_apto * chuveiro_kw * f_ch
-D2a_torneira_apt = aptos * torneiras_por_apto * torneira_kw * f_ch
-
-D2a_admin_ch = chuveiros_admin * chuveiro_kw * f_ch
-D2a_admin_tor = torneiras_admin * torneira_kw * f_ch
-
-D2a = D2a_chuveiro_apt + D2a_torneira_apt + D2a_admin_ch + D2a_admin_tor
-
-print(f"D2a = {D2a:.2f} kVA")
-
-f_lava = fator_aparelho("maquinas_lavar_louca", aptos)
+D2a_apt = aptos * chuveiro_kw * f_ch
 D2b = aptos * lavar_louca_kw * f_lava
-
-print(f"D2b = {D2b:.2f} kVA")
-
-f_sec = fator_aparelho("maquina_secar_roupa", aptos)
 D2c = aptos * secar_kw * f_sec
 
-print(f"D2c = {D2c:.2f} kVA")
+D2a_admin_ch = chuveiros_admin * chuveiro_kw * f_ch
+D2a_admin_tor = torneiras_admin * 3.0 * f_ch
 
-D2 = D2a + D2b + D2c
+D2_admin = D2a_admin_ch + D2a_admin_tor
+
+D2 = D2a_apt + D2b + D2c + D2_admin
+
+print(f"D2a apartamentos = {D2a_apt:.2f} kVA")
+print(f"D2 administração = {D2_admin:.2f} kVA")
+print(f"D2b = {D2b:.2f} kVA")
+print(f"D2c = {D2c:.2f} kVA")
 
 print(f"\nD2 = {D2:.2f} kVA")
 
-# ---------------------------------------------------------
+# ---------------------------------
 # 3 - MOTORES
-# ---------------------------------------------------------
+# ---------------------------------
 
 motores = [
     (1,1),
@@ -300,23 +288,24 @@ motores = [
 
 D3 = demanda_motores(motores)
 
-# ---------------------------------------------------------
-# 4 - DEMANDA GERAL
-# ---------------------------------------------------------
+# ---------------------------------
+# 4 - DEMANDA FINAL
+# ---------------------------------
 
 print("\n4- Demanda Geral da Entrada\n")
 
 f_sim = fator_simultaneidade(aptos)
 
-D2_apt = D2a_chuveiro_apt + D2a_torneira_apt + D2b + D2c
+D2_apt = D2a_apt + D2b + D2c
 
 Dapt = (D1a + D2_apt) * f_sim
-Dadm = D1b + (D2a_admin_ch + D2a_admin_tor) + D3
 
-print(f"\nDapt = {Dapt:.2f} kVA")
-print(f"Dadm = {Dadm:.2f} kVA")
+Dadm = D1b + D2_admin + D3
 
 Dg = Dapt + Dadm
+
+print(f"Dapt = {Dapt:.2f} kVA")
+print(f"Dadm = {Dadm:.2f} kVA")
 
 print("\n--------------------------------")
 print(f"DEMANDA GERAL = {Dg:.2f} kVA")
