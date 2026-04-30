@@ -10,10 +10,11 @@ def gerar_relatorio_pdf():
     # =========================
     # CAMINHO DO ARQUIVO
     # =========================
-    pasta = r"C:\Users\an053116\Documents\01 - Códigos python\Demanda CPFL GED119\Jupyter\Relatórios"
+    pasta = r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\Ged13\Relatórios"
+    
     os.makedirs(pasta, exist_ok=True)
 
-    caminho_pdf = os.path.join(pasta, "relatorio_demanda_completo.pdf")
+    caminho_pdf = os.path.join(pasta, "Descrição Cálculo Demanda Ged13.pdf")
 
     doc = SimpleDocTemplate(caminho_pdf, pagesize=A4)
 

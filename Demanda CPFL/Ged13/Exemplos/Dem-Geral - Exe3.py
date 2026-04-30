@@ -6,12 +6,10 @@ sys.stdout.reconfigure(encoding="utf-8")
 # =================================================
 # BANCO
 # =================================================
-
-nome_banco = r"C:\Users\an053116\Documents\01 - Códigos python\Demanda CPFL GED119\database\databaseCPFLGed13.db"
+nome_banco = r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\Ged13\DB13\databaseCPFLGed13.db"
 
 conn = sqlite3.connect(nome_banco)
 cursor = conn.cursor()
-
 # =================================================
 # FUNÇÕES
 # =================================================

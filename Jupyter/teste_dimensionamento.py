@@ -1,2 +1,0 @@
-from database_manager import criar_tabela_edificio
-criar_tabela_edificio()
