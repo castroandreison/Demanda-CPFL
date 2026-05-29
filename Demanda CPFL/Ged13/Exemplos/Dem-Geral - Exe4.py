@@ -52,6 +52,25 @@ cargas = {
 # FUNÇÕES
 # =================================================
 
+def obter_ampacidade(secao, tipo_instalacao):
+    
+    cursor.execute(f"""
+    SELECT {tipo_instalacao}
+    FROM tabela11_cabos_bt
+    WHERE secao_mm2 = ?
+    """, (secao,))
+
+    valor = cursor.fetchone()
+
+    if not valor:
+        return None
+
+    return valor[0]
+
+def calcular_corrente_trifasica(kva, tensao):
+    return (kva * 1000) / (math.sqrt(3) * tensao)
+
+
 def arredonda_kw(valor):
     return math.ceil(valor)
 
@@ -208,6 +227,7 @@ print(f"220/380V → {cat220}")
 print("\n==============================")
 print("🔌 PADRÃO DE ENTRADA")
 print("==============================")
+print("\n🔹 PADRÃO 127/220V")
 
 cursor.execute("""
 SELECT disjuntor,cobre_mm2,eletroduto,poste,caixa
@@ -215,14 +235,44 @@ FROM tabela1c_trifasico_127_220
 WHERE categoria = ?
 """, (cat127,))
 
-padrao = cursor.fetchone()
+padrao127 = cursor.fetchone()
 
-if padrao:
+if padrao127:
     print(f"Categoria: {cat127}")
-    print(f"Disjuntor: {padrao[0]}")
-    print(f"Cabo: {padrao[1]}")
-    print(f"Eletroduto: {padrao[2]}")
-    print(f"Poste: {padrao[3]}")
-    print(f"Caixa: {padrao[4]}")
+    print(f"Disjuntor: {padrao127[0]}")
+    print(f"Cabo: {padrao127[1]}")
+    print(f"Eletroduto: {padrao127[2]}")
+    print(f"Poste: {padrao127[3]}")
+    print(f"Caixa: {padrao127[4]}")
+
+
+print("\n🔹 PADRÃO 220/380V")
+
+cursor.execute("""
+SELECT disjuntor,cobre_mm2,eletroduto,poste,caixa
+FROM tabela1c_trifasico_220_380
+WHERE categoria = ?
+""", (cat220,))
+
+padrao220 = cursor.fetchone()
+
+if padrao220:
+    print(f"Categoria: {cat220}")
+    print(f"Disjuntor: {padrao220[0]}")
+    print(f"Cabo: {padrao220[1]}")
+    print(f"Eletroduto: {padrao220[2]}")
+    print(f"Poste: {padrao220[3]}")
+    print(f"Caixa: {padrao220[4]}")
+
+# =================================================
+# CORRENTE
+# =================================================
+print("\n🔹 CORRENTE")
+
+I_220 = calcular_corrente_trifasica(D, 220)
+I_380 = calcular_corrente_trifasica(D, 380)
+
+print(f"220V → {I_220:.2f} A")
+print(f"380V → {I_380:.2f} A")
 
 conn.close()

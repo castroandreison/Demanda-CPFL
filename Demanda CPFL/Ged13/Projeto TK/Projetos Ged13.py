@@ -10,8 +10,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 # =================================================
 # CAMINHOS DOS BANCOS
 # =================================================
-caminho_proj = r"C:\Users\an053116\Documents\01 - Códigos python\Demanda CPFL GED119\Jupyter\Ged13\Projeto TK\projetos.db"
-caminho_ged = r"C:\Users\an053116\Documents\01 - Códigos python\Demanda CPFL GED119\database\databaseCPFLGed13.db"
+caminho_proj = r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\Ged13\Projeto TK\projetos.db"
+caminho_ged = r"C:\Users\an053116\Documents\01 - Códigos python\35 - Demanda CPFL GED119\Demanda CPFL\Ged13\DB13\databaseCPFLGed13.db"
 
 os.makedirs(os.path.dirname(caminho_proj), exist_ok=True)
 
@@ -100,62 +100,269 @@ def get_categoria(D):
 
 
 # =================================================
+# FUNÇÕES DE MANIPULAÇÃO DE DADOS
+# =================================================
+
+def adicionar_carga():
+    # Determinar qual aba está ativa
+    aba_atual = notebook.index(notebook.select())
+    
+    # Mapear índices para as variáveis corretas
+    entradas = [
+        (entry_nome_geral, entry_potencia_geral),
+        (entry_nome_chuveiros, entry_potencia_chuveiros),
+        (entry_nome_eletro, entry_potencia_eletro),
+        (entry_nome_ar, entry_potencia_ar),
+        (entry_nome_motor, entry_potencia_motor)
+    ]
+    
+    entry_nome, entry_potencia = entradas[aba_atual]
+    
+    nome = entry_nome.get().strip()
+    potencia = entry_potencia.get().strip()
+    
+    if not nome or not potencia:
+        messagebox.showwarning("Aviso", "Preencha todos os campos!")
+        return
+    
+    try:
+        potencia_float = float(potencia)
+        if potencia_float <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showwarning("Aviso", "Potência deve ser um número positivo!")
+        return
+    
+    # Inserir no banco de dados
+    cursor_proj.execute("INSERT INTO cargas (nome, potencia) VALUES (?, ?)", (nome, potencia))
+    conn_proj.commit()
+    
+    # Limpar campos
+    entry_nome.delete(0, tk.END)
+    entry_potencia.delete(0, tk.END)
+    
+    # Recarregar a lista correspondente
+    carregar_por_aba(aba_atual)
+
+def excluir_carga():
+    # Determinar qual aba está ativa
+    aba_atual = notebook.index(notebook.select())
+    
+    # Mapear índices para as árvores corretas
+    arvores = [tree_geral, tree_chuveiros, tree_eletro, tree_ar, tree_motor]
+    tree_atual = arvores[aba_atual]
+    
+    selecionado = tree_atual.selection()
+    if not selecionado:
+        messagebox.showwarning("Aviso", "Selecione uma carga para excluir!")
+        return
+    
+    item = selecionado[0]
+    valores = tree_atual.item(item)["values"]
+    nome = valores[0]
+    
+    # Confirmar exclusão
+    if messagebox.askyesno("Confirmar", f"Excluir a carga '{nome}'?"):
+        # Excluir do banco de dados
+        cursor_proj.execute("DELETE FROM cargas WHERE nome = ?", (nome,))
+        conn_proj.commit()
+        
+        # Recarregar a lista correspondente
+        carregar_por_aba(aba_atual)
+
+def carregar_detalhes_selecionado(event):
+    """Carrega os detalhes da carga selecionada nos campos de entrada"""
+    # Determinar qual aba está ativa
+    aba_atual = notebook.index(notebook.select())
+    
+    # Mapear índices para as árvores e entradas corretas
+    arvores = [tree_geral, tree_chuveiros, tree_eletro, tree_ar, tree_motor]
+    entradas = [
+        (entry_nome_geral, entry_potencia_geral),
+        (entry_nome_chuveiros, entry_potencia_chuveiros),
+        (entry_nome_eletro, entry_potencia_eletro),
+        (entry_nome_ar, entry_potencia_ar),
+        (entry_nome_motor, entry_potencia_motor)
+    ]
+    
+    tree_atual = arvores[aba_atual]
+    entry_nome, entry_potencia = entradas[aba_atual]
+    
+    selecionado = tree_atual.selection()
+    if selecionado:
+        item = selecionado[0]
+        valores = tree_atual.item(item)["values"]
+        # Limpar campos atuais
+        entry_nome.delete(0, tk.END)
+        entry_potencia.delete(0, tk.END)
+        # Inserir valores da carga selecionada
+        entry_nome.insert(0, valores[0])  # Nome
+        entry_potencia.insert(0, valores[1])  # Potência
+
+def editar(event):
+    # Determinar qual aba está ativa
+    aba_atual = notebook.index(notebook.select())
+    
+    # Mapear índices para as árvores corretas
+    arvores = [tree_geral, tree_chuveiros, tree_eletro, tree_ar, tree_motor]
+    tree_atual = arvores[aba_atual]
+    
+    item = tree_atual.selection()[0]
+    col = tree_atual.identify_column(event.x)
+    
+    # Get the column name from the column identifier
+    col_name = tree_atual.heading(col, "text") if col else None
+    
+    if col_name:  # Only proceed if we clicked on a column header
+        x, y, w, h = tree_atual.bbox(item, col)
+        
+        entry = tk.Entry(janela)
+        entry.place(x=x, y=y, width=w)
+        
+        # Set the current value in the entry field
+        current_value = tree_atual.set(item, col)
+        entry.insert(0, current_value)
+        entry.select_range(0, tk.END)
+        entry.focus()
+        
+        def salvar(e):
+            novo_valor = entry.get()
+            tree_atual.set(item, col, novo_valor)
+            entry.destroy()
+        
+        def cancelar(e):
+            entry.destroy()
+            
+        entry.bind("<Return>", salvar)
+        entry.bind("<Escape>", cancelar)
+        entry.bind("<FocusOut>", lambda e: entry.destroy())  # Destroy when losing focus
+
+# =================================================
 # INTERFACE
 # =================================================
 
 janela = tk.Tk()
 janela.title("GED-13 Completo")
-janela.geometry("1000x700")
+janela.geometry("1200x800")
 
-cols = ("Nome", "Potência (W)", "Qtd")
-tree = ttk.Treeview(janela, columns=cols, show="headings")
+# Notebook para abas categorizadas
+notebook = ttk.Notebook(janela)
+notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-for col in cols:
-    tree.heading(col, text=col)
+# Aba Geral (Tomadas e Iluminação)
+frame_geral = ttk.Frame(notebook)
+notebook.add(frame_geral, text="Geral")
 
-tree.pack(fill="both", expand=True)
+# Aba Chuveiros e Aquecimento
+frame_chuveiros = ttk.Frame(notebook)
+notebook.add(frame_chuveiros, text="Chuveiros/Aquecimento")
+
+# Aba Eletrodomésticos
+frame_eletro = ttk.Frame(notebook)
+notebook.add(frame_eletro, text="Eletrodomésticos")
+
+# Aba Ar Condicionado
+frame_ar = ttk.Frame(notebook)
+notebook.add(frame_ar, text="Ar Condicionado")
+
+# Aba Motores
+frame_motor = ttk.Frame(notebook)
+notebook.add(frame_motor, text="Motores")
+
+# Função para criar interface de carga em cada aba
+def criar_interface_carga(frame, titulo):
+    # Frame para entrada de dados
+    frame_input = tk.Frame(frame)
+    frame_input.pack(pady=10, padx=10, fill="x")
+    
+    tk.Label(frame_input, text=f"Nome da Carga ({titulo}):").grid(row=0, column=0, padx=5)
+    entry_nome = tk.Entry(frame_input, width=20)
+    entry_nome.grid(row=0, column=1, padx=5)
+    
+    tk.Label(frame_input, text="Potência (W):").grid(row=0, column=2, padx=5)
+    entry_potencia = tk.Entry(frame_input, width=10)
+    entry_potencia.grid(row=0, column=3, padx=5)
+    
+    tk.Button(frame_input, text="Adicionar Carga", command=adicionar_carga).grid(row=0, column=4, padx=5)
+    tk.Button(frame_input, text="Excluir Carga", command=excluir_carga).grid(row=0, column=5, padx=5)
+    
+    cols = ("Nome", "Potência (W)", "Qtd")
+    tree = ttk.Treeview(frame, columns=cols, show="headings")
+    
+    for col in cols:
+        tree.heading(col, text=col)
+    
+    tree.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    return frame_input, entry_nome, entry_potencia, tree
+
+# Criar interfaces para cada aba
+frame_input_geral, entry_nome_geral, entry_potencia_geral, tree_geral = criar_interface_carga(frame_geral, "Geral")
+frame_input_chuveiros, entry_nome_chuveiros, entry_potencia_chuveiros, tree_chuveiros = criar_interface_carga(frame_chuveiros, "Chuveiros/Aquecimento")
+frame_input_eletro, entry_nome_eletro, entry_potencia_eletro, tree_eletro = criar_interface_carga(frame_eletro, "Eletrodomésticos")
+frame_input_ar, entry_nome_ar, entry_potencia_ar, tree_ar = criar_interface_carga(frame_ar, "Ar Condicionado")
+frame_input_motor, entry_nome_motor, entry_potencia_motor, tree_motor = criar_interface_carga(frame_motor, "Motores")
 
 # =================================================
-# CARREGAR CARGAS
+# FUNÇÕES DE CARREGAMENTO
 # =================================================
 
 def carregar():
-    tree.delete(*tree.get_children())
-    cursor_proj.execute("SELECT nome,potencia FROM cargas")
+    """Carrega todas as cargas em todas as abas"""
+    carregar_por_aba(0)  # Geral
+    carregar_por_aba(1)  # Chuveiros/Aquecimento
+    carregar_por_aba(2)  # Eletrodomésticos
+    carregar_por_aba(3)  # Ar Condicionado
+    carregar_por_aba(4)  # Motores
 
+def carregar_por_aba(aba_index):
+    """Carrega as cargas de uma aba específica com base no tipo"""
+    # Mapear índices de aba para tipos de carga
+    tipos_por_aba = {
+        0: ["geral"],  # Geral
+        1: ["chuveiro"],  # Chuveiros/Aquecimento
+        2: ["eletro"],  # Eletrodomésticos
+        3: ["ar"],  # Ar Condicionado
+        4: ["motor"]  # Motores
+    }
+    
+    # Mapear índices de aba para árvores corretas
+    arvores = [tree_geral, tree_chuveiros, tree_eletro, tree_ar, tree_motor]
+    tree_atual = arvores[aba_index]
+    
+    # Limpar a árvore atual
+    tree_atual.delete(*tree_atual.get_children())
+    
+    # Buscar cargas do tipo específico
+    tipos = tipos_por_aba[aba_index]
+    placeholders = ','.join(['?' for _ in tipos])
+    query = f"SELECT nome,potencia FROM cargas WHERE tipo IN ({placeholders})"
+    cursor_proj.execute(query, tipos)
+    
     for nome, pot in cursor_proj.fetchall():
-        tree.insert("", "end", values=(nome, float(pot), 1))
+        tree_atual.insert("", "end", values=(nome, float(pot), 1))
 
+# Carregar inicialmente
 carregar()
 
-# =================================================
-# EDITAR
-# =================================================
-
-def editar(event):
-    item = tree.selection()[0]
-    col = tree.identify_column(event.x)
-
-    if col == "#3":
-        x, y, w, h = tree.bbox(item, col)
-
-        entry = tk.Entry(janela)
-        entry.place(x=x, y=y, width=w)
-
-        def salvar(e):
-            tree.set(item, "Qtd", entry.get())
-            entry.destroy()
-
-        entry.bind("<Return>", salvar)
-
-tree.bind("<Double-1>", editar)
+# Bind events para cada árvore
+tree_geral.bind("<Double-1>", editar)
+tree_geral.bind("<<TreeviewSelect>>", carregar_detalhes_selecionado)
+tree_chuveiros.bind("<Double-1>", editar)
+tree_chuveiros.bind("<<TreeviewSelect>>", carregar_detalhes_selecionado)
+tree_eletro.bind("<Double-1>", editar)
+tree_eletro.bind("<<TreeviewSelect>>", carregar_detalhes_selecionado)
+tree_ar.bind("<Double-1>", editar)
+tree_ar.bind("<<TreeviewSelect>>", carregar_detalhes_selecionado)
+tree_motor.bind("<Double-1>", editar)
+tree_motor.bind("<<TreeviewSelect>>", carregar_detalhes_selecionado)
 
 # =================================================
 # SAÍDA
 # =================================================
 
 saida = tk.Text(janela, height=20)
-saida.pack(fill="x")
+saida.pack(fill="x", padx=10, pady=10)
 
 # =================================================
 # CÁLCULO COMPLETO GED
@@ -163,10 +370,10 @@ saida.pack(fill="x")
 def calcular():
     
     saida.delete("1.0", tk.END)
-
+    
     saida.insert(tk.END, "GED-13 - MEMORIAL COMPLETO\n")
     saida.insert(tk.END, "==============================\n\n")
-
+    
     # =================================================
     # SEPARAÇÃO DE CARGAS AUTOMÁTICA
     # =================================================
@@ -178,34 +385,38 @@ def calcular():
     eletro = 0
     ar_qtd = 0
     motores_qtd = 0
-
-    for item in tree.get_children():
-        nome, pot, qtd = tree.item(item)["values"]
-
-        try:
-            pot = float(pot)
-            qtd = int(qtd)
-        except:
-            continue
-
-        total = pot * qtd
-
-        if "Tomada" in nome:
-            tomadas += total
-        elif "Iluminação" in nome:
-            iluminacao += total
-        elif "Chuveiro" in nome:
-            chuveiros += total
-        elif "Torneira" in nome:
-            torneira += total
-        elif "Ferro" in nome:
-            ferro += total
-        elif "Ar" in nome:
-            ar_qtd += qtd
-        elif "Motor" in nome:
-            motores_qtd += qtd
-        else:
-            eletro += total
+    
+    # Coletar dados de todas as árvores
+    arvores = [tree_geral, tree_chuveiros, tree_eletro, tree_ar, tree_motor]
+    
+    for tree_atual in arvores:
+        for item in tree_atual.get_children():
+            nome, pot, qtd = tree_atual.item(item)["values"]
+            
+            try:
+                pot = float(pot)
+                qtd = int(qtd)
+            except:
+                continue
+            
+            total = pot * qtd
+            
+            if "Tomada" in nome:
+                tomadas += total
+            elif "Iluminação" in nome:
+                iluminacao += total
+            elif "Chuveiro" in nome:
+                chuveiros += total
+            elif "Torneira" in nome:
+                torneira += total
+            elif "Ferro" in nome:
+                ferro += total
+            elif "Ar" in nome:
+                ar_qtd += qtd
+            elif "Motor" in nome:
+                motores_qtd += qtd
+            else:
+                eletro += total
 
     # =================================================
     # 🔹 A - TOMADAS + ILUMINAÇÃO
@@ -359,8 +570,8 @@ def calcular():
         saida.insert(tk.END, f"Motor FF máx: {padrao[9]}\n")
         saida.insert(tk.END, f"Motor FFF máx: {padrao[10]}\n")
 
-# botão
-tk.Button(janela, text="Calcular GED Completo", command=calcular).pack()
+# botão calcular (os botões de adicionar/excluir já estão em cada aba)
+tk.Button(janela, text="Calcular GED Completo", command=calcular).pack(pady=10)
 
 # loop
 janela.mainloop()
