@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">GED-13 - Cálculo de Demanda</div>
+    <div class="info-box">
+        <span class="icon">ℹ️</span>
+        <span>Adicione as cargas em cada categoria e clique em "Calcular GED Completo" para obter o memorial de cálculo e o padrão de entrada.</span>
+    </div>
+</div>
+
+<div class="tabs" id="category-tabs">
+    <button class="tab-btn active" data-tab="0">Geral</button>
+    <button class="tab-btn" data-tab="1">Chuveiros/Aquecimento</button>
+    <button class="tab-btn" data-tab="2">Eletrodomésticos</button>
+    <button class="tab-btn" data-tab="3">Ar Condicionado</button>
+    <button class="tab-btn" data-tab="4">Motores</button>
+</div>
+
+<div id="tab-0" class="tab-content active">
+    <div class="card">
+        <div class="card-header">Geral <span class="badge" id="count-0">0</span></div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Nome da Carga</label>
+                <input type="text" id="nome-0" placeholder="Ex: Tomadas" list="suggest-0">
+                <datalist id="suggest-0">
+                    <option value="Tomadas">
+                    <option value="Iluminação">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Potência (W)</label>
+                <input type="number" id="pot-0" min="0" step="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="addCarga(0)">+ Adicionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(0)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Nome</th><th>Potência (W)</th></tr></thead>
+                <tbody id="tbody-0"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-0">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-1" class="tab-content">
+    <div class="card">
+        <div class="card-header">Chuveiros / Aquecimento <span class="badge" id="count-1">0</span></div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Nome da Carga</label>
+                <input type="text" id="nome-1" placeholder="Ex: Chuveiro" list="suggest-1">
+                <datalist id="suggest-1">
+                    <option value="Chuveiro">
+                    <option value="Torneira">
+                    <option value="Ferro">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Potência (W)</label>
+                <input type="number" id="pot-1" min="0" step="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="addCarga(1)">+ Adicionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(1)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Nome</th><th>Potência (W)</th></tr></thead>
+                <tbody id="tbody-1"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-1">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-2" class="tab-content">
+    <div class="card">
+        <div class="card-header">Eletrodomésticos <span class="badge" id="count-2">0</span></div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Nome da Carga</label>
+                <input type="text" id="nome-2" placeholder="Ex: Geladeira" list="suggest-2">
+                <datalist id="suggest-2">
+                    <option value="Geladeira">
+                    <option value="Microondas">
+                    <option value="Máquina Lavar">
+                    <option value="TV">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Potência (W)</label>
+                <input type="number" id="pot-2" min="0" step="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="addCarga(2)">+ Adicionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(2)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Nome</th><th>Potência (W)</th></tr></thead>
+                <tbody id="tbody-2"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-2">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-3" class="tab-content">
+    <div class="card">
+        <div class="card-header">Ar Condicionado <span class="badge" id="count-3">0</span></div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Nome da Carga</label>
+                <input type="text" id="nome-3" placeholder="Ex: Ar 14000 BTU" list="suggest-3">
+                <datalist id="suggest-3">
+                    <option value="Ar Condicionado">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Potência (W) / Quantidade</label>
+                <input type="number" id="pot-3" min="0" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="addCarga(3)">+ Adicionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(3)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Nome</th><th>Quantidade</th></tr></thead>
+                <tbody id="tbody-3"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-3">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-4" class="tab-content">
+    <div class="card">
+        <div class="card-header">Motores <span class="badge" id="count-4">0</span></div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Nome da Carga</label>
+                <input type="text" id="nome-4" placeholder="Ex: Motor 1 CV" list="suggest-4">
+                <datalist id="suggest-4">
+                    <option value="Motor">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="pot-4" min="0" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="addCarga(4)">+ Adicionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(4)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Nome</th><th>Quantidade</th></tr></thead>
+                <tbody id="tbody-4"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-4">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div style="text-align:center;margin-bottom:24px;">
+    <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED13()">
+        ⚡ Calcular GED Completo
+    </button>
+</div>
+
+<div id="result-container" style="display:none;">
+    <div class="card">
+        <div class="card-header">Memorial de Cálculo - GED-13</div>
+        <div id="result-content"></div>
+    </div>
+</div>
+
+<div id="loading-container" style="display:none;">
+    <div class="loading">
+        <div class="spinner"></div>
+        Calculando...
+    </div>
+</div>
+
+<script>
+const nomesPorAba = {
+    0: ['nome-0', 'pot-0', 'tbody-0', 'empty-0', 'count-0'],
+    1: ['nome-1', 'pot-1', 'tbody-1', 'empty-1', 'count-1'],
+    2: ['nome-2', 'pot-2', 'tbody-2', 'empty-2', 'count-2'],
+    3: ['nome-3', 'pot-3', 'tbody-3', 'empty-3', 'count-3'],
+    4: ['nome-4', 'pot-4', 'tbody-4', 'empty-4', 'count-4'],
+};
+
+const cargas = { 0: [], 1: [], 2: [], 3: [], 4: [] };
+
+function renderAba(aba) {
+    const [nomeId, potId, tbodyId, emptyId, countId] = nomesPorAba[aba];
+    const tbody = document.getElementById(tbodyId);
+    const empty = document.getElementById(emptyId);
+    const count = document.getElementById(countId);
+    tbody.innerHTML = '';
+    if (cargas[aba].length === 0) {
+        empty.style.display = 'block';
+        count.textContent = '0';
+        return;
+    }
+    empty.style.display = 'none';
+    count.textContent = cargas[aba].length;
+    cargas[aba].forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = function() {
+            document.querySelectorAll(`#${tbodyId} tr`).forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById(nomeId).value = c.nome;
+            document.getElementById(potId).value = c.potencia;
+        };
+        tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
+                        <td>${c.nome}</td>
+                        <td>${c.potencia}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function addCarga(aba) {
+    const [nomeId, potId] = nomesPorAba[aba];
+    const nome = document.getElementById(nomeId).value.trim();
+    const potencia = document.getElementById(potId).value.trim();
+    if (!nome || !potencia) { alert('Preencha todos os campos!'); return; }
+    const p = parseFloat(potencia);
+    if (isNaN(p) || p <= 0) { alert('Potência deve ser um número positivo!'); return; }
+    cargas[aba].push({ nome, potencia: p });
+    renderAba(aba);
+    document.getElementById(nomeId).value = '';
+    document.getElementById(potId).value = '';
+    document.getElementById(nomeId).focus();
+}
+
+function delCarga(aba) {
+    const [nomeId, potId, tbodyId] = nomesPorAba[aba];
+    const selected = document.querySelector(`#${tbodyId} tr.selected`);
+    if (!selected) { alert('Selecione uma carga para excluir!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    if (confirm(`Excluir a carga '${cargas[aba][idx].nome}'?`)) {
+        cargas[aba].splice(idx, 1);
+        renderAba(aba);
+    }
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    });
+});
+
+function calcularGED13() {
+    const todasCargas = [];
+    for (let aba = 0; aba <= 4; aba++) {
+        for (const c of cargas[aba]) {
+            todasCargas.push({ nome: c.nome, potencia: c.potencia, qtd: 1 });
+        }
+    }
+
+    document.getElementById('result-container').style.display = 'none';
+    document.getElementById('loading-container').style.display = 'block';
+
+    fetch('/api/ged13/calcular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cargas: todasCargas })
+    })
+    .then(r => r.json())
+    .then(resp => {
+        document.getElementById('loading-container').style.display = 'none';
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultadoGed13(resp.data);
+    })
+    .catch(err => {
+        document.getElementById('loading-container').style.display = 'none';
+        alert('Erro: ' + err.message);
+    });
+}
+
+function mostrarResultadoGed13(d) {
+    const container = document.getElementById('result-container');
+    const content = document.getElementById('result-content');
+    container.style.display = 'block';
+
+    const padrao = d.padrao ? `
+        <div class="result-section">
+            <div class="result-title blue">🔌 Padrão de Entrada</div>
+            <div class="result-line">Tipo de ligação: <span class="highlight">TRIFÁSICO</span></div>
+            <div class="result-line">Categoria: ${padrao.categoria}</div>
+            <div class="result-line">Cabo cobre: ${padrao.cobre_mm2}</div>
+            <div class="result-line">Cabo alumínio: ${padrao.aluminio_mm2}</div>
+            <div class="result-line">Eletroduto: ${padrao.eletroduto}</div>
+            <div class="result-line">Disjuntor: ${padrao.disjuntor}</div>
+            <div class="result-line">Aterramento: ${padrao.aterramento}</div>
+            <div class="result-line">Poste padrão: ${padrao.poste}</div>
+            <div class="result-line">Caixa de medição: ${padrao.caixa}</div>
+            <div class="result-line">Motor FN máx: ${padrao.motor_fn}</div>
+            <div class="result-line">Motor FF máx: ${padrao.motor_ff}</div>
+            <div class="result-line">Motor FFF máx: ${padrao.motor_fff}</div>
+        </div>
+    ` : '<div class="result-line">Padrão de entrada não encontrado para esta demanda.</div>';
+
+    content.innerHTML = `
+        <div class="result-section">
+            <div class="result-title">A - Tomadas + Iluminação</div>
+            <div class="result-line">Tomadas = ${d.tomadas.toFixed(0)} W</div>
+            <div class="result-line">Iluminação = ${d.iluminacao.toFixed(0)} W</div>
+            <div class="result-line">A base = ${d.carga_a.toFixed(2)} kW</div>
+            <div class="result-line">FD A = ${d.fdA}</div>
+            <div class="result-line"><span class="highlight">A = ${d.A.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title purple">B - Chuveiros / Torneira / Ferro</div>
+            <div class="result-line">Chuveiros = ${d.chuveiros.toFixed(0)} W</div>
+            <div class="result-line">Torneira = ${d.torneira.toFixed(0)} W</div>
+            <div class="result-line">Ferro = ${d.ferro.toFixed(0)} W</div>
+            <div class="result-line">B base = ${d.carga_b.toFixed(2)} kW</div>
+            <div class="result-line">FD B = ${d.fdB}</div>
+            <div class="result-line"><span class="highlight">B = ${d.B.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title gold">D - Eletrodomésticos</div>
+            <div class="result-line">Total eletrodomésticos = ${d.eletro.toFixed(0)} W</div>
+            <div class="result-line">D base = ${d.carga_d.toFixed(2)} kW</div>
+            <div class="result-line">FD D = ${d.fdD}</div>
+            <div class="result-line"><span class="highlight">D = ${d.D.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title">F - Ar Condicionado</div>
+            <div class="result-line">Ar-condicionado unitário = ${d.va_ar.toFixed(0)} VA</div>
+            <div class="result-line">Quantidade = ${d.ar_qtd}</div>
+            <div class="result-line"><span class="highlight">F = ${d.F.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title purple">G - Motores</div>
+            <div class="result-line">Motor unitário = ${d.motor_kva.toFixed(2)} kVA</div>
+            <div class="result-line">Quantidade = ${d.motores_qtd}</div>
+            <div class="result-line"><span class="highlight">G = ${d.G.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title gold">📊 Demanda Total</div>
+            <div class="result-line">A = ${d.A.toFixed(2)} kVA</div>
+            <div class="result-line">B = ${d.B.toFixed(2)} kVA</div>
+            <div class="result-line">D = ${d.D.toFixed(2)} kVA</div>
+            <div class="result-line">F = ${d.F.toFixed(2)} kVA</div>
+            <div class="result-line">G = ${d.G.toFixed(2)} kVA</div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-final">
+            <div class="label">Demanda Total</div>
+            <div class="value">${d.D_total.toFixed(2)} kVA</div>
+        </div>
+
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center;">
+            <div class="card" style="padding:12px;background:var(--bg-hover);">
+                <div style="font-size:11px;color:var(--text-muted);">Carga Instalada</div>
+                <div style="font-size:18px;font-weight:700;color:var(--accent);">${d.carga_instalada.toFixed(2)} kW</div>
+            </div>
+            <div class="card" style="padding:12px;background:var(--bg-hover);">
+                <div style="font-size:11px;color:var(--text-muted);">Enquadramento</div>
+                <div style="font-size:14px;font-weight:600;">
+                    Mono: ${d.mono || '—'} | Bi: ${d.bi || '—'} | Tri: ${d.tri || '—'}
+                </div>
+            </div>
+        </div>
+
+        ${padrao}
+    `;
+    content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+{% endblock %}

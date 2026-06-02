@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero">
+    <h1>Cálculo de Demanda</h1>
+    <p>Selecione a norma técnica para realizar o cálculo de demanda</p>
+</div>
+
+<div class="calc-cards">
+    <a href="/ged119" class="calc-card">
+        <div class="icon">🏢</div>
+        <h3>GED-119</h3>
+        <p>Fornecimento de Energia Elétrica a Edifícios de Uso Coletivo.<br>
+        Cálculo de demanda geral (Dg) para edifícios residenciais e comerciais.</p>
+        <span class="btn btn-primary">Acessar</span>
+    </a>
+    <a href="/ged13" class="calc-card">
+        <div class="icon">🏠</div>
+        <h3>GED-13</h3>
+        <p>Cálculo de Carga Instalada e Demanda.<br>
+        Dimensionamento do padrão de entrada para unidades consumidoras individuais.</p>
+        <span class="btn btn-primary">Acessar</span>
+    </a>
+</div>
+{% endblock %}

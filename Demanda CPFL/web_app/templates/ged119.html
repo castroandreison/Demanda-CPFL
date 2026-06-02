@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">Dados do Edifício</div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Nº de Apartamentos</label>
+            <input type="number" id="aptos" value="20" min="1">
+        </div>
+        <div class="form-group">
+            <label>Área do Apartamento (m²)</label>
+            <input type="number" id="area_apto" value="70" min="1" step="0.1">
+        </div>
+        <div class="form-group">
+            <label>Área Administrativa (m²)</label>
+            <input type="number" id="area_adm" value="50" min="0" step="0.1">
+        </div>
+        <div class="form-group">
+            <label>Iluminação (W)</label>
+            <input type="number" id="iluminacao" value="0" min="0">
+        </div>
+        <div class="form-group">
+            <label>Tomadas (W)</label>
+            <input type="number" id="tomadas" value="0" min="0">
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Aparelhos (por apartamento)</div>
+    <div class="form-grid col-4">
+        <div class="form-group">
+            <label>Potência do Chuveiro (kW)</label>
+            <input type="number" id="chuveiro_kw" value="5.5" min="0" step="0.1">
+        </div>
+        <div class="form-group">
+            <label>Potência da Torneira (kW)</label>
+            <input type="number" id="torneira_kw" value="3.5" min="0" step="0.1">
+        </div>
+        <div class="form-group">
+            <label>Chuveiros por apto</label>
+            <input type="number" id="qtd_chuveiros" value="1" min="0">
+        </div>
+        <div class="form-group">
+            <label>Torneiras por apto</label>
+            <input type="number" id="qtd_torneiras" value="0" min="0">
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Motores
+        <span class="badge" id="motor-count">0</span>
+    </div>
+    <div class="form-grid col-3" style="margin-bottom:12px;">
+        <div class="form-group">
+            <label>Potência (CV)</label>
+            <input type="number" id="motor_cv" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" id="motor_qtd" min="1" value="1">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;">
+            <div class="btn-group" style="margin-top:18px;">
+                <button class="btn btn-success btn-sm" onclick="adicionarMotor()">+ Adicionar</button>
+                <button class="btn btn-danger btn-sm" onclick="excluirMotor()">- Excluir</button>
+            </div>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px;"></th>
+                    <th>Potência (CV)</th>
+                    <th>Quantidade</th>
+                </tr>
+            </thead>
+            <tbody id="motor-table-body">
+            </tbody>
+        </table>
+    </div>
+    <div class="empty-state" id="motor-empty">Nenhum motor cadastrado</div>
+</div>
+
+<div style="text-align:center;margin-bottom:24px;">
+    <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED119()">
+        ⚡ Calcular Demanda
+    </button>
+</div>
+
+<div id="result-container" style="display:none;">
+    <div class="card">
+        <div class="card-header">Memorial de Cálculo - GED-119</div>
+        <div id="result-content"></div>
+    </div>
+</div>
+
+<div id="loading-container" style="display:none;">
+    <div class="loading">
+        <div class="spinner"></div>
+        Calculando...
+    </div>
+</div>
+
+<script>
+let motores = [];
+
+function renderMotores() {
+    const tbody = document.getElementById('motor-table-body');
+    const empty = document.getElementById('motor-empty');
+    const count = document.getElementById('motor-count');
+    tbody.innerHTML = '';
+    if (motores.length === 0) {
+        empty.style.display = 'block';
+        count.textContent = '0';
+        return;
+    }
+    empty.style.display = 'none';
+    count.textContent = motores.length;
+    motores.forEach((m, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = function() {
+            document.querySelectorAll('#motor-table-body tr').forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById('motor_cv').value = m.cv;
+            document.getElementById('motor_qtd').value = m.qtd;
+        };
+        tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
+                        <td>${m.cv}</td>
+                        <td>${m.qtd}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function adicionarMotor() {
+    const cv = parseFloat(document.getElementById('motor_cv').value);
+    const qtd = parseInt(document.getElementById('motor_qtd').value);
+    if (isNaN(cv) || cv <= 0) { alert('Potência (CV) deve ser um número positivo!'); return; }
+    if (isNaN(qtd) || qtd <= 0) { alert('Quantidade deve ser um número positivo!'); return; }
+    motores.push({ cv, qtd });
+    renderMotores();
+    document.getElementById('motor_cv').value = '';
+    document.getElementById('motor_qtd').value = '1';
+    document.getElementById('motor_cv').focus();
+}
+
+function excluirMotor() {
+    const selected = document.querySelector('#motor-table-body tr.selected');
+    if (!selected) { alert('Selecione um motor para excluir!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    if (confirm(`Excluir motor ${motores[idx].cv} CV (qtd: ${motores[idx].qtd})?`)) {
+        motores.splice(idx, 1);
+        renderMotores();
+    }
+}
+
+function calcularGED119() {
+    const dados = {
+        aptos: document.getElementById('aptos').value,
+        area_apto: document.getElementById('area_apto').value,
+        area_adm: document.getElementById('area_adm').value,
+        iluminacao: document.getElementById('iluminacao').value,
+        tomadas: document.getElementById('tomadas').value,
+        chuveiro_kw: document.getElementById('chuveiro_kw').value,
+        torneira_kw: document.getElementById('torneira_kw').value,
+        qtd_chuveiros: document.getElementById('qtd_chuveiros').value,
+        qtd_torneiras: document.getElementById('qtd_torneiras').value,
+        motores: motores
+    };
+
+    document.getElementById('result-container').style.display = 'none';
+    document.getElementById('loading-container').style.display = 'block';
+
+    fetch('/api/ged119/calcular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        document.getElementById('loading-container').style.display = 'none';
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultado(resp.data);
+    })
+    .catch(err => {
+        document.getElementById('loading-container').style.display = 'none';
+        alert('Erro: ' + err.message);
+    });
+}
+
+function mostrarResultado(d) {
+    const container = document.getElementById('result-container');
+    const content = document.getElementById('result-content');
+    container.style.display = 'block';
+
+    const motoresHtml = d.motores.length > 0
+        ? d.motores.map((m, i) =>
+            `<div class="result-line">${i+1}) ${m.cv} CV x ${m.qtd} un = ${m.total_kva.toFixed(2)} kVA (Tabela 4)</div>`
+          ).join('')
+        : '<div class="result-line">Nenhum motor cadastrado.</div>';
+
+    content.innerHTML = `
+        <div class="result-section">
+            <div class="result-title">1 - Iluminação (Item 5.1 - GED-119)</div>
+            <div class="result-line">Fórmula: D1 = (Área × W/m²) / 1000</div>
+            <div class="result-line">W/m² adotado = ${d.w_m2} W/m²</div>
+            <br>
+            <div class="result-line"><span class="label">a) Apartamentos:</span></div>
+            <div class="result-line">D1a = (${d.area_apto.toFixed(0)} m² × ${d.aptos} aptos × ${d.w_m2} W/m²) / 1000</div>
+            <div class="result-line">D1a = <span class="value">${d.D1a.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="label">b) Administração:</span></div>
+            <div class="result-line">D1b = (${d.area_adm.toFixed(0)} m² × ${d.w_m2} W/m²) / 1000</div>
+            <div class="result-line">D1b = <span class="value">${d.D1b.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="highlight">D1 = D1a + D1b = ${d.D1a.toFixed(2)} + ${d.D1b.toFixed(2)} = ${d.D1.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title purple">2 - Aparelhos (Item 5.2 - GED-119)</div>
+            <div class="result-line">Fórmula: D2 = Σ(Qtd × Potência × FD)</div>
+            <br>
+            <div class="result-line">Total de chuveiros: ${d.aptos} aptos × ${d.total_chuveiros_geral / d.aptos} = ${d.total_chuveiros_geral}</div>
+            <div class="result-line">Total de torneiras: ${d.aptos} aptos × ${d.total_torneiras_geral / d.aptos} = ${d.total_torneiras_geral}</div>
+            <div class="result-line">Total aparelhos = ${d.total_chuveiros_geral} + ${d.total_torneiras_geral} = ${d.total_aparelhos}</div>
+            <div class="result-line">FD (Tabela 2): para ${d.total_aparelhos} aparelhos = ${d.f_ch}</div>
+            <br>
+            <div class="result-line">Chuveiros: ${d.aptos} × ${d.total_chuveiros_geral / d.aptos} × ${(d.chuveiros_contrib / (d.f_ch * d.aptos * (d.total_chuveiros_geral / d.aptos))).toFixed(1)} kW × ${d.f_ch}</div>
+            <div class="result-line">Contribuição = <span class="value">${d.chuveiros_contrib.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line">Torneiras: ${d.aptos} × ${d.total_torneiras_geral / d.aptos} × ${(d.torneiras_contrib / (d.f_ch * d.aptos * (d.total_torneiras_geral / d.aptos))).toFixed(1)} kW × ${d.f_ch}</div>
+            <div class="result-line">Contribuição = <span class="value">${d.torneiras_contrib.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="highlight">D2 = ${d.chuveiros_contrib.toFixed(2)} + ${d.torneiras_contrib.toFixed(2)} = ${d.D2.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title gold">3 - Motores (Item 5.3 - GED-119)</div>
+            <div class="result-line">Fórmula: D3 = Maior motor × 1,0 + (Restante) × 0,5</div>
+            <br>
+            ${motoresHtml}
+            <br>
+            <div class="result-line">Total potência motores = ${d.total_motores_kva.toFixed(2)} kVA</div>
+            <div class="result-line">Maior motor = ${d.maior_motor_kva.toFixed(2)} kVA</div>
+            <div class="result-line">Restante = ${d.total_motores_kva.toFixed(2)} - ${d.maior_motor_kva.toFixed(2)} = ${d.restantes_kva.toFixed(2)} kVA</div>
+            <br>
+            <div class="result-line"><span class="highlight">D3 = ${d.maior_motor_kva.toFixed(2)} × 1,0 + ${d.restantes_kva.toFixed(2)} × 0,5 = ${d.D3.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title blue">4 - Demanda Geral (Item 5.4 - GED-119)</div>
+            <div class="result-line">Fórmula: Dg = Dapt + Dadm</div>
+            <br>
+            <div class="result-line">Dapt = (D1a + D2) × Fator de Simultaneidade</div>
+            <div class="result-line">Dadm = D1b + D3</div>
+            <br>
+            <div class="result-line">Fator de simultaneidade (Tabela 7): para ${d.aptos} apartamentos = ${d.f_sim}</div>
+            <br>
+            <div class="result-line">Dapt = (${d.D1a.toFixed(2)} + ${d.D2.toFixed(2)}) × ${d.f_sim}</div>
+            <div class="result-line">Dapt = ${(d.D1a + d.D2).toFixed(2)} × ${d.f_sim} = <span class="value">${d.Dapt.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line">Dadm = ${d.D1b.toFixed(2)} + ${d.D3.toFixed(2)} = <span class="value">${d.Dadm.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="highlight">Dg = ${d.Dapt.toFixed(2)} + ${d.Dadm.toFixed(2)} = ${d.Dg.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-final">
+            <div class="label">Demanda Geral (Dg)</div>
+            <div class="value">${d.Dg.toFixed(2)} kVA</div>
+        </div>
+
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div class="card" style="padding:12px;background:var(--bg-hover);">
+                <div style="font-size:11px;color:var(--text-muted);">D1 (Iluminação)</div>
+                <div style="font-size:18px;font-weight:700;color:var(--accent);">${d.D1.toFixed(2)}</div>
+            </div>
+            <div class="card" style="padding:12px;background:var(--bg-hover);">
+                <div style="font-size:11px;color:var(--text-muted);">D2 (Aparelhos)</div>
+                <div style="font-size:18px;font-weight:700;color:var(--purple);">${d.D2.toFixed(2)}</div>
+            </div>
+            <div class="card" style="padding:12px;background:var(--bg-hover);">
+                <div style="font-size:11px;color:var(--text-muted);">D3 (Motores)</div>
+                <div style="font-size:18px;font-weight:700;color:var(--warning);">${d.D3.toFixed(2)}</div>
+            </div>
+            <div class="card" style="padding:12px;background:var(--bg-hover);">
+                <div style="font-size:11px;color:var(--text-muted);">Dg (Total)</div>
+                <div style="font-size:18px;font-weight:700;color:var(--success);">${d.Dg.toFixed(2)}</div>
+            </div>
+        </div>
+    `;
+    content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+{% endblock %}
