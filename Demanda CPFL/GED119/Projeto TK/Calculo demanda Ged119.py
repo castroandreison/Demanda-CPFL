@@ -49,11 +49,27 @@ CREATE TABLE IF NOT EXISTS motores_projeto (
 )
 """)
 
+cursor_proj.execute("""
+CREATE TABLE IF NOT EXISTS outras_cargas_projeto (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    projeto_id INTEGER,
+    tipo TEXT,
+    descricao TEXT,
+    potencia REAL,
+    quantidade INTEGER,
+    FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE
+)
+""")
+
 for col in ("chuveiros_adm", "torneiras_adm", "secar_kw", "lavar_kw", "secar_apto", "lavar_apto"):
     try:
         cursor_proj.execute(f"ALTER TABLE projetos ADD COLUMN {col} REAL DEFAULT 0")
     except sqlite3.OperationalError:
         pass
+try:
+    cursor_proj.execute("ALTER TABLE projetos ADD COLUMN tipo TEXT DEFAULT 'Residencial'")
+except sqlite3.OperationalError:
+    pass
 conn_proj.commit()
 
 # -----------------------------------
@@ -129,6 +145,8 @@ def fator_simultaneidade(qtd):
 # -----------------------------------
 
 motores = []
+outras_cargas_apt = []
+outras_cargas_adm = []
 current_projeto_id = None
 ultimo_Dg = None
 
@@ -203,6 +221,148 @@ def carregar_motor_selecionado(event):
         entry_cv.insert(0, valores[0])
         entry_qtd_motor.delete(0, tk.END)
         entry_qtd_motor.insert(0, valores[1])
+
+# -----------------------------------
+# FUNÇÕES OUTRAS CARGAS - APARTAMENTOS
+# -----------------------------------
+
+def atualizar_tabela_cargas_apt():
+    lista_cargas_apt.delete(*lista_cargas_apt.get_children())
+    for desc, pot, qtd in outras_cargas_apt:
+        lista_cargas_apt.insert("", "end", values=(desc, pot, qtd))
+
+def adicionar_carga_apt():
+    desc = entry_desc_carga_apt.get().strip()
+    try:
+        pot = float(entry_pot_carga_apt.get())
+        qtd = int(entry_qtd_carga_apt.get())
+        if not desc or pot <= 0 or qtd <= 0:
+            raise ValueError
+        outras_cargas_apt.append((desc, pot, qtd))
+        atualizar_tabela_cargas_apt()
+        entry_desc_carga_apt.delete(0, tk.END)
+        entry_pot_carga_apt.delete(0, tk.END)
+        entry_qtd_carga_apt.delete(0, tk.END)
+        entry_desc_carga_apt.focus()
+    except:
+        messagebox.showerror("Erro", "Descricao, Potencia (>0) e Quantidade (>0) sao obrigatorios!")
+
+def excluir_carga_apt():
+    selecionado = lista_cargas_apt.selection()
+    if not selecionado:
+        messagebox.showwarning("Aviso", "Selecione uma carga para excluir!")
+        return
+    item = selecionado[0]
+    valores = lista_cargas_apt.item(item)["values"]
+    if messagebox.askyesno("Confirmar", f"Excluir '{valores[0]}' ({valores[1]} kW x {valores[2]})?"):
+        idx = lista_cargas_apt.index(item)
+        outras_cargas_apt.pop(idx)
+        atualizar_tabela_cargas_apt()
+        entry_desc_carga_apt.delete(0, tk.END)
+        entry_pot_carga_apt.delete(0, tk.END)
+        entry_qtd_carga_apt.delete(0, tk.END)
+        entry_desc_carga_apt.focus()
+
+def editar_carga_apt():
+    selecionado = lista_cargas_apt.selection()
+    if not selecionado:
+        messagebox.showwarning("Aviso", "Selecione uma carga para editar!")
+        return
+    item = selecionado[0]
+    valores = lista_cargas_apt.item(item)["values"]
+    idx = lista_cargas_apt.index(item)
+    entry_desc_carga_apt.delete(0, tk.END)
+    entry_desc_carga_apt.insert(0, valores[0])
+    entry_pot_carga_apt.delete(0, tk.END)
+    entry_pot_carga_apt.insert(0, valores[1])
+    entry_qtd_carga_apt.delete(0, tk.END)
+    entry_qtd_carga_apt.insert(0, valores[2])
+    outras_cargas_apt.pop(idx)
+    atualizar_tabela_cargas_apt()
+    entry_desc_carga_apt.focus()
+
+def carregar_carga_selecionada_apt(event):
+    selecionado = lista_cargas_apt.selection()
+    if selecionado:
+        item = selecionado[0]
+        valores = lista_cargas_apt.item(item)["values"]
+        entry_desc_carga_apt.delete(0, tk.END)
+        entry_desc_carga_apt.insert(0, valores[0])
+        entry_pot_carga_apt.delete(0, tk.END)
+        entry_pot_carga_apt.insert(0, valores[1])
+        entry_qtd_carga_apt.delete(0, tk.END)
+        entry_qtd_carga_apt.insert(0, valores[2])
+
+# -----------------------------------
+# FUNÇÕES OUTRAS CARGAS - ADMINISTRAÇÃO
+# -----------------------------------
+
+def atualizar_tabela_cargas_adm():
+    lista_cargas_adm.delete(*lista_cargas_adm.get_children())
+    for desc, pot, qtd in outras_cargas_adm:
+        lista_cargas_adm.insert("", "end", values=(desc, pot, qtd))
+
+def adicionar_carga_adm():
+    desc = entry_desc_carga_adm.get().strip()
+    try:
+        pot = float(entry_pot_carga_adm.get())
+        qtd = int(entry_qtd_carga_adm.get())
+        if not desc or pot <= 0 or qtd <= 0:
+            raise ValueError
+        outras_cargas_adm.append((desc, pot, qtd))
+        atualizar_tabela_cargas_adm()
+        entry_desc_carga_adm.delete(0, tk.END)
+        entry_pot_carga_adm.delete(0, tk.END)
+        entry_qtd_carga_adm.delete(0, tk.END)
+        entry_desc_carga_adm.focus()
+    except:
+        messagebox.showerror("Erro", "Descricao, Potencia (>0) e Quantidade (>0) sao obrigatorios!")
+
+def excluir_carga_adm():
+    selecionado = lista_cargas_adm.selection()
+    if not selecionado:
+        messagebox.showwarning("Aviso", "Selecione uma carga para excluir!")
+        return
+    item = selecionado[0]
+    valores = lista_cargas_adm.item(item)["values"]
+    if messagebox.askyesno("Confirmar", f"Excluir '{valores[0]}' ({valores[1]} kW x {valores[2]})?"):
+        idx = lista_cargas_adm.index(item)
+        outras_cargas_adm.pop(idx)
+        atualizar_tabela_cargas_adm()
+        entry_desc_carga_adm.delete(0, tk.END)
+        entry_pot_carga_adm.delete(0, tk.END)
+        entry_qtd_carga_adm.delete(0, tk.END)
+        entry_desc_carga_adm.focus()
+
+def editar_carga_adm():
+    selecionado = lista_cargas_adm.selection()
+    if not selecionado:
+        messagebox.showwarning("Aviso", "Selecione uma carga para editar!")
+        return
+    item = selecionado[0]
+    valores = lista_cargas_adm.item(item)["values"]
+    idx = lista_cargas_adm.index(item)
+    entry_desc_carga_adm.delete(0, tk.END)
+    entry_desc_carga_adm.insert(0, valores[0])
+    entry_pot_carga_adm.delete(0, tk.END)
+    entry_pot_carga_adm.insert(0, valores[1])
+    entry_qtd_carga_adm.delete(0, tk.END)
+    entry_qtd_carga_adm.insert(0, valores[2])
+    outras_cargas_adm.pop(idx)
+    atualizar_tabela_cargas_adm()
+    entry_desc_carga_adm.focus()
+
+def carregar_carga_selecionada_adm(event):
+    selecionado = lista_cargas_adm.selection()
+    if selecionado:
+        item = selecionado[0]
+        valores = lista_cargas_adm.item(item)["values"]
+        entry_desc_carga_adm.delete(0, tk.END)
+        entry_desc_carga_adm.insert(0, valores[0])
+        entry_pot_carga_adm.delete(0, tk.END)
+        entry_pot_carga_adm.insert(0, valores[1])
+        entry_qtd_carga_adm.delete(0, tk.END)
+        entry_qtd_carga_adm.insert(0, valores[2])
 
 # -----------------------------------
 # CÁLCULO PRINCIPAL
@@ -478,6 +638,7 @@ def salvar_projeto():
         secar_apto = vazio_zero(entry_secar_apto, int)
         lavar_kw = vazio_zero(entry_lavar_kw, float)
         lavar_apto = vazio_zero(entry_lavar_apto, int)
+        tipo = combo_tipo_edificio.get()
     except ValueError:
         messagebox.showerror("Erro", "Verifique os dados inseridos!")
         return
@@ -491,12 +652,12 @@ def salvar_projeto():
             nome=?, aptos=?, area_apto=?, area_adm=?, iluminacao=?, tomadas=?,
             chuveiro_kw=?, torneira_kw=?, chuveiros_apto=?, torneiras_apto=?,
             chuveiros_adm=?, torneiras_adm=?,
-            secar_kw=?, secar_apto=?, lavar_kw=?, lavar_apto=?
+            secar_kw=?, secar_apto=?, lavar_kw=?, lavar_apto=?, tipo=?
             WHERE id=?
         """, (nome, aptos, area_apto, area_adm, iluminacao, tomadas,
               chuveiro_kw, torneira_kw, chuveiros_apto, torneiras_apto,
               chuveiros_adm, torneiras_adm,
-              secar_kw, secar_apto, lavar_kw, lavar_apto,
+              secar_kw, secar_apto, lavar_kw, lavar_apto, tipo,
               projeto_id))
     else:
         cursor_proj.execute("""
@@ -504,12 +665,12 @@ def salvar_projeto():
             (nome, aptos, area_apto, area_adm, iluminacao, tomadas,
              chuveiro_kw, torneira_kw, chuveiros_apto, torneiras_apto,
              chuveiros_adm, torneiras_adm,
-             secar_kw, secar_apto, lavar_kw, lavar_apto)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             secar_kw, secar_apto, lavar_kw, lavar_apto, tipo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (nome, aptos, area_apto, area_adm, iluminacao, tomadas,
               chuveiro_kw, torneira_kw, chuveiros_apto, torneiras_apto,
               chuveiros_adm, torneiras_adm,
-              secar_kw, secar_apto, lavar_kw, lavar_apto))
+              secar_kw, secar_apto, lavar_kw, lavar_apto, tipo))
         projeto_id = cursor_proj.lastrowid
     current_projeto_id = projeto_id
     conn_proj.commit()
@@ -520,6 +681,18 @@ def salvar_projeto():
             INSERT INTO motores_projeto (projeto_id, cv, quantidade)
             VALUES (?, ?, ?)
         """, (projeto_id, cv, qtd))
+
+    cursor_proj.execute("DELETE FROM outras_cargas_projeto WHERE projeto_id = ?", (projeto_id,))
+    for desc, pot, qtd in outras_cargas_apt:
+        cursor_proj.execute("""
+            INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade)
+            VALUES (?, 'apt', ?, ?, ?)
+        """, (projeto_id, desc, pot, qtd))
+    for desc, pot, qtd in outras_cargas_adm:
+        cursor_proj.execute("""
+            INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade)
+            VALUES (?, 'adm', ?, ?, ?)
+        """, (projeto_id, desc, pot, qtd))
     conn_proj.commit()
 
     listar_projetos()
@@ -563,11 +736,35 @@ def carregar_projeto():
     entry_secar_apto.delete(0, tk.END); entry_secar_apto.insert(0, proj[16] if len(proj) > 16 else 0)
     entry_lavar_apto.delete(0, tk.END); entry_lavar_apto.insert(0, proj[17] if len(proj) > 17 else 0)
 
+    tipo_carregado = proj[18] if len(proj) > 18 and proj[18] else "Residencial"
+    if tipo_carregado in combo_tipo_edificio["values"]:
+        combo_tipo_edificio.set(tipo_carregado)
+    else:
+        combo_tipo_edificio.current(0)
+
     motores.clear()
     cursor_proj.execute("SELECT cv, quantidade FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
     for cv, qtd in cursor_proj.fetchall():
         motores.append((cv, qtd))
     atualizar_tabela_motores()
+
+    outras_cargas_apt.clear()
+    cursor_proj.execute(
+        "SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'apt'",
+        (projeto_id,)
+    )
+    for desc, pot, qtd in cursor_proj.fetchall():
+        outras_cargas_apt.append((desc, pot, qtd))
+    atualizar_tabela_cargas_apt()
+
+    outras_cargas_adm.clear()
+    cursor_proj.execute(
+        "SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'adm'",
+        (projeto_id,)
+    )
+    for desc, pot, qtd in cursor_proj.fetchall():
+        outras_cargas_adm.append((desc, pot, qtd))
+    atualizar_tabela_cargas_adm()
 
     notebook.select(aba1_container)
     messagebox.showinfo("Sucesso", f"Projeto '{proj[1]}' carregado!")
@@ -586,6 +783,7 @@ def excluir_projeto():
 
     if messagebox.askyesno("Confirmar", f"Excluir o projeto '{nome}'?"):
         cursor_proj.execute("DELETE FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
+        cursor_proj.execute("DELETE FROM outras_cargas_projeto WHERE projeto_id = ?", (projeto_id,))
         cursor_proj.execute("DELETE FROM projetos WHERE id = ?", (projeto_id,))
         conn_proj.commit()
         listar_projetos()
@@ -611,8 +809,13 @@ def novo_projeto():
     entry_secar_apto.delete(0, tk.END)
     entry_lavar_kw.delete(0, tk.END)
     entry_lavar_apto.delete(0, tk.END)
+    combo_tipo_edificio.current(0)
     motores.clear()
     atualizar_tabela_motores()
+    outras_cargas_apt.clear()
+    atualizar_tabela_cargas_apt()
+    outras_cargas_adm.clear()
+    atualizar_tabela_cargas_adm()
     entry_nome_projeto.focus()
 
 
@@ -671,6 +874,19 @@ def calcular_transformador():
         txt_transf.insert(tk.END, "=" * 60 + "\n")
         txt_transf.insert(tk.END, "  DIMENSIONAMENTO DO TRANSFORMADOR\n")
         txt_transf.insert(tk.END, "=" * 60 + "\n\n")
+
+        tipo_ed = combo_tipo_edificio.get()
+        limite = 400 if tipo_ed == "Residencial" else 300
+        txt_transf.insert(tk.END, "REGRA 7.3 - Limite de Atendimento\n")
+        txt_transf.insert(tk.END, f"  Tipo do Edifício: {tipo_ed}\n")
+        txt_transf.insert(tk.END, f"  Demanda Geral (Dg): {ultimo_Dg:.2f} kVA\n")
+        txt_transf.insert(tk.END, f"  Limite para BT: {limite} kVA\n")
+        if ultimo_Dg > limite:
+            txt_transf.insert(tk.END, f"  >>> ATENÇÃO: Dg > {limite} kVA - Alimentação pela rede primária (GED-2855) <<<\n")
+            txt_transf.insert(tk.END, f"  >>> Consulte a aba 'Rede Primária | Demanda > 300/400 kVA' <<<\n")
+        else:
+            txt_transf.insert(tk.END, f"  OK - Demanda dentro do limite para atendimento em BT.\n")
+        txt_transf.insert(tk.END, "\n")
 
         txt_transf.insert(tk.END, f"Demanda Geral (Dg): {ultimo_Dg:.2f} kVA\n")
         txt_transf.insert(tk.END, f"Tensão: {tensao_opcao}\n")
@@ -854,206 +1070,13 @@ notebook = ttk.Notebook(janela)
 notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
 # -----------------------------------
-# ABA 1 - DADOS
+# ABA 1 - GERENCIAMENTO DE PROJETOS
 # -----------------------------------
 
-aba1_container = ttk.Frame(notebook)
-notebook.add(aba1_container, text="Dados do Edifício")
+aba_proj = ttk.Frame(notebook)
+notebook.add(aba_proj, text="Gerenciamento de Projetos")
 
-canvas1 = tk.Canvas(aba1_container, highlightthickness=0, width=860)
-scroll1 = ttk.Scrollbar(aba1_container, orient="vertical", command=canvas1.yview)
-aba1 = ttk.Frame(canvas1, padding=5)
-
-def _config_inner(event):
-    canvas1.configure(scrollregion=canvas1.bbox("all"))
-    canvas1.itemconfig(inner_id, width=canvas1.winfo_width())
-
-aba1.bind("<Configure>", _config_inner)
-inner_id = canvas1.create_window((0, 0), window=aba1, anchor="nw")
-canvas1.configure(yscrollcommand=scroll1.set)
-
-canvas1.pack(side="left", fill="both", expand=True)
-scroll1.pack(side="right", fill="y")
-
-def _on_mousewheel(event):
-    canvas1.yview_scroll(int(-1 * (event.delta / 120)), "units")
-canvas1.bind("<MouseWheel>", _on_mousewheel)
-
-aba1_container.rowconfigure(0, weight=1)
-aba1_container.columnconfigure(0, weight=1)
-
-# --- Grupo: Edifício ---
-frame_edificio = ttk.LabelFrame(aba1, text="Edifício", padding=10)
-frame_edificio.pack(fill="x", padx=10, pady=10)
-
-ttk.Label(frame_edificio, text="Nº de Apartamentos:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
-entry_aptos = ttk.Entry(frame_edificio, width=15)
-entry_aptos.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(frame_edificio, text="Área do Apartamento (m²):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
-entry_area_apto = ttk.Entry(frame_edificio, width=15)
-entry_area_apto.grid(row=1, column=1, padx=5, pady=5)
-
-ttk.Label(frame_edificio, text="Área Administrativa (m²):").grid(row=2, column=0, padx=5, pady=5, sticky="e")
-entry_area_adm = ttk.Entry(frame_edificio, width=15)
-entry_area_adm.grid(row=2, column=1, padx=5, pady=5)
-
-# --- Grupo: Cargas ---
-frame_cargas = ttk.LabelFrame(aba1, text="Cargas de Iluminação e Tomadas", padding=10)
-frame_cargas.pack(fill="x", padx=10, pady=10)
-
-ttk.Label(frame_cargas, text="Iluminação (W):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
-entry_iluminacao = ttk.Entry(frame_cargas, width=15)
-entry_iluminacao.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(frame_cargas, text="Tomadas (W):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
-entry_tomadas = ttk.Entry(frame_cargas, width=15)
-entry_tomadas.grid(row=1, column=1, padx=5, pady=5)
-
-# --- Grupo: Aparelhos ---
-frame_aparelhos = ttk.LabelFrame(aba1, text="Aparelhos (por apartamento)", padding=10)
-frame_aparelhos.pack(fill="x", padx=10, pady=10)
-
-ttk.Label(frame_aparelhos, text="Potência do Chuveiro (kW):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
-entry_chuveiro = ttk.Entry(frame_aparelhos, width=15)
-entry_chuveiro.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(frame_aparelhos, text="Potência da Torneira (kW):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
-entry_torneira = ttk.Entry(frame_aparelhos, width=15)
-entry_torneira.grid(row=1, column=1, padx=5, pady=5)
-
-ttk.Label(frame_aparelhos, text="Qtd. de Chuveiros por apto:").grid(row=2, column=0, padx=5, pady=5, sticky="e")
-entry_qtd_chuveiros = ttk.Entry(frame_aparelhos, width=15)
-entry_qtd_chuveiros.grid(row=2, column=1, padx=5, pady=5)
-
-ttk.Label(frame_aparelhos, text="Qtd. de Torneiras por apto:").grid(row=3, column=0, padx=5, pady=5, sticky="e")
-entry_qtd_torneiras = ttk.Entry(frame_aparelhos, width=15)
-entry_qtd_torneiras.grid(row=3, column=1, padx=5, pady=5)
-
-# --- Grupo: Aparelhos (Administração) ---
-frame_aparelhos_adm = ttk.LabelFrame(aba1, text="Aparelhos (administração)", padding=10)
-frame_aparelhos_adm.pack(fill="x", padx=10, pady=10)
-
-ttk.Label(frame_aparelhos_adm, text="Qtd. de Chuveiros:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
-entry_qtd_chuveiros_adm = ttk.Entry(frame_aparelhos_adm, width=15)
-entry_qtd_chuveiros_adm.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(frame_aparelhos_adm, text="Qtd. de Torneiras:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
-entry_qtd_torneiras_adm = ttk.Entry(frame_aparelhos_adm, width=15)
-entry_qtd_torneiras_adm.grid(row=1, column=1, padx=5, pady=5)
-
-# --- Grupo: Eletrodomésticos (por apartamento) ---
-frame_eletro = ttk.LabelFrame(aba1, text="Eletrodomésticos (por apartamento)", padding=10)
-frame_eletro.pack(fill="x", padx=10, pady=10)
-
-ttk.Label(frame_eletro, text="Pot. Máq. Secar Roupa (kW):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
-entry_secar_kw = ttk.Entry(frame_eletro, width=15)
-entry_secar_kw.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(frame_eletro, text="Qtd. por apto:").grid(row=0, column=2, padx=5, pady=5, sticky="e")
-entry_secar_apto = ttk.Entry(frame_eletro, width=15)
-entry_secar_apto.grid(row=0, column=3, padx=5, pady=5)
-
-ttk.Label(frame_eletro, text="Pot. Máq. Lavar Louça (kW):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
-entry_lavar_kw = ttk.Entry(frame_eletro, width=15)
-entry_lavar_kw.grid(row=1, column=1, padx=5, pady=5)
-
-ttk.Label(frame_eletro, text="Qtd. por apto:").grid(row=1, column=2, padx=5, pady=5, sticky="e")
-entry_lavar_apto = ttk.Entry(frame_eletro, width=15)
-entry_lavar_apto.grid(row=1, column=3, padx=5, pady=5)
-
-# -----------------------------------
-# ABA 2 - MOTORES
-# -----------------------------------
-
-aba2 = ttk.Frame(notebook)
-notebook.add(aba2, text="Motores")
-
-# Frame de entrada
-frame_motor_input = ttk.LabelFrame(aba2, text="Adicionar / Editar Motor", padding=10)
-frame_motor_input.pack(fill="x", padx=10, pady=10)
-
-ttk.Label(frame_motor_input, text="Potência (CV):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
-entry_cv = ttk.Entry(frame_motor_input, width=12)
-entry_cv.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(frame_motor_input, text="Quantidade:").grid(row=0, column=2, padx=5, pady=5, sticky="e")
-entry_qtd_motor = ttk.Entry(frame_motor_input, width=12)
-entry_qtd_motor.grid(row=0, column=3, padx=5, pady=5)
-
-frame_botoes = ttk.Frame(frame_motor_input)
-frame_botoes.grid(row=0, column=4, padx=10, pady=5)
-
-btn_add = ttk.Button(frame_botoes, text="Adicionar", command=adicionar_motor)
-btn_add.pack(side="left", padx=2)
-
-btn_edit = ttk.Button(frame_botoes, text="Editar", command=editar_motor)
-btn_edit.pack(side="left", padx=2)
-
-btn_del = ttk.Button(frame_botoes, text="Excluir", command=excluir_motor)
-btn_del.pack(side="left", padx=2)
-
-# Frame para tabela
-frame_tabela_motor = ttk.LabelFrame(aba2, text="Motores Cadastrados", padding=5)
-frame_tabela_motor.pack(fill="both", expand=True, padx=10, pady=10)
-
-aba2.rowconfigure(1, weight=1)
-aba2.columnconfigure(0, weight=1)
-
-scroll_motor = ttk.Scrollbar(frame_tabela_motor, orient="vertical")
-lista_motores = ttk.Treeview(
-    frame_tabela_motor,
-    columns=("cv", "qtd"),
-    show="headings",
-    yscrollcommand=scroll_motor.set
-)
-scroll_motor.config(command=lista_motores.yview)
-
-lista_motores.heading("cv", text="Potência (CV)")
-lista_motores.heading("qtd", text="Quantidade")
-
-lista_motores.column("cv", width=150, anchor="center")
-lista_motores.column("qtd", width=150, anchor="center")
-
-lista_motores.pack(side="left", fill="both", expand=True)
-scroll_motor.pack(side="right", fill="y")
-
-lista_motores.bind("<<TreeviewSelect>>", carregar_motor_selecionado)
-
-# -----------------------------------
-# ABA 3 - RESULTADO
-# -----------------------------------
-
-aba3 = ttk.Frame(notebook)
-notebook.add(aba3, text="Resultado")
-
-frame_resultado = ttk.LabelFrame(aba3, text="Memorial de Cálculo", padding=10)
-frame_resultado.pack(fill="both", expand=True, padx=10, pady=10)
-
-btn_calc = ttk.Button(frame_resultado, text="Calcular Demanda", command=calcular)
-btn_calc.pack(pady=10)
-
-scroll_resultado = ttk.Scrollbar(frame_resultado, orient="vertical")
-txt_resultado = tk.Text(
-    frame_resultado,
-    height=20,
-    font=("Consolas", 10),
-    yscrollcommand=scroll_resultado.set
-)
-scroll_resultado.config(command=txt_resultado.yview)
-
-txt_resultado.pack(side="left", fill="both", expand=True)
-scroll_resultado.pack(side="right", fill="y")
-
-# -----------------------------------
-# ABA 4 - GERENCIAMENTO DE PROJETOS
-# -----------------------------------
-
-aba4 = ttk.Frame(notebook)
-notebook.add(aba4, text="Gerenciamento de Projetos")
-
-# Frame nome do projeto
-frame_proj_nome = ttk.LabelFrame(aba4, text="Projeto", padding=10)
+frame_proj_nome = ttk.LabelFrame(aba_proj, text="Projeto", padding=10)
 frame_proj_nome.pack(fill="x", padx=10, pady=10)
 
 ttk.Label(frame_proj_nome, text="Nome do Projeto:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
@@ -1076,12 +1099,11 @@ btn_carregar.pack(side="left", padx=2)
 btn_excluir = ttk.Button(frame_botoes_proj, text="Excluir", command=excluir_projeto)
 btn_excluir.pack(side="left", padx=2)
 
-# Frame lista de projetos
-frame_lista_proj = ttk.LabelFrame(aba4, text="Projetos Salvos", padding=5)
+frame_lista_proj = ttk.LabelFrame(aba_proj, text="Projetos Salvos", padding=5)
 frame_lista_proj.pack(fill="both", expand=True, padx=10, pady=10)
 
-aba4.rowconfigure(1, weight=1)
-aba4.columnconfigure(0, weight=1)
+aba_proj.rowconfigure(1, weight=1)
+aba_proj.columnconfigure(0, weight=1)
 
 scroll_proj = ttk.Scrollbar(frame_lista_proj, orient="vertical")
 lista_projetos = ttk.Treeview(
@@ -1108,36 +1130,340 @@ scroll_proj.pack(side="right", fill="y")
 listar_projetos()
 
 # -----------------------------------
-# ABA 5 - CALCULAR TRANSFORMADOR
+# ABA 2 - DADOS DO EDIFÍCIO
 # -----------------------------------
 
-aba5 = ttk.Frame(notebook)
-notebook.add(aba5, text="Calcular Transformador")
+aba_edificio = ttk.Frame(notebook)
+notebook.add(aba_edificio, text="Dados do Edifício")
 
-canvas5 = tk.Canvas(aba5, highlightthickness=0, width=860)
-scroll5 = ttk.Scrollbar(aba5, orient="vertical", command=canvas5.yview)
-aba5_inner = ttk.Frame(canvas5, padding=5)
+frame_edificio = ttk.LabelFrame(aba_edificio, text="Edifício", padding=10)
+frame_edificio.pack(fill="x", padx=10, pady=10)
 
-def _config_inner5(event):
-    canvas5.configure(scrollregion=canvas5.bbox("all"))
-    canvas5.itemconfig(inner5_id, width=canvas5.winfo_width())
+ttk.Label(frame_edificio, text="Nº de Apartamentos:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_aptos = ttk.Entry(frame_edificio, width=15)
+entry_aptos.grid(row=0, column=1, padx=5, pady=5)
 
-aba5_inner.bind("<Configure>", _config_inner5)
-inner5_id = canvas5.create_window((0, 0), window=aba5_inner, anchor="nw")
-canvas5.configure(yscrollcommand=scroll5.set)
+ttk.Label(frame_edificio, text="Área do Apartamento (m²):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_area_apto = ttk.Entry(frame_edificio, width=15)
+entry_area_apto.grid(row=1, column=1, padx=5, pady=5)
 
-canvas5.pack(side="left", fill="both", expand=True)
-scroll5.pack(side="right", fill="y")
+ttk.Label(frame_edificio, text="Área Administrativa (m²):").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+entry_area_adm = ttk.Entry(frame_edificio, width=15)
+entry_area_adm.grid(row=2, column=1, padx=5, pady=5)
 
-def _on_mousewheel5(event):
-    canvas5.yview_scroll(int(-1 * (event.delta / 120)), "units")
-canvas5.bind("<MouseWheel>", _on_mousewheel5)
+ttk.Label(frame_edificio, text="Tipo de Edifício:").grid(row=3, column=0, padx=5, pady=5, sticky="e")
+combo_tipo_edificio = ttk.Combobox(frame_edificio, values=["Residencial", "Comercial", "Misto"], state="readonly", width=20)
+combo_tipo_edificio.grid(row=3, column=1, padx=5, pady=5, sticky="w")
+combo_tipo_edificio.current(0)
 
-aba5.rowconfigure(0, weight=1)
-aba5.columnconfigure(0, weight=1)
+# -----------------------------------
+# ABA 3 - ILUMINAÇÃO E TOMADAS
+# -----------------------------------
 
-# --- Frame: Dados de Entrada ---
-frame_dados_transf = ttk.LabelFrame(aba5_inner, text="Dados de Entrada", padding=10)
+aba_cargas = ttk.Frame(notebook)
+notebook.add(aba_cargas, text="Iluminação e Tomadas")
+
+frame_cargas = ttk.LabelFrame(aba_cargas, text="Cargas de Iluminação e Tomadas", padding=10)
+frame_cargas.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_cargas, text="Iluminação (W):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_iluminacao = ttk.Entry(frame_cargas, width=15)
+entry_iluminacao.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_cargas, text="Tomadas (W):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_tomadas = ttk.Entry(frame_cargas, width=15)
+entry_tomadas.grid(row=1, column=1, padx=5, pady=5)
+
+# -----------------------------------
+# ABA 4 - APARTAMENTOS
+# -----------------------------------
+
+aba_aptos = ttk.Frame(notebook)
+notebook.add(aba_aptos, text="Apartamentos")
+
+frame_aparelhos = ttk.LabelFrame(aba_aptos, text="Aparelhos (por apartamento)", padding=10)
+frame_aparelhos.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_aparelhos, text="Potência do Chuveiro (kW):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_chuveiro = ttk.Entry(frame_aparelhos, width=15)
+entry_chuveiro.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_aparelhos, text="Potência da Torneira (kW):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_torneira = ttk.Entry(frame_aparelhos, width=15)
+entry_torneira.grid(row=1, column=1, padx=5, pady=5)
+
+ttk.Label(frame_aparelhos, text="Qtd. de Chuveiros por apto:").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+entry_qtd_chuveiros = ttk.Entry(frame_aparelhos, width=15)
+entry_qtd_chuveiros.grid(row=2, column=1, padx=5, pady=5)
+
+ttk.Label(frame_aparelhos, text="Qtd. de Torneiras por apto:").grid(row=3, column=0, padx=5, pady=5, sticky="e")
+entry_qtd_torneiras = ttk.Entry(frame_aparelhos, width=15)
+entry_qtd_torneiras.grid(row=3, column=1, padx=5, pady=5)
+
+frame_eletro = ttk.LabelFrame(aba_aptos, text="Eletrodomésticos (por apartamento)", padding=10)
+frame_eletro.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_eletro, text="Pot. Máq. Secar Roupa (kW):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_secar_kw = ttk.Entry(frame_eletro, width=15)
+entry_secar_kw.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_eletro, text="Qtd. por apto:").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+entry_secar_apto = ttk.Entry(frame_eletro, width=15)
+entry_secar_apto.grid(row=0, column=3, padx=5, pady=5)
+
+ttk.Label(frame_eletro, text="Pot. Máq. Lavar Louça (kW):").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_lavar_kw = ttk.Entry(frame_eletro, width=15)
+entry_lavar_kw.grid(row=1, column=1, padx=5, pady=5)
+
+ttk.Label(frame_eletro, text="Qtd. por apto:").grid(row=1, column=2, padx=5, pady=5, sticky="e")
+entry_lavar_apto = ttk.Entry(frame_eletro, width=15)
+entry_lavar_apto.grid(row=1, column=3, padx=5, pady=5)
+
+frame_outras_apt = ttk.LabelFrame(aba_aptos, text="Outras Cargas (por apartamento)", padding=10)
+frame_outras_apt.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_outras_apt, text="Descricao:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_desc_carga_apt = ttk.Entry(frame_outras_apt, width=20)
+entry_desc_carga_apt.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_outras_apt, text="Potencia (kW):").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+entry_pot_carga_apt = ttk.Entry(frame_outras_apt, width=12)
+entry_pot_carga_apt.grid(row=0, column=3, padx=5, pady=5)
+
+ttk.Label(frame_outras_apt, text="Quantidade:").grid(row=0, column=4, padx=5, pady=5, sticky="e")
+entry_qtd_carga_apt = ttk.Entry(frame_outras_apt, width=12)
+entry_qtd_carga_apt.grid(row=0, column=5, padx=5, pady=5)
+
+frame_botoes_outras_apt = ttk.Frame(frame_outras_apt)
+frame_botoes_outras_apt.grid(row=0, column=6, padx=10, pady=5)
+
+btn_add_carga_apt = ttk.Button(frame_botoes_outras_apt, text="Adicionar", command=adicionar_carga_apt)
+btn_add_carga_apt.pack(side="left", padx=2)
+
+btn_edit_carga_apt = ttk.Button(frame_botoes_outras_apt, text="Editar", command=editar_carga_apt)
+btn_edit_carga_apt.pack(side="left", padx=2)
+
+btn_del_carga_apt = ttk.Button(frame_botoes_outras_apt, text="Excluir", command=excluir_carga_apt)
+btn_del_carga_apt.pack(side="left", padx=2)
+
+frame_tabela_cargas_apt = ttk.LabelFrame(aba_aptos, text="Cargas Cadastradas", padding=5)
+frame_tabela_cargas_apt.pack(fill="both", expand=True, padx=10, pady=10)
+
+aba_aptos.rowconfigure(2, weight=1)
+aba_aptos.columnconfigure(0, weight=1)
+
+scroll_cargas_apt = ttk.Scrollbar(frame_tabela_cargas_apt, orient="vertical")
+lista_cargas_apt = ttk.Treeview(
+    frame_tabela_cargas_apt,
+    columns=("desc", "pot", "qtd"),
+    show="headings",
+    yscrollcommand=scroll_cargas_apt.set
+)
+scroll_cargas_apt.config(command=lista_cargas_apt.yview)
+
+lista_cargas_apt.heading("desc", text="Descricao")
+lista_cargas_apt.heading("pot", text="Potencia (kW)")
+lista_cargas_apt.heading("qtd", text="Quantidade")
+
+lista_cargas_apt.column("desc", width=200, anchor="center")
+lista_cargas_apt.column("pot", width=120, anchor="center")
+lista_cargas_apt.column("qtd", width=120, anchor="center")
+
+lista_cargas_apt.pack(side="left", fill="both", expand=True)
+scroll_cargas_apt.pack(side="right", fill="y")
+
+lista_cargas_apt.bind("<<TreeviewSelect>>", carregar_carga_selecionada_apt)
+
+# -----------------------------------
+# ABA 5 - ADMINISTRAÇÃO
+# -----------------------------------
+
+aba_adm = ttk.Frame(notebook)
+notebook.add(aba_adm, text="Administração")
+
+frame_aparelhos_adm = ttk.LabelFrame(aba_adm, text="Aparelhos (administração)", padding=10)
+frame_aparelhos_adm.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_aparelhos_adm, text="Qtd. de Chuveiros:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_qtd_chuveiros_adm = ttk.Entry(frame_aparelhos_adm, width=15)
+entry_qtd_chuveiros_adm.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_aparelhos_adm, text="Qtd. de Torneiras:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_qtd_torneiras_adm = ttk.Entry(frame_aparelhos_adm, width=15)
+entry_qtd_torneiras_adm.grid(row=1, column=1, padx=5, pady=5)
+
+frame_outras_adm = ttk.LabelFrame(aba_adm, text="Outras Cargas (administracao)", padding=10)
+frame_outras_adm.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_outras_adm, text="Descricao:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_desc_carga_adm = ttk.Entry(frame_outras_adm, width=20)
+entry_desc_carga_adm.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_outras_adm, text="Potencia (kW):").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+entry_pot_carga_adm = ttk.Entry(frame_outras_adm, width=12)
+entry_pot_carga_adm.grid(row=0, column=3, padx=5, pady=5)
+
+ttk.Label(frame_outras_adm, text="Quantidade:").grid(row=0, column=4, padx=5, pady=5, sticky="e")
+entry_qtd_carga_adm = ttk.Entry(frame_outras_adm, width=12)
+entry_qtd_carga_adm.grid(row=0, column=5, padx=5, pady=5)
+
+frame_botoes_outras_adm = ttk.Frame(frame_outras_adm)
+frame_botoes_outras_adm.grid(row=0, column=6, padx=10, pady=5)
+
+btn_add_carga_adm = ttk.Button(frame_botoes_outras_adm, text="Adicionar", command=adicionar_carga_adm)
+btn_add_carga_adm.pack(side="left", padx=2)
+
+btn_edit_carga_adm = ttk.Button(frame_botoes_outras_adm, text="Editar", command=editar_carga_adm)
+btn_edit_carga_adm.pack(side="left", padx=2)
+
+btn_del_carga_adm = ttk.Button(frame_botoes_outras_adm, text="Excluir", command=excluir_carga_adm)
+btn_del_carga_adm.pack(side="left", padx=2)
+
+frame_tabela_cargas_adm = ttk.LabelFrame(aba_adm, text="Cargas Cadastradas", padding=5)
+frame_tabela_cargas_adm.pack(fill="both", expand=True, padx=10, pady=10)
+
+aba_adm.rowconfigure(1, weight=1)
+aba_adm.columnconfigure(0, weight=1)
+
+scroll_cargas_adm = ttk.Scrollbar(frame_tabela_cargas_adm, orient="vertical")
+lista_cargas_adm = ttk.Treeview(
+    frame_tabela_cargas_adm,
+    columns=("desc", "pot", "qtd"),
+    show="headings",
+    yscrollcommand=scroll_cargas_adm.set
+)
+scroll_cargas_adm.config(command=lista_cargas_adm.yview)
+
+lista_cargas_adm.heading("desc", text="Descricao")
+lista_cargas_adm.heading("pot", text="Potencia (kW)")
+lista_cargas_adm.heading("qtd", text="Quantidade")
+
+lista_cargas_adm.column("desc", width=200, anchor="center")
+lista_cargas_adm.column("pot", width=120, anchor="center")
+lista_cargas_adm.column("qtd", width=120, anchor="center")
+
+lista_cargas_adm.pack(side="left", fill="both", expand=True)
+scroll_cargas_adm.pack(side="right", fill="y")
+
+lista_cargas_adm.bind("<<TreeviewSelect>>", carregar_carga_selecionada_adm)
+
+# -----------------------------------
+# ABA 6 - MOTORES
+# -----------------------------------
+
+aba_motores = ttk.Frame(notebook)
+notebook.add(aba_motores, text="Motores")
+
+frame_motor_input = ttk.LabelFrame(aba_motores, text="Adicionar / Editar Motor", padding=10)
+frame_motor_input.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_motor_input, text="Potência (CV):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_cv = ttk.Entry(frame_motor_input, width=12)
+entry_cv.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Label(frame_motor_input, text="Quantidade:").grid(row=0, column=2, padx=5, pady=5, sticky="e")
+entry_qtd_motor = ttk.Entry(frame_motor_input, width=12)
+entry_qtd_motor.grid(row=0, column=3, padx=5, pady=5)
+
+frame_botoes = ttk.Frame(frame_motor_input)
+frame_botoes.grid(row=0, column=4, padx=10, pady=5)
+
+btn_add = ttk.Button(frame_botoes, text="Adicionar", command=adicionar_motor)
+btn_add.pack(side="left", padx=2)
+
+btn_edit = ttk.Button(frame_botoes, text="Editar", command=editar_motor)
+btn_edit.pack(side="left", padx=2)
+
+btn_del = ttk.Button(frame_botoes, text="Excluir", command=excluir_motor)
+btn_del.pack(side="left", padx=2)
+
+frame_tabela_motor = ttk.LabelFrame(aba_motores, text="Motores Cadastrados", padding=5)
+frame_tabela_motor.pack(fill="both", expand=True, padx=10, pady=10)
+
+aba_motores.rowconfigure(1, weight=1)
+aba_motores.columnconfigure(0, weight=1)
+
+scroll_motor = ttk.Scrollbar(frame_tabela_motor, orient="vertical")
+lista_motores = ttk.Treeview(
+    frame_tabela_motor,
+    columns=("cv", "qtd"),
+    show="headings",
+    yscrollcommand=scroll_motor.set
+)
+scroll_motor.config(command=lista_motores.yview)
+
+lista_motores.heading("cv", text="Potência (CV)")
+lista_motores.heading("qtd", text="Quantidade")
+
+lista_motores.column("cv", width=150, anchor="center")
+lista_motores.column("qtd", width=150, anchor="center")
+
+lista_motores.pack(side="left", fill="both", expand=True)
+scroll_motor.pack(side="right", fill="y")
+
+lista_motores.bind("<<TreeviewSelect>>", carregar_motor_selecionado)
+
+# -----------------------------------
+# ABA 7 - RESULTADO
+# -----------------------------------
+
+aba_resultado = ttk.Frame(notebook)
+notebook.add(aba_resultado, text="Resultado")
+
+frame_resultado = ttk.LabelFrame(aba_resultado, text="Memorial de Cálculo", padding=10)
+frame_resultado.pack(fill="both", expand=True, padx=10, pady=10)
+
+btn_calc = ttk.Button(frame_resultado, text="Calcular Demanda", command=calcular)
+btn_calc.pack(pady=10)
+
+scroll_resultado = ttk.Scrollbar(frame_resultado, orient="vertical")
+txt_resultado = tk.Text(
+    frame_resultado,
+    height=20,
+    font=("Consolas", 10),
+    yscrollcommand=scroll_resultado.set
+)
+scroll_resultado.config(command=txt_resultado.yview)
+
+txt_resultado.pack(side="left", fill="both", expand=True)
+scroll_resultado.pack(side="right", fill="y")
+
+# -----------------------------------
+# ABA 8 - CALCULAR TRANSFORMADOR
+# -----------------------------------
+
+aba_transf = ttk.Frame(notebook)
+notebook.add(aba_transf, text="Calcular Transformador")
+
+canvas8 = tk.Canvas(aba_transf, highlightthickness=0, width=860)
+scroll8 = ttk.Scrollbar(aba_transf, orient="vertical", command=canvas8.yview)
+aba8_inner = ttk.Frame(canvas8, padding=5)
+
+def _config_inner8(event):
+    canvas8.configure(scrollregion=canvas8.bbox("all"))
+    canvas8.itemconfig(inner8_id, width=canvas8.winfo_width())
+
+aba8_inner.bind("<Configure>", _config_inner8)
+inner8_id = canvas8.create_window((0, 0), window=aba8_inner, anchor="nw")
+canvas8.configure(yscrollcommand=scroll8.set)
+
+canvas8.pack(side="left", fill="both", expand=True)
+scroll8.pack(side="right", fill="y")
+
+def _on_mousewheel8(event):
+    canvas8.yview_scroll(int(-1 * (event.delta / 120)), "units")
+canvas8.bind("<MouseWheel>", _on_mousewheel8)
+
+aba_transf.rowconfigure(0, weight=1)
+aba_transf.columnconfigure(0, weight=1)
+
+frame_limite = ttk.LabelFrame(aba8_inner, text="Limite de Atendimento (Regra 7.3)", padding=10)
+frame_limite.pack(fill="x", padx=10, pady=10)
+
+lbl_limite_info = tk.Label(frame_limite, text="Carregue um projeto e calcule a demanda para verificar os limites.", font=("Consolas", 10))
+lbl_limite_info.grid(row=0, column=0, padx=5, pady=5)
+
+frame_dados_transf = ttk.LabelFrame(aba8_inner, text="Dados de Entrada", padding=10)
 frame_dados_transf.pack(fill="x", padx=10, pady=10)
 
 ttk.Label(frame_dados_transf, text="Demanda Geral (Dg):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
@@ -1154,8 +1480,7 @@ combo_metodo_inst = ttk.Combobox(frame_dados_transf, values=["A", "B", "C", "D",
 combo_metodo_inst.grid(row=2, column=1, padx=5, pady=5, sticky="w")
 combo_metodo_inst.current(2)
 
-# --- Frame: Forma de Agrupamento (Tabela 11 - 2 de 2) ---
-frame_agrup = ttk.LabelFrame(aba5_inner, text="Fatores de Correção para Condutores Agrupados (Tabela 11 - 2 de 2)", padding=10)
+frame_agrup = ttk.LabelFrame(aba8_inner, text="Fatores de Correção para Condutores Agrupados (Tabela 11 - 2 de 2)", padding=10)
 frame_agrup.pack(fill="x", padx=10, pady=10)
 
 ttk.Label(frame_agrup, text="Forma de Agrupamento:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
@@ -1170,15 +1495,31 @@ entry_num_circuitos = ttk.Entry(frame_agrup, width=10)
 entry_num_circuitos.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 entry_num_circuitos.insert(0, "1")
 
-# --- Botão Calcular ---
-frame_btn_transf = ttk.Frame(aba5_inner)
+frame_btn_transf = ttk.Frame(aba8_inner)
 frame_btn_transf.pack(fill="x", padx=10, pady=10)
 
 def atualizar_dg_transf():
     if ultimo_Dg is not None:
         lbl_dg_transf.config(text=f"{ultimo_Dg:.2f} kVA")
+        tipo_ed = combo_tipo_edificio.get()
+        if tipo_ed == "Residencial":
+            limite = 400
+        else:
+            limite = 300
+        if ultimo_Dg > limite:
+            lbl_limite_info.config(
+                text=f"Tipo: {tipo_ed} | Dg={ultimo_Dg:.2f} kVA | Limite: {limite} kVA | ATENCAO: Dg acima do limite! => Alimentacao pela rede primaria (GED-2855)",
+                foreground="white", background="red"
+            )
+            notebook.select(aba_primaria)
+        else:
+            lbl_limite_info.config(
+                text=f"Tipo: {tipo_ed} | Dg={ultimo_Dg:.2f} kVA | Limite: {limite} kVA | OK - Demanda dentro do limite de BT",
+                foreground="white", background="green"
+            )
     else:
         lbl_dg_transf.config(text="--- (calcule primeiro)")
+        lbl_limite_info.config(text="Carregue um projeto e calcule a demanda para verificar os limites.", foreground="black", background="lightgray")
 
 btn_calc_transf = ttk.Button(frame_btn_transf, text="Calcular Transformador", command=lambda: [atualizar_dg_transf(), calcular_transformador()])
 btn_calc_transf.pack(side="left", padx=5)
@@ -1186,8 +1527,7 @@ btn_calc_transf.pack(side="left", padx=5)
 btn_atualizar_dg = ttk.Button(frame_btn_transf, text="Atualizar Dg", command=atualizar_dg_transf)
 btn_atualizar_dg.pack(side="left", padx=5)
 
-# --- Frame Resultado ---
-frame_res_transf = ttk.LabelFrame(aba5_inner, text="Resultado do Dimensionamento", padding=10)
+frame_res_transf = ttk.LabelFrame(aba8_inner, text="Resultado do Dimensionamento", padding=10)
 frame_res_transf.pack(fill="both", expand=True, padx=10, pady=10)
 
 scroll_transf = ttk.Scrollbar(frame_res_transf, orient="vertical")
@@ -1202,10 +1542,72 @@ scroll_transf.config(command=txt_transf.yview)
 txt_transf.pack(side="left", fill="both", expand=True)
 scroll_transf.pack(side="right", fill="y")
 
-# Atualizar Dg automaticamente ao trocar para a aba "Calcular Transformador"
+# -----------------------------------
+# ABA 9 - REDE PRIMÁRIA (GED-2855)
+# -----------------------------------
+
+aba_primaria = ttk.Frame(notebook)
+notebook.add(aba_primaria, text="Rede Primária | Demanda > 300/400 kVA")
+
+frame_primaria_info = ttk.LabelFrame(aba_primaria, text="Alimentacao a Partir da Rede Primaria (Regra 7.3)", padding=10)
+frame_primaria_info.pack(fill="x", padx=10, pady=10)
+
+txt_primaria = tk.Text(frame_primaria_info, height=15, font=("Consolas", 10), wrap="word")
+txt_primaria.pack(fill="both", expand=True, padx=5, pady=5)
+
+txt_primaria.insert(tk.END, "REGRA 7.3 - GED-119\n")
+txt_primaria.insert(tk.END, "=" * 60 + "\n\n")
+txt_primaria.insert(tk.END, "A alimentacao do edificio sera a partir da rede primaria da via publica quando:\n\n")
+txt_primaria.insert(tk.END, "a) Edificios residenciais: Dg > 400 kVA\n")
+txt_primaria.insert(tk.END, "   (entre 300 e 400 kVA, opcao do projetista conforme item 7.1)\n\n")
+txt_primaria.insert(tk.END, "b) Edificios comerciais ou mistos: Dg > 300 kVA\n\n")
+txt_primaria.insert(tk.END, "Para projetos com demanda superior aos limites acima, consultar:\n")
+txt_primaria.insert(tk.END, "  >> GED-2855 - Fornecimento em Tensao Primaria <<\n\n")
+txt_primaria.insert(tk.END, "Esta norma define os criterios para:\n")
+txt_primaria.insert(tk.END, "  - Subestacao abaixadora\n")
+txt_primaria.insert(tk.END, "  - Protecao e manobra no lado primario\n")
+txt_primaria.insert(tk.END, "  - Medicao em alta tensao\n")
+txt_primaria.insert(tk.END, "  - Padrao de entrada primario\n")
+txt_primaria.insert(tk.END, "  - Cabos, disjuntores e chaves seccionadoras\n")
+
+frame_primaria_dados = ttk.LabelFrame(aba_primaria, text="Dados do Projeto", padding=10)
+frame_primaria_dados.pack(fill="x", padx=10, pady=10)
+
+lbl_primaria_dg = ttk.Label(frame_primaria_dados, text="Demanda Geral (Dg): ---", font=("Consolas", 10, "bold"))
+lbl_primaria_dg.pack(padx=5, pady=5, anchor="w")
+
+lbl_primaria_tipo = ttk.Label(frame_primaria_dados, text="Tipo de Edificio: ---", font=("Consolas", 10))
+lbl_primaria_tipo.pack(padx=5, pady=5, anchor="w")
+
+lbl_primaria_limite = ttk.Label(frame_primaria_dados, text="Limite: ---", font=("Consolas", 10))
+lbl_primaria_limite.pack(padx=5, pady=5, anchor="w")
+
+lbl_primaria_status = tk.Label(frame_primaria_dados, text="", font=("Consolas", 10, "bold"))
+lbl_primaria_status.pack(padx=5, pady=5, anchor="w")
+
 def on_tab_change(event):
-    if notebook.tab("current", "text") == "Calcular Transformador":
+    tab_name = notebook.tab("current", "text")
+    if tab_name == "Calcular Transformador":
         atualizar_dg_transf()
+    elif "Rede Primaria" in tab_name:
+        if ultimo_Dg is not None:
+            tipo_ed = combo_tipo_edificio.get()
+            limite = 400 if tipo_ed == "Residencial" else 300
+            lbl_primaria_dg.config(text=f"Demanda Geral (Dg): {ultimo_Dg:.2f} kVA")
+            lbl_primaria_tipo.config(text=f"Tipo de Edificio: {tipo_ed}")
+            lbl_primaria_limite.config(text=f"Limite: {limite} kVA")
+            if ultimo_Dg > limite:
+                lbl_primaria_status.config(
+                    text="STATUS: Demanda EXCEDE o limite - Necessario projeto em rede primaria (GED-2855)",
+                    foreground="red"
+                )
+            else:
+                lbl_primaria_status.config(
+                    text="STATUS: Demanda dentro do limite - Atendimento em BT OK",
+                    foreground="green"
+                )
+        else:
+            lbl_primaria_dg.config(text="Demanda Geral (Dg): --- (calcule primeiro)")
 
 notebook.bind("<<NotebookTabChanged>>", on_tab_change)
 
@@ -1221,9 +1623,9 @@ if cursor_proj.fetchone()[0] == 0:
         (nome, aptos, area_apto, area_adm, iluminacao, tomadas,
          chuveiro_kw, torneira_kw, chuveiros_apto, torneiras_apto,
          chuveiros_adm, torneiras_adm,
-         secar_kw, secar_apto, lavar_kw, lavar_apto)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, ("Teste Dimensionamento", 20, 180, 2884, 5, 5, 5.4, 3.0, 4, 0, 5, 2, 2.5, 1, 2.5, 1))
+         secar_kw, secar_apto, lavar_kw, lavar_apto, tipo)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, ("Teste Dimensionamento", 20, 180, 2884, 5, 5, 5.4, 3.0, 4, 0, 5, 2, 2.5, 1, 2.5, 1, "Residencial"))
     proj_id = cursor_proj.lastrowid
 
     motores_teste = [(1.0, 1), (5.0, 1), (7.5, 1), (10.0, 3)]
