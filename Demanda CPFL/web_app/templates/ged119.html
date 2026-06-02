@@ -1,113 +1,565 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="card">
-    <div class="card-header">Dados do Edifício</div>
-    <div class="form-grid">
-        <div class="form-group">
-            <label>Nº de Apartamentos</label>
-            <input type="number" id="aptos" value="20" min="1">
-        </div>
-        <div class="form-group">
-            <label>Área do Apartamento (m²)</label>
-            <input type="number" id="area_apto" value="70" min="1" step="0.1">
-        </div>
-        <div class="form-group">
-            <label>Área Administrativa (m²)</label>
-            <input type="number" id="area_adm" value="50" min="0" step="0.1">
-        </div>
-        <div class="form-group">
-            <label>Iluminação (W)</label>
-            <input type="number" id="iluminacao" value="0" min="0">
-        </div>
-        <div class="form-group">
-            <label>Tomadas (W)</label>
-            <input type="number" id="tomadas" value="0" min="0">
-        </div>
-    </div>
+<div class="tabs" id="main-tabs">
+    <button class="tab-btn active" data-tab="tab-projetos">Gerenciamento</button>
+    <button class="tab-btn" data-tab="tab-dados">Dados do Edifício</button>
+    <button class="tab-btn" data-tab="tab-aparelhos">Aparelhos</button>
+    <button class="tab-btn" data-tab="tab-eletro">Eletrodomésticos</button>
+    <button class="tab-btn" data-tab="tab-outras-apt">Outras Cargas (Apt)</button>
+    <button class="tab-btn" data-tab="tab-outras-adm">Outras Cargas (Adm)</button>
+    <button class="tab-btn" data-tab="tab-motores">Motores</button>
+    <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
+    <button class="tab-btn" data-tab="tab-limites">Limites / Rede Primária</button>
 </div>
 
-<div class="card">
-    <div class="card-header">Aparelhos (por apartamento)</div>
-    <div class="form-grid col-4">
-        <div class="form-group">
-            <label>Potência do Chuveiro (kW)</label>
-            <input type="number" id="chuveiro_kw" value="5.5" min="0" step="0.1">
-        </div>
-        <div class="form-group">
-            <label>Potência da Torneira (kW)</label>
-            <input type="number" id="torneira_kw" value="3.5" min="0" step="0.1">
-        </div>
-        <div class="form-group">
-            <label>Chuveiros por apto</label>
-            <input type="number" id="qtd_chuveiros" value="1" min="0">
-        </div>
-        <div class="form-group">
-            <label>Torneiras por apto</label>
-            <input type="number" id="qtd_torneiras" value="0" min="0">
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        Motores
-        <span class="badge" id="motor-count">0</span>
-    </div>
-    <div class="form-grid col-3" style="margin-bottom:12px;">
-        <div class="form-group">
-            <label>Potência (CV)</label>
-            <input type="number" id="motor_cv" step="0.01" min="0">
-        </div>
-        <div class="form-group">
-            <label>Quantidade</label>
-            <input type="number" id="motor_qtd" min="1" value="1">
-        </div>
-        <div class="form-group" style="justify-content:flex-end;">
-            <div class="btn-group" style="margin-top:18px;">
-                <button class="btn btn-success btn-sm" onclick="adicionarMotor()">+ Adicionar</button>
-                <button class="btn btn-danger btn-sm" onclick="excluirMotor()">- Excluir</button>
+<div id="tab-projetos" class="tab-content">
+    <div class="card">
+        <div class="card-header">Gerenciamento de Projetos</div>
+        <div class="form-grid" style="grid-template-columns:2fr 1fr;">
+            <div class="form-group">
+                <label>Nome do Projeto</label>
+                <input type="text" id="projeto_nome" placeholder="Digite o nome do projeto" style="width:100%;">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="salvarProjeto()">💾 Salvar</button>
+                    <button class="btn btn-primary btn-sm" onclick="novoProjeto()">📄 Novo</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirProjeto()">🗑 Excluir</button>
+                </div>
             </div>
         </div>
     </div>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:40px;"></th>
-                    <th>Potência (CV)</th>
-                    <th>Quantidade</th>
-                </tr>
-            </thead>
-            <tbody id="motor-table-body">
-            </tbody>
-        </table>
-    </div>
-    <div class="empty-state" id="motor-empty">Nenhum motor cadastrado</div>
-</div>
 
-<div style="text-align:center;margin-bottom:24px;">
-    <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED119()">
-        ⚡ Calcular Demanda
-    </button>
-</div>
-
-<div id="result-container" style="display:none;">
     <div class="card">
-        <div class="card-header">Memorial de Cálculo - GED-119</div>
-        <div id="result-content"></div>
+        <div class="card-header">
+            Projetos Salvos
+            <span class="badge" id="projeto-count">0</span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome do Projeto</th>
+                        <th>Aptos</th>
+                        <th>Data Criação</th>
+                    </tr>
+                </thead>
+                <tbody id="projeto-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="projeto-empty">Nenhum projeto salvo</div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-dados')">
+            Novo Projeto &rarr;
+        </button>
     </div>
 </div>
 
-<div id="loading-container" style="display:none;">
-    <div class="loading">
-        <div class="spinner"></div>
-        Calculando...
+<div id="tab-dados" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dados do Edifício</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nº de Apartamentos</label>
+                <input type="number" id="aptos" value="20" min="1">
+            </div>
+            <div class="form-group">
+                <label>Área do Apartamento (m²)</label>
+                <input type="number" id="area_apto" value="70" min="1" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Área Administrativa (m²)</label>
+                <input type="number" id="area_adm" value="50" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Iluminação (W)</label>
+                <input type="number" id="iluminacao" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Tomadas (W)</label>
+                <input type="number" id="tomadas" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Edifício</label>
+                <select id="tipo">
+                    <option value="Residencial">Residencial</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Misto">Misto</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Aparelhos (por apartamento)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Potência do Chuveiro (kW)</label>
+                <input type="number" id="chuveiro_kw" value="5.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Potência da Torneira (kW)</label>
+                <input type="number" id="torneira_kw" value="3.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Chuveiros por apto</label>
+                <input type="number" id="qtd_chuveiros" value="1" min="0">
+            </div>
+            <div class="form-group">
+                <label>Torneiras por apto</label>
+                <input type="number" id="qtd_torneiras" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Aparelhos (Administração)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Qtd. Chuveiros (adm)</label>
+                <input type="number" id="qtd_chuveiros_adm" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Qtd. Torneiras (adm)</label>
+                <input type="number" id="qtd_torneiras_adm" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Eletrodomésticos (por apartamento)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Pot. Máq. Secar Roupa (kW)</label>
+                <input type="number" id="secar_kw" value="0" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Qtd. por apto</label>
+                <input type="number" id="secar_apto" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Pot. Máq. Lavar Louça (kW)</label>
+                <input type="number" id="lavar_kw" value="0" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Qtd. por apto</label>
+                <input type="number" id="lavar_apto" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-aparelhos')">
+            Próximo: Aparelhos &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-aparelhos" class="tab-content">
+    <div class="card">
+        <div class="card-header">Aparelhos (por apartamento)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Potência do Chuveiro (kW)</label>
+                <input type="number" id="chuveiro_kw2" value="5.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Potência da Torneira (kW)</label>
+                <input type="number" id="torneira_kw2" value="3.5" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Chuveiros por apto</label>
+                <input type="number" id="qtd_chuveiros2" value="1" min="0">
+            </div>
+            <div class="form-group">
+                <label>Torneiras por apto</label>
+                <input type="number" id="qtd_torneiras2" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Aparelhos (Administração)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Qtd. Chuveiros (adm)</label>
+                <input type="number" id="qtd_chuveiros_adm2" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Qtd. Torneiras (adm)</label>
+                <input type="number" id="qtd_torneiras_adm2" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-eletro')">
+            Próximo: Eletrodomésticos &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-eletro" class="tab-content">
+    <div class="card">
+        <div class="card-header">Eletrodomésticos (por apartamento)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Pot. Máq. Secar Roupa (kW)</label>
+                <input type="number" id="secar_kw2" value="0" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Qtd. por apto</label>
+                <input type="number" id="secar_apto2" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Pot. Máq. Lavar Louça (kW)</label>
+                <input type="number" id="lavar_kw2" value="0" min="0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Qtd. por apto</label>
+                <input type="number" id="lavar_apto2" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-outras-apt')">
+            Próximo: Outras Cargas &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-outras-apt" class="tab-content">
+    <div class="card">
+        <div class="card-header">Outras Cargas (Apartamentos)</div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="carga_apt_desc" placeholder="Ex: Forno elétrico">
+            </div>
+            <div class="form-group">
+                <label>Potência (kW)</label>
+                <input type="number" id="carga_apt_pot" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="carga_apt_qtd" min="1" value="1">
+            </div>
+        </div>
+        <div class="btn-group" style="margin-bottom:12px;">
+            <button class="btn btn-success btn-sm" onclick="adicionarCarga('apt')">+ Adicionar</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirCarga('apt')">- Excluir</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>Descrição</th>
+                        <th>Potência (kW)</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody id="carga-apt-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="carga-apt-empty">Nenhuma carga cadastrada</div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-outras-adm')">
+            Próximo: Outras Cargas (Adm) &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-outras-adm" class="tab-content">
+    <div class="card">
+        <div class="card-header">Outras Cargas (Administração)</div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="carga_adm_desc" placeholder="Ex: Bomba d'água">
+            </div>
+            <div class="form-group">
+                <label>Potência (kW)</label>
+                <input type="number" id="carga_adm_pot" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="carga_adm_qtd" min="1" value="1">
+            </div>
+        </div>
+        <div class="btn-group" style="margin-bottom:12px;">
+            <button class="btn btn-success btn-sm" onclick="adicionarCarga('adm')">+ Adicionar</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirCarga('adm')">- Excluir</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>Descrição</th>
+                        <th>Potência (kW)</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody id="carga-adm-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="carga-adm-empty">Nenhuma carga cadastrada</div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-motores')">
+            Próximo: Motores &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-motores" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            Motores
+            <span class="badge" id="motor-count">0</span>
+        </div>
+        <div class="form-grid col-3" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Potência (CV)</label>
+                <input type="number" id="motor_cv" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="motor_qtd" min="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="adicionarMotor()">+ Adicionar</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirMotor()">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>Potência (CV)</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody id="motor-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="motor-empty">Nenhum motor cadastrado</div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED119(); calcTab('tab-resultado');">
+            ⚡ Calcular Demanda
+        </button>
+    </div>
+</div>
+
+<div id="tab-resultado" class="tab-content">
+    <div id="loading-container" style="display:none;text-align:center;padding:40px;">
+        <div class="loading">
+            <div class="spinner"></div>
+            Calculando...
+        </div>
+    </div>
+
+    <div id="result-container" style="display:none;">
+        <div class="card">
+            <div class="card-header">
+                Memorial de Cálculo - GED-119
+                <button class="btn btn-primary btn-sm" onclick="window.print()" style="margin-left:auto;">📄 PDF / Imprimir</button>
+            </div>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED119()">
+            ⚡ Calcular / Recalcular
+        </button>
+    </div>
+</div>
+
+<div id="tab-limites" class="tab-content">
+    <div class="card" id="limite-card">
+        <div class="card-header">Limite de Atendimento (Regra 7.3 - GED-119)</div>
+        <div id="limite-content">
+            <p style="color:var(--text-secondary);">Calcule a demanda primeiro para verificar os limites.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Rede Primária (GED-2855)</div>
+        <div class="info-box">
+            <span class="icon">&#9432;</span>
+            <div>
+                <strong>Regra 7.3:</strong> A alimentação do edifício será a partir da rede primária da via pública quando:
+                <br><br>
+                <strong>a)</strong> Edifícios residenciais: Dg &gt; 400 kVA<br>
+                &nbsp;&nbsp;&nbsp;(entre 300 e 400 kVA, opção do projetista conforme item 7.1)
+                <br><br>
+                <strong>b)</strong> Edifícios comerciais ou mistos: Dg &gt; 300 kVA
+                <br><br>
+                Para projetos com demanda superior aos limites acima, consultar:
+                <br>
+                <strong>&raquo; GED-2855 - Fornecimento em Tensão Primária &laquo;</strong>
+                <br><br>
+                Esta norma define os critérios para:
+                <ul style="margin-left:20px;margin-top:6px;">
+                    <li>Subestação abaixadora</li>
+                    <li>Proteção e manobra no lado primário</li>
+                    <li>Medição em alta tensão</li>
+                    <li>Padrão de entrada primário</li>
+                    <li>Cabos, disjuntores e chaves seccionadoras</li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
 let motores = [];
+let outrasCargas = { apt: [], adm: [] };
+let currentProjetoId = null;
+
+// --- Project Management ---
+
+function listarProjetos() {
+    fetch('/api/projetos/listar')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const tbody = document.getElementById('projeto-table-body');
+        const empty = document.getElementById('projeto-empty');
+        const count = document.getElementById('projeto-count');
+        tbody.innerHTML = '';
+        if (resp.data.length === 0) {
+            empty.style.display = 'block';
+            count.textContent = '0';
+            return;
+        }
+        empty.style.display = 'none';
+        count.textContent = resp.data.length;
+        resp.data.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.onclick = function() {
+                document.querySelectorAll('#projeto-table-body tr').forEach(r => r.classList.remove('selected'));
+                tr.classList.add('selected');
+                carregarProjeto(p.id);
+            };
+            tr.innerHTML = `<td>${p.id}</td><td>${p.nome}</td><td>${p.aptos}</td><td>${p.data_criacao}</td>`;
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(err => alert('Erro ao listar projetos: ' + err.message));
+}
+
+function carregarProjeto(projetoId) {
+    fetch('/api/projetos/carregar/' + projetoId)
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const p = resp.data;
+        currentProjetoId = p.id;
+        document.getElementById('projeto_nome').value = p.nome;
+        setField('aptos', p.aptos);
+        setField('area_apto', p.area_apto);
+        setField('area_adm', p.area_adm);
+        setField('iluminacao', p.iluminacao);
+        setField('tomadas', p.tomadas);
+        setField('chuveiro_kw', p.chuveiro_kw);
+        setField('torneira_kw', p.torneira_kw);
+        setField('qtd_chuveiros', p.chuveiros_apto);
+        setField('qtd_torneiras', p.torneiras_apto);
+        setField('qtd_chuveiros_adm', p.chuveiros_adm || 0);
+        setField('qtd_torneiras_adm', p.torneiras_adm || 0);
+        setField('secar_kw', p.secar_kw || 0);
+        setField('secar_apto', p.secar_apto || 0);
+        setField('lavar_kw', p.lavar_kw || 0);
+        setField('lavar_apto', p.lavar_apto || 0);
+        document.getElementById('tipo').value = p.tipo || 'Residencial';
+        motores = (p.motores || []).map(m => ({ cv: m.cv, qtd: m.qtd }));
+        renderMotores();
+        outrasCargas.apt = (p.outras_cargas_apt || []).map(c => ({ desc: c.descricao, pot: c.potencia, qtd: c.quantidade }));
+        renderCargas('apt');
+        outrasCargas.adm = (p.outras_cargas_adm || []).map(c => ({ desc: c.descricao, pot: c.potencia, qtd: c.quantidade }));
+        renderCargas('adm');
+        calcTab('tab-dados');
+    })
+    .catch(err => alert('Erro ao carregar projeto: ' + err.message));
+}
+
+function setField(id, val) {
+    const v = val !== undefined && val !== null ? val : 0;
+    const el1 = document.getElementById(id);
+    const el2 = document.getElementById(id + '2');
+    if (el1) el1.value = v;
+    if (el2) el2.value = v;
+}
+
+function salvarProjeto() {
+    const nome = document.getElementById('projeto_nome').value.trim();
+    if (!nome) { alert('Digite um nome para o projeto!'); return; }
+    const dados = getDados();
+    dados.id = currentProjetoId;
+    dados.nome = nome;
+    fetch('/api/projetos/salvar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        currentProjetoId = resp.data.id;
+        alert('Projeto salvo com sucesso!');
+        listarProjetos();
+    })
+    .catch(err => alert('Erro ao salvar projeto: ' + err.message));
+}
+
+function novoProjeto() {
+    currentProjetoId = null;
+    document.getElementById('projeto_nome').value = '';
+    ['aptos','area_apto','area_adm','iluminacao','tomadas',
+     'chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
+     'qtd_chuveiros_adm','qtd_torneiras_adm',
+     'secar_kw','secar_apto','lavar_kw','lavar_apto'].forEach(id => setField(id, ''));
+    document.getElementById('tipo').value = 'Residencial';
+    motores = [];
+    renderMotores();
+    outrasCargas = { apt: [], adm: [] };
+    renderCargas('apt');
+    renderCargas('adm');
+    calcTab('tab-dados');
+}
+
+function excluirProjeto() {
+    if (!currentProjetoId) { alert('Carregue um projeto primeiro!'); return; }
+    const nome = document.getElementById('projeto_nome').value;
+    if (!confirm('Excluir o projeto "' + nome + '"?')) return;
+    fetch('/api/projetos/excluir/' + currentProjetoId, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        novoProjeto();
+        listarProjetos();
+    })
+    .catch(err => alert('Erro ao excluir projeto: ' + err.message));
+}
+
+// Auto-list on page load
+document.addEventListener('DOMContentLoaded', listarProjetos);
 
 function renderMotores() {
     const tbody = document.getElementById('motor-table-body');
@@ -158,19 +610,97 @@ function excluirMotor() {
     }
 }
 
-function calcularGED119() {
-    const dados = {
-        aptos: document.getElementById('aptos').value,
-        area_apto: document.getElementById('area_apto').value,
-        area_adm: document.getElementById('area_adm').value,
-        iluminacao: document.getElementById('iluminacao').value,
-        tomadas: document.getElementById('tomadas').value,
-        chuveiro_kw: document.getElementById('chuveiro_kw').value,
-        torneira_kw: document.getElementById('torneira_kw').value,
-        qtd_chuveiros: document.getElementById('qtd_chuveiros').value,
-        qtd_torneiras: document.getElementById('qtd_torneiras').value,
-        motores: motores
+function renderCargas(tipo) {
+    const prefix = tipo === 'apt' ? 'carga-apt' : 'carga-adm';
+    const tbody = document.getElementById(prefix + '-table-body');
+    const empty = document.getElementById(prefix + '-empty');
+    tbody.innerHTML = '';
+    if (outrasCargas[tipo].length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    outrasCargas[tipo].forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = function() {
+            document.querySelectorAll('#' + prefix + '-table-body tr').forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById('carga_' + tipo + '_desc').value = c.desc;
+            document.getElementById('carga_' + tipo + '_pot').value = c.pot;
+            document.getElementById('carga_' + tipo + '_qtd').value = c.qtd;
+        };
+        tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
+                        <td>${c.desc}</td>
+                        <td>${c.pot}</td>
+                        <td>${c.qtd}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function adicionarCarga(tipo) {
+    const desc = document.getElementById('carga_' + tipo + '_desc').value.trim();
+    const pot = parseFloat(document.getElementById('carga_' + tipo + '_pot').value);
+    const qtd = parseInt(document.getElementById('carga_' + tipo + '_qtd').value);
+    if (!desc || isNaN(pot) || pot <= 0 || isNaN(qtd) || qtd <= 0) {
+        alert('Descrição, Potência (>0) e Quantidade (>0) são obrigatórios!');
+        return;
+    }
+    outrasCargas[tipo].push({ desc, pot, qtd });
+    renderCargas(tipo);
+    document.getElementById('carga_' + tipo + '_desc').value = '';
+    document.getElementById('carga_' + tipo + '_pot').value = '';
+    document.getElementById('carga_' + tipo + '_qtd').value = '1';
+    document.getElementById('carga_' + tipo + '_desc').focus();
+}
+
+function excluirCarga(tipo) {
+    const prefix = tipo === 'apt' ? 'carga-apt' : 'carga-adm';
+    const selected = document.querySelector('#' + prefix + '-table-body tr.selected');
+    if (!selected) { alert('Selecione uma carga para excluir!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    if (confirm(`Excluir "${outrasCargas[tipo][idx].desc}"?`)) {
+        outrasCargas[tipo].splice(idx, 1);
+        renderCargas(tipo);
+    }
+}
+
+function getDados() {
+    const tabPrefix = (id) => {
+        const v = document.getElementById(id);
+        return v ? v.value : document.getElementById(id.replace(/2$/, '')).value;
     };
+    return {
+        aptos: tabPrefix('aptos'),
+        area_apto: tabPrefix('area_apto'),
+        area_adm: tabPrefix('area_adm'),
+        iluminacao: tabPrefix('iluminacao'),
+        tomadas: tabPrefix('tomadas'),
+        chuveiro_kw: tabPrefix('chuveiro_kw'),
+        torneira_kw: tabPrefix('torneira_kw'),
+        qtd_chuveiros: tabPrefix('qtd_chuveiros'),
+        qtd_torneiras: tabPrefix('qtd_torneiras'),
+        qtd_chuveiros_adm: tabPrefix('qtd_chuveiros_adm'),
+        qtd_torneiras_adm: tabPrefix('qtd_torneiras_adm'),
+        secar_kw: tabPrefix('secar_kw'),
+        secar_apto: tabPrefix('secar_apto'),
+        lavar_kw: tabPrefix('lavar_kw'),
+        lavar_apto: tabPrefix('lavar_apto'),
+        tipo: document.getElementById('tipo').value,
+        motores: motores,
+        outras_cargas_apt: outrasCargas.apt.map(c => [c.desc, c.pot, c.qtd]),
+        outras_cargas_adm: outrasCargas.adm.map(c => [c.desc, c.pot, c.qtd]),
+    };
+}
+
+function calcTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+function calcularGED119() {
+    const dados = getDados();
 
     document.getElementById('result-container').style.display = 'none';
     document.getElementById('loading-container').style.display = 'block';
@@ -185,11 +715,38 @@ function calcularGED119() {
         document.getElementById('loading-container').style.display = 'none';
         if (!resp.success) throw new Error(resp.error);
         mostrarResultado(resp.data);
+        mostrarLimites(resp.data);
+        calcTab('tab-resultado');
     })
     .catch(err => {
         document.getElementById('loading-container').style.display = 'none';
         alert('Erro: ' + err.message);
     });
+}
+
+function mostrarLimites(d) {
+    const container = document.getElementById('limite-content');
+    const tipo = d.tipo;
+    const limite = d.limite;
+    const acima = d.acima_limite;
+    const cor = acima ? 'var(--danger)' : 'var(--success)';
+    const status = acima
+        ? `ATENÇÃO: Dg (${d.Dg.toFixed(2)} kVA) > ${limite} kVA - Alimentação pela rede primária (GED-2855)`
+        : `OK - Demanda (${d.Dg.toFixed(2)} kVA) dentro do limite de BT (${limite} kVA)`;
+    container.innerHTML = `
+        <div class="result-line" style="margin-bottom:8px;"><strong>Tipo do Edifício:</strong> ${tipo}</div>
+        <div class="result-line" style="margin-bottom:8px;"><strong>Demanda Geral (Dg):</strong> ${d.Dg.toFixed(2)} kVA</div>
+        <div class="result-line" style="margin-bottom:8px;"><strong>Limite para BT:</strong> ${limite} kVA</div>
+        <div class="result-line" style="margin-bottom:8px;color:${cor};font-weight:700;font-size:15px;">${status}</div>
+        ${acima ? '<div class="result-line" style="margin-top:12px;padding:10px;background:rgba(248,81,73,0.1);border:1px solid var(--danger);border-radius:var(--radius-sm);">Consulte a seção <strong>"Rede Primária (GED-2855)"</strong> abaixo para detalhes sobre o atendimento em tensão primária.</div>' : ''}
+    `;
+    const limiteCard = document.getElementById('limite-card');
+    limiteCard.style.borderColor = acima ? 'var(--danger)' : 'var(--success)';
+    if (acima) {
+        document.querySelector('[data-tab="tab-limites"]').style.color = 'var(--danger)';
+    } else {
+        document.querySelector('[data-tab="tab-limites"]').style.color = '';
+    }
 }
 
 function mostrarResultado(d) {
@@ -202,6 +759,18 @@ function mostrarResultado(d) {
             `<div class="result-line">${i+1}) ${m.cv} CV x ${m.qtd} un = ${m.total_kva.toFixed(2)} kVA (Tabela 4)</div>`
           ).join('')
         : '<div class="result-line">Nenhum motor cadastrado.</div>';
+
+    const outrasAptHtml = d.outras_cargas_apt && d.outras_cargas_apt.length > 0
+        ? d.outras_cargas_apt.map(c =>
+            `<div class="result-line">${c[0]}: ${c[1]} kW x ${c[2]} un = ${(c[1]*c[2]).toFixed(2)} kVA</div>`
+          ).join('')
+        : '<div class="result-line">Nenhuma.</div>';
+
+    const outrasAdmHtml = d.outras_cargas_adm && d.outras_cargas_adm.length > 0
+        ? d.outras_cargas_adm.map(c =>
+            `<div class="result-line">${c[0]}: ${c[1]} kW x ${c[2]} un = ${(c[1]*c[2]).toFixed(2)} kVA</div>`
+          ).join('')
+        : '<div class="result-line">Nenhuma.</div>';
 
     content.innerHTML = `
         <div class="result-section">
@@ -226,18 +795,34 @@ function mostrarResultado(d) {
             <div class="result-title purple">2 - Aparelhos (Item 5.2 - GED-119)</div>
             <div class="result-line">Fórmula: D2 = Σ(Qtd × Potência × FD)</div>
             <br>
-            <div class="result-line">Total de chuveiros: ${d.aptos} aptos × ${d.total_chuveiros_geral / d.aptos} = ${d.total_chuveiros_geral}</div>
-            <div class="result-line">Total de torneiras: ${d.aptos} aptos × ${d.total_torneiras_geral / d.aptos} = ${d.total_torneiras_geral}</div>
-            <div class="result-line">Total aparelhos = ${d.total_chuveiros_geral} + ${d.total_torneiras_geral} = ${d.total_aparelhos}</div>
+            <div class="result-line"><span class="label">a) Apartamentos:</span></div>
+            <div class="result-line">Chuveiros: ${d.aptos} aptos × ${(d.total_chuveiros_geral - d.chuveiros_adm) / d.aptos} = ${d.total_chuveiros_geral - d.chuveiros_adm} un</div>
+            <div class="result-line">Torneiras: ${d.aptos} aptos × ${(d.total_torneiras_geral - d.torneiras_adm) / d.aptos} = ${d.total_torneiras_geral - d.torneiras_adm} un</div>
+            <br>
+            <div class="result-line"><span class="label">b) Administração:</span></div>
+            <div class="result-line">Chuveiros: ${d.chuveiros_adm} un</div>
+            <div class="result-line">Torneiras: ${d.torneiras_adm} un</div>
+            <br>
+            <div class="result-line">Total aparelhos = ${d.total_chuveiros_geral - d.chuveiros_adm} + ${d.chuveiros_adm} + ${d.torneiras_adm} = ${d.total_aparelhos}</div>
             <div class="result-line">FD (Tabela 2): para ${d.total_aparelhos} aparelhos = ${d.f_ch}</div>
             <br>
-            <div class="result-line">Chuveiros: ${d.aptos} × ${d.total_chuveiros_geral / d.aptos} × ${(d.chuveiros_contrib / (d.f_ch * d.aptos * (d.total_chuveiros_geral / d.aptos))).toFixed(1)} kW × ${d.f_ch}</div>
-            <div class="result-line">Contribuição = <span class="value">${d.chuveiros_contrib.toFixed(2)} kVA</span></div>
+            <div class="result-line">Chuveiros (aptos): ${d.total_chuveiros_geral - d.chuveiros_adm} un × ${d.chuveiro_kw.toFixed(1)} kW × ${d.f_ch} = ${d.apt_chuveiros.toFixed(2)} kVA</div>
+            ${d.chuveiros_adm > 0 ? `<div class="result-line">Chuveiros (adm): ${d.chuveiros_adm} un × ${d.chuveiro_kw.toFixed(1)} kW × ${d.f_ch} = ${d.adm_chuveiros.toFixed(2)} kVA</div>` : ''}
+            ${d.torneiras_adm > 0 ? `<div class="result-line">Torneiras (adm): ${d.torneiras_adm} un × ${d.torneira_kw.toFixed(1)} kW × ${d.f_ch} = ${d.adm_torneiras.toFixed(2)} kVA</div>` : ''}
             <br>
-            <div class="result-line">Torneiras: ${d.aptos} × ${d.total_torneiras_geral / d.aptos} × ${(d.torneiras_contrib / (d.f_ch * d.aptos * (d.total_torneiras_geral / d.aptos))).toFixed(1)} kW × ${d.f_ch}</div>
-            <div class="result-line">Contribuição = <span class="value">${d.torneiras_contrib.toFixed(2)} kVA</span></div>
+            <div class="result-line"><span class="label">c) Máq. Secar Roupa:</span></div>
+            <div class="result-line">Total: ${d.aptos} aptos × ${d.total_secar / d.aptos} = ${d.total_secar} un</div>
+            <div class="result-line">FD (Tabela 2 - maquina_secar_roupa): para ${d.total_secar} un = ${d.f_secar}</div>
+            <div class="result-line">D2b = ${d.total_secar} × ${(d.D2b / (d.total_secar || 1) / (d.f_secar || 1)).toFixed(1)} kW × ${d.f_secar} = <span class="value">${d.D2b.toFixed(2)} kVA</span></div>
             <br>
-            <div class="result-line"><span class="highlight">D2 = ${d.chuveiros_contrib.toFixed(2)} + ${d.torneiras_contrib.toFixed(2)} = ${d.D2.toFixed(2)} kVA</span></div>
+            <div class="result-line"><span class="label">d) Máq. Lavar Louça:</span></div>
+            <div class="result-line">Total: ${d.aptos} aptos × ${d.total_lavar / d.aptos} = ${d.total_lavar} un</div>
+            <div class="result-line">FD (Tabela 2 - maquinas_lavar_louca): para ${d.total_lavar} un = ${d.f_lavar}</div>
+            <div class="result-line">D2c = ${d.total_lavar} × ${(d.D2c / (d.total_lavar || 1) / (d.f_lavar || 1)).toFixed(1)} kW × ${d.f_lavar} = <span class="value">${d.D2c.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="highlight">D2 (Apartamentos) = ${d.D2_apt.toFixed(2)} kVA</span></div>
+            <div class="result-line"><span class="highlight">D2 (Administração) = ${d.D2_adm.toFixed(2)} kVA</span></div>
+            <div class="result-line"><span class="highlight">D2 Total = ${d.D2.toFixed(2)} kVA</span></div>
         </div>
 
         <hr class="result-divider">
@@ -258,20 +843,47 @@ function mostrarResultado(d) {
         <hr class="result-divider">
 
         <div class="result-section">
+            <div class="result-title" style="color:var(--cyan);">Outras Cargas</div>
+            <div class="result-line"><span class="label">Apartamentos:</span></div>
+            ${outrasAptHtml}
+            <div class="result-line">Total outras cargas (apt) = <span class="value">${d.total_outras_apt.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="label">Administração:</span></div>
+            ${outrasAdmHtml}
+            <div class="result-line">Total outras cargas (adm) = <span class="value">${d.total_outras_adm.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
             <div class="result-title blue">4 - Demanda Geral (Item 5.4 - GED-119)</div>
             <div class="result-line">Fórmula: Dg = Dapt + Dadm</div>
             <br>
-            <div class="result-line">Dapt = (D1a + D2) × Fator de Simultaneidade</div>
-            <div class="result-line">Dadm = D1b + D3</div>
+            <div class="result-line">Dapt = (D1a + D2_apt) × Fator de Simultaneidade</div>
+            <div class="result-line">Dadm = D1b + D2_adm + D3 + Outras Cargas (adm)</div>
             <br>
             <div class="result-line">Fator de simultaneidade (Tabela 7): para ${d.aptos} apartamentos = ${d.f_sim}</div>
             <br>
-            <div class="result-line">Dapt = (${d.D1a.toFixed(2)} + ${d.D2.toFixed(2)}) × ${d.f_sim}</div>
-            <div class="result-line">Dapt = ${(d.D1a + d.D2).toFixed(2)} × ${d.f_sim} = <span class="value">${d.Dapt.toFixed(2)} kVA</span></div>
+            <div class="result-line">Dapt = (${d.D1a.toFixed(2)} + ${d.D2_apt.toFixed(2)}) × ${d.f_sim}</div>
+            <div class="result-line">Dapt = ${(d.D1a + d.D2_apt).toFixed(2)} × ${d.f_sim} = <span class="value">${d.Dapt.toFixed(2)} kVA</span></div>
             <br>
-            <div class="result-line">Dadm = ${d.D1b.toFixed(2)} + ${d.D3.toFixed(2)} = <span class="value">${d.Dadm.toFixed(2)} kVA</span></div>
+            <div class="result-line">Dadm = ${d.D1b.toFixed(2)} + ${d.D2_adm.toFixed(2)} + ${d.D3.toFixed(2)} + ${d.total_outras_adm.toFixed(2)}</div>
+            <div class="result-line">Dadm = <span class="value">${d.Dadm.toFixed(2)} kVA</span></div>
             <br>
-            <div class="result-line"><span class="highlight">Dg = ${d.Dapt.toFixed(2)} + ${d.Dadm.toFixed(2)} = ${d.Dg.toFixed(2)} kVA</span></div>
+            <div class="result-line"><span class="highlight">Dg = ${d.Dapt.toFixed(2)} + ${d.Dadm.toFixed(2)} + ${d.total_outras_apt.toFixed(2)} = ${d.Dg.toFixed(2)} kVA</span></div>
+        </div>
+
+        <hr class="result-divider">
+
+        <div class="result-section">
+            <div class="result-title" style="color:var(--danger);">Regra 7.3 - Limite de Atendimento</div>
+            <div class="result-line">Tipo do Edifício: ${d.tipo}</div>
+            <div class="result-line">Limite para BT: ${d.limite} kVA</div>
+            <div class="result-line" style="color:${d.acima_limite ? 'var(--danger)' : 'var(--success)'};font-weight:700;">
+                ${d.acima_limite
+                    ? `>>> ATENÇÃO: Dg > ${d.limite} kVA - Alimentação pela rede primária (GED-2855) <<<`
+                    : `OK - Demanda dentro do limite para atendimento em BT.`}
+            </div>
         </div>
 
         <hr class="result-divider">
@@ -300,7 +912,29 @@ function mostrarResultado(d) {
             </div>
         </div>
     `;
-    content.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+    });
+});
+
+// Sync input fields across tabs
+function syncField(id) {
+    const el1 = document.getElementById(id);
+    const el2 = document.getElementById(id + '2');
+    if (el1 && el2) {
+        el1.addEventListener('input', () => el2.value = el1.value);
+        el2.addEventListener('input', () => el1.value = el2.value);
+    }
+}
+['chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
+ 'qtd_chuveiros_adm','qtd_torneiras_adm',
+ 'secar_kw','secar_apto','lavar_kw','lavar_apto'].forEach(syncField);
 </script>
 {% endblock %}

@@ -530,6 +530,18 @@ table tbody tr:last-child td {
     font-size: 14px;
 }
 
+/* Print */
+@media print {
+    body { background: #fff; color: #000; }
+    .navbar, .tabs, .tab-btn, .btn, #loading-container { display: none !important; }
+    .tab-content { display: block !important; }
+    .card { border: 1px solid #ccc; box-shadow: none; background: #fff; }
+    .result-line { color: #000; }
+    .result-final .value { color: #000; }
+    .result-line .highlight { color: #006600; }
+    #print-area { display: block !important; }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .form-grid,

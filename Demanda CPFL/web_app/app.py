@@ -8,6 +8,7 @@ if _dir not in sys.path:
 
 from core.ged119 import calcular as calc_ged119
 from core.ged13 import calcular as calc_ged13
+from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
 
 app = Flask(__name__)
 
@@ -38,6 +39,44 @@ def api_ged13():
         dados = request.get_json()
         resultado = calc_ged13(dados)
         return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- PROJECT MANAGEMENT API ---
+
+@app.route('/api/projetos/listar', methods=['GET'])
+def api_projetos_listar():
+    try:
+        projetos = listar_projetos()
+        return jsonify({'success': True, 'data': projetos})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/projetos/carregar/<int:projeto_id>', methods=['GET'])
+def api_projetos_carregar(projeto_id):
+    try:
+        proj = carregar_projeto(projeto_id)
+        if proj is None:
+            return jsonify({'success': False, 'error': 'Projeto nao encontrado'}), 404
+        return jsonify({'success': True, 'data': proj})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/projetos/salvar', methods=['POST'])
+def api_projetos_salvar():
+    try:
+        dados = request.get_json()
+        projeto_id = dados.get('id')
+        novo_id = salvar_projeto(projeto_id, dados)
+        return jsonify({'success': True, 'data': {'id': novo_id}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/projetos/excluir/<int:projeto_id>', methods=['DELETE'])
+def api_projetos_excluir(projeto_id):
+    try:
+        excluir_projeto(projeto_id)
+        return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
