@@ -130,6 +130,7 @@ def fator_simultaneidade(qtd):
 
 motores = []
 current_projeto_id = None
+ultimo_Dg = None
 
 def atualizar_tabela_motores():
     lista_motores.delete(*lista_motores.get_children())
@@ -221,6 +222,7 @@ def calcular():
             raise ValueError("{}: '{}' invalido".format(nome, raw))
 
     try:
+        global ultimo_Dg
         aptos = ler_valor(entry_aptos, "Nº de Apartamentos", int)
         area_apto = ler_valor(entry_area_apto, "Área do Apartamento", float)
         area_adm = ler_valor(entry_area_adm, "Área Administrativa", float)
@@ -295,6 +297,7 @@ def calcular():
         Dadm = D1b + D2_adm + D3
 
         Dg = Dapt + Dadm
+        ultimo_Dg = Dg
 
         # -------------------------
         # RESULTADO
@@ -621,6 +624,222 @@ def listar_projetos():
 
 
 # -----------------------------------
+# CALCULAR TRANSFORMADOR
+# -----------------------------------
+
+def buscar_faixa_tabela(tabela, col_min, col_max, valor):
+    cursor.execute(f"SELECT * FROM {tabela}")
+    linhas = cursor.fetchall()
+    colunas = [d[0] for d in cursor.description]
+    for linha in linhas:
+        min_v = linha[colunas.index(col_min)]
+        max_v = linha[colunas.index(col_max)]
+        if min_v is None and max_v is not None and valor <= max_v:
+            return linha
+        if max_v is None and min_v is not None and valor >= min_v:
+            return linha
+        if min_v is not None and max_v is not None and min_v <= valor <= max_v:
+            return linha
+    return None
+
+def calcular_transformador():
+    global ultimo_Dg
+    if ultimo_Dg is None:
+        messagebox.showwarning("Aviso", "Calcule a demanda primeiro (aba Resultado)!")
+        return
+
+    try:
+        tensao_opcao = combo_tensao.get()
+        metodo_inst = combo_metodo_inst.get()
+        forma_agrup = combo_forma_agrup.get()
+        num_circuitos_str = entry_num_circuitos.get().strip()
+
+        num_circuitos = int(num_circuitos_str) if num_circuitos_str else 1
+        if num_circuitos < 1:
+            num_circuitos = 1
+
+        if tensao_opcao == "380/220V (trifásico)":
+            V = 380
+            fator_380 = 1.73
+        else:
+            V = 220
+            fator_380 = 1.0
+
+        I = ultimo_Dg * 1000 / (V * 3**0.5)
+
+        txt_transf.delete("1.0", tk.END)
+        txt_transf.insert(tk.END, "=" * 60 + "\n")
+        txt_transf.insert(tk.END, "  DIMENSIONAMENTO DO TRANSFORMADOR\n")
+        txt_transf.insert(tk.END, "=" * 60 + "\n\n")
+
+        txt_transf.insert(tk.END, f"Demanda Geral (Dg): {ultimo_Dg:.2f} kVA\n")
+        txt_transf.insert(tk.END, f"Tensão: {tensao_opcao}\n")
+        txt_transf.insert(tk.END, f"Corrente Calculada: I = {ultimo_Dg:.2f} x 1000 / ({V} x √3) = {I:.2f} A\n\n")
+
+        # --- TRANSFORMADOR (TABELA_10) ---
+        trafo = buscar_faixa_tabela("TABELA_10", "demanda_min", "demanda_max", ultimo_Dg)
+        if trafo:
+            trafo_kva = trafo[3]
+            txt_transf.insert(tk.END, "1 - TRANSFORMADOR RECOMENDADO (Tabela 10)\n")
+            txt_transf.insert(tk.END, f"   Demanda: {ultimo_Dg:.2f} kVA\n")
+            txt_transf.insert(tk.END, f"   Transformador: {trafo_kva:.0f} kVA\n")
+            txt_transf.insert(tk.END, f"   Faixa: {trafo[1]:.0f} a {trafo[2]:.0f} kVA\n\n")
+        else:
+            trafo_kva = None
+            txt_transf.insert(tk.END, "1 - TRANSFORMADOR RECOMENDADO (Tabela 10)\n")
+            txt_transf.insert(tk.END, "   Nenhum transformador encontrado para esta demanda.\n\n")
+
+        # --- CAPACIDADE DE INTERRUPÇÃO ---
+        if trafo_kva:
+            cap = buscar_faixa_tabela("capacidade_interrupcao_transformador", "transformador_kva", "transformador_kva", trafo_kva)
+            if cap:
+                txt_transf.insert(tk.END, "   Capacidade de Interrupção:\n")
+                txt_transf.insert(tk.END, f"      {cap[1]:.0f} kVA -> {cap[2]:.1f} kA  (Z% = {cap[3]:.2f}%)\n\n")
+
+        # --- CONDUTORES (TABELA 11 - 1 de 2) ---
+        cursor.execute("SELECT * FROM tabela11_cabos_bt ORDER BY secao_mm2")
+        cabos = cursor.fetchall()
+        col_cabos = [d[0] for d in cursor.description]
+
+        cols_metodo = {"A": "A", "B": "B", "C": "C", "D": "D", "E": "E", "F": "F"}
+        if metodo_inst in cols_metodo:
+            col_corrente = cols_metodo[metodo_inst]
+        else:
+            col_corrente = "C"
+
+        idx_corrente = col_cabos.index(col_corrente)
+        idx_secao = col_cabos.index("secao_mm2")
+
+        txt_transf.insert(tk.END, "2 - CONDUTORES BT (Tabela 11 - 1 de 2)\n")
+        txt_transf.insert(tk.END, f"   Método de Instalação: {metodo_inst}\n")
+        txt_transf.insert(tk.END, f"   Tensão: {tensao_opcao}\n")
+        if fator_380 > 1:
+            txt_transf.insert(tk.END, f"   Fator 380V (x1,73): aplicado\n")
+
+        I_correcao = I
+
+        # --- FATOR DE CORREÇÃO (TABELA 11 - 2 de 2) ---
+        cursor.execute("SELECT * FROM tabela11_fatores_correcao")
+        fatores = cursor.fetchall()
+        col_fat = [d[0] for d in cursor.description]
+
+        fator_correcao = 1.0
+        nome_forma = forma_agrup
+        for linha in fatores:
+            if linha[1] == nome_forma:
+                if num_circuitos == 1:
+                    fator_correcao = linha[2]
+                elif num_circuitos == 2:
+                    fator_correcao = linha[3]
+                elif num_circuitos == 3:
+                    fator_correcao = linha[4]
+                elif num_circuitos == 4:
+                    fator_correcao = linha[5]
+                elif num_circuitos == 5:
+                    fator_correcao = linha[6]
+                elif num_circuitos == 6:
+                    fator_correcao = linha[7]
+                elif num_circuitos == 7:
+                    fator_correcao = linha[8]
+                elif num_circuitos == 8:
+                    fator_correcao = linha[9]
+                elif num_circuitos <= 11:
+                    fator_correcao = linha[10]
+                elif num_circuitos <= 15:
+                    fator_correcao = linha[11]
+                elif num_circuitos <= 19:
+                    fator_correcao = linha[12]
+                else:
+                    fator_correcao = linha[13]
+                break
+
+        if fator_correcao is None or fator_correcao == 0:
+            fator_correcao = 1.0
+
+        I_corrigida = I_correcao / fator_correcao
+
+        txt_transf.insert(tk.END, f"   Agrupamento: {nome_forma}\n")
+        txt_transf.insert(tk.END, f"   Circuitos agrupados: {num_circuitos}\n")
+        txt_transf.insert(tk.END, f"   Fator de Correção (F): {fator_correcao:.2f}\n")
+        txt_transf.insert(tk.END, f"   Corrente Corrigida: I' = {I:.2f} / {fator_correcao:.2f} = {I_corrigida:.2f} A\n\n")
+
+        # Encontrar seção do cabo
+        cabo_sel = None
+        for cabo in cabos:
+            capacidade = cabo[idx_corrente]
+            if fator_380 > 1:
+                capacidade = capacidade * fator_380
+            if capacidade >= I_corrigida:
+                cabo_sel = cabo
+                break
+
+        if cabo_sel:
+            secao = cabo_sel[idx_secao]
+            capacidade_real = cabo_sel[idx_corrente]
+            if fator_380 > 1:
+                capacidade_real = capacidade_real * fator_380
+            txt_transf.insert(tk.END, f"   Seção Recomendada: {secao:.0f} mm²\n")
+            txt_transf.insert(tk.END, f"   Capacidade (Tabela): {cabo_sel[idx_corrente]:.0f} A")
+            if fator_380 > 1:
+                txt_transf.insert(tk.END, f" x {fator_380} = {capacidade_real:.0f} A")
+            txt_transf.insert(tk.END, f" >= {I_corrigida:.2f} A ✓\n")
+        else:
+            txt_transf.insert(tk.END, "   Nenhum cabo encontrado com capacidade suficiente.\n")
+            secao = None
+
+        if secao:
+            diametro = cabo_sel[col_cabos.index("diametro_externo_mm")]
+            txt_transf.insert(tk.END, f"   Diâmetro Externo: {diametro:.1f} mm\n")
+        txt_transf.insert(tk.END, "\n")
+
+        # --- BARRAMENTO BT (TABELA 12) ---
+        barra = buscar_faixa_tabela("tabela12_barramento_bt", "demanda_min_kva", "demanda_max_kva", ultimo_Dg)
+        txt_transf.insert(tk.END, "3 - BARRAMENTO DE BAIXA TENSÃO (Tabela 12)\n")
+        if barra:
+            txt_transf.insert(tk.END, f"   Demanda: {ultimo_Dg:.2f} kVA\n")
+            txt_transf.insert(tk.END, f"   Barramento: {barra[3]} mm  ({barra[4]} pol)\n\n")
+        else:
+            txt_transf.insert(tk.END, "   Nenhum barramento encontrado para esta demanda.\n\n")
+
+        # --- DISJUNTOR ---
+        cursor.execute("SELECT corrente_nominal_A FROM disjuntores_termomagneticos ORDER BY corrente_nominal_A")
+        disjuntores = [r[0] for r in cursor.fetchall()]
+        disjuntor_sel = None
+        for d in disjuntores:
+            if d >= I:
+                disjuntor_sel = d
+                break
+
+        txt_transf.insert(tk.END, "4 - DISJUNTOR TERMOMAGNÉTICO\n")
+        txt_transf.insert(tk.END, f"   Corrente Calculada: {I:.2f} A\n")
+        if disjuntor_sel:
+            txt_transf.insert(tk.END, f"   Disjuntor Padronizado: {disjuntor_sel:.0f} A\n")
+            txt_transf.insert(tk.END, f"   Correntes Nominais Padronizadas (A): 100 - 125 - 150 - 160 - 175 - 200 - 225 - 250 - 300 - 350 - 400 - 450 - 500 - 600\n\n")
+        else:
+            txt_transf.insert(tk.END, "   Nenhum disjuntor padronizado encontrado (acima de 600A).\n\n")
+
+        # --- RESUMO ---
+        txt_transf.insert(tk.END, "=" * 60 + "\n")
+        txt_transf.insert(tk.END, "  RESUMO DO DIMENSIONAMENTO\n")
+        txt_transf.insert(tk.END, "=" * 60 + "\n\n")
+        if trafo_kva:
+            txt_transf.insert(tk.END, f"  Transformador: {trafo_kva:.0f} kVA\n")
+            if cap:
+                txt_transf.insert(tk.END, f"  Capacidade de Interrupção: {cap[2]:.1f} kA\n")
+        if secao:
+            txt_transf.insert(tk.END, f"  Condutor: {secao:.0f} mm²\n")
+        if barra:
+            txt_transf.insert(tk.END, f"  Barramento BT: {barra[3]} mm\n")
+        if disjuntor_sel:
+            txt_transf.insert(tk.END, f"  Disjuntor: {disjuntor_sel:.0f} A\n")
+        txt_transf.insert(tk.END, f"  Corrente Total: {I:.2f} A\n")
+        txt_transf.insert(tk.END, "=" * 60 + "\n")
+
+    except Exception as e:
+        messagebox.showerror("Erro", f"Erro no dimensionamento:\n{str(e)}")
+
+
+# -----------------------------------
 # INTERFACE
 # -----------------------------------
 
@@ -887,6 +1106,109 @@ lista_projetos.pack(side="left", fill="both", expand=True)
 scroll_proj.pack(side="right", fill="y")
 
 listar_projetos()
+
+# -----------------------------------
+# ABA 5 - CALCULAR TRANSFORMADOR
+# -----------------------------------
+
+aba5 = ttk.Frame(notebook)
+notebook.add(aba5, text="Calcular Transformador")
+
+canvas5 = tk.Canvas(aba5, highlightthickness=0, width=860)
+scroll5 = ttk.Scrollbar(aba5, orient="vertical", command=canvas5.yview)
+aba5_inner = ttk.Frame(canvas5, padding=5)
+
+def _config_inner5(event):
+    canvas5.configure(scrollregion=canvas5.bbox("all"))
+    canvas5.itemconfig(inner5_id, width=canvas5.winfo_width())
+
+aba5_inner.bind("<Configure>", _config_inner5)
+inner5_id = canvas5.create_window((0, 0), window=aba5_inner, anchor="nw")
+canvas5.configure(yscrollcommand=scroll5.set)
+
+canvas5.pack(side="left", fill="both", expand=True)
+scroll5.pack(side="right", fill="y")
+
+def _on_mousewheel5(event):
+    canvas5.yview_scroll(int(-1 * (event.delta / 120)), "units")
+canvas5.bind("<MouseWheel>", _on_mousewheel5)
+
+aba5.rowconfigure(0, weight=1)
+aba5.columnconfigure(0, weight=1)
+
+# --- Frame: Dados de Entrada ---
+frame_dados_transf = ttk.LabelFrame(aba5_inner, text="Dados de Entrada", padding=10)
+frame_dados_transf.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_dados_transf, text="Demanda Geral (Dg):").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+lbl_dg_transf = ttk.Label(frame_dados_transf, text="---", font=("Consolas", 10, "bold"))
+lbl_dg_transf.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+ttk.Label(frame_dados_transf, text="Tensão:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+combo_tensao = ttk.Combobox(frame_dados_transf, values=["380/220V (trifásico)", "220/127V (trifásico)"], state="readonly", width=25)
+combo_tensao.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+combo_tensao.current(0)
+
+ttk.Label(frame_dados_transf, text="Método de Instalação:").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+combo_metodo_inst = ttk.Combobox(frame_dados_transf, values=["A", "B", "C", "D", "E", "F"], state="readonly", width=10)
+combo_metodo_inst.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+combo_metodo_inst.current(2)
+
+# --- Frame: Forma de Agrupamento (Tabela 11 - 2 de 2) ---
+frame_agrup = ttk.LabelFrame(aba5_inner, text="Fatores de Correção para Condutores Agrupados (Tabela 11 - 2 de 2)", padding=10)
+frame_agrup.pack(fill="x", padx=10, pady=10)
+
+ttk.Label(frame_agrup, text="Forma de Agrupamento:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+cursor.execute("SELECT forma_agrupamento FROM tabela11_fatores_correcao")
+formas = [r[0] for r in cursor.fetchall()]
+combo_forma_agrup = ttk.Combobox(frame_agrup, values=formas, state="readonly", width=70)
+combo_forma_agrup.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+combo_forma_agrup.current(0)
+
+ttk.Label(frame_agrup, text="Nº de Circuitos Agrupados:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_num_circuitos = ttk.Entry(frame_agrup, width=10)
+entry_num_circuitos.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+entry_num_circuitos.insert(0, "1")
+
+# --- Botão Calcular ---
+frame_btn_transf = ttk.Frame(aba5_inner)
+frame_btn_transf.pack(fill="x", padx=10, pady=10)
+
+def atualizar_dg_transf():
+    if ultimo_Dg is not None:
+        lbl_dg_transf.config(text=f"{ultimo_Dg:.2f} kVA")
+    else:
+        lbl_dg_transf.config(text="--- (calcule primeiro)")
+
+btn_calc_transf = ttk.Button(frame_btn_transf, text="Calcular Transformador", command=lambda: [atualizar_dg_transf(), calcular_transformador()])
+btn_calc_transf.pack(side="left", padx=5)
+
+btn_atualizar_dg = ttk.Button(frame_btn_transf, text="Atualizar Dg", command=atualizar_dg_transf)
+btn_atualizar_dg.pack(side="left", padx=5)
+
+# --- Frame Resultado ---
+frame_res_transf = ttk.LabelFrame(aba5_inner, text="Resultado do Dimensionamento", padding=10)
+frame_res_transf.pack(fill="both", expand=True, padx=10, pady=10)
+
+scroll_transf = ttk.Scrollbar(frame_res_transf, orient="vertical")
+txt_transf = tk.Text(
+    frame_res_transf,
+    height=25,
+    font=("Consolas", 10),
+    yscrollcommand=scroll_transf.set
+)
+scroll_transf.config(command=txt_transf.yview)
+
+txt_transf.pack(side="left", fill="both", expand=True)
+scroll_transf.pack(side="right", fill="y")
+
+# Atualizar Dg automaticamente ao trocar para a aba "Calcular Transformador"
+def on_tab_change(event):
+    if notebook.tab("current", "text") == "Calcular Transformador":
+        atualizar_dg_transf()
+
+notebook.bind("<<NotebookTabChanged>>", on_tab_change)
+
 
 # -----------------------------------
 # CRIAR PROJETO TESTE DIMENSIONAMENTO
