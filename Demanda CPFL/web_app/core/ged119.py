@@ -63,6 +63,145 @@ def fator_simultaneidade(qtd):
     conn.close()
     return 1
 
+def buscar_faixa_tabela(cursor, tabela, col_min, col_max, valor):
+    cursor.execute(f"SELECT * FROM {tabela}")
+    linhas = cursor.fetchall()
+    colunas = [d[0] for d in cursor.description]
+    for linha in linhas:
+        min_v = linha[colunas.index(col_min)]
+        max_v = linha[colunas.index(col_max)]
+        if min_v is None and max_v is not None and valor <= max_v:
+            return dict(zip(colunas, linha))
+        if max_v is None and min_v is not None and valor >= min_v:
+            return dict(zip(colunas, linha))
+        if min_v is not None and max_v is not None and min_v <= valor <= max_v:
+            return dict(zip(colunas, linha))
+    return None
+
+def calcular_transformador(dados):
+    dg = float(dados['dg'])
+    tipo = dados.get('tipo', 'Residencial')
+    tensao_opcao = dados.get('tensao', '380/220V (trifásico)')
+    metodo_inst = dados.get('metodo_inst', 'C')
+    forma_agrup = dados.get('forma_agrup', 'Em feixe ao ar livre')
+    num_circuitos = int(dados.get('num_circuitos', 1))
+    if num_circuitos < 1:
+        num_circuitos = 1
+
+    if tensao_opcao == "380/220V (trifásico)":
+        V = 380
+        fator_380 = 1.73
+    else:
+        V = 220
+        fator_380 = 1.0
+
+    I = dg * 1000 / (V * 3**0.5)
+
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    # --- REGRA 7.3 ---
+    limite = 400 if tipo == "Residencial" else 300
+    acima_limite = dg > limite
+
+    # --- TRANSFORMADOR (TABELA_10) ---
+    trafo = buscar_faixa_tabela(cursor, "TABELA_10", "demanda_min", "demanda_max", dg)
+    trafo_kva = trafo['transformador_kva'] if trafo else None
+
+    # --- CAPACIDADE DE INTERRUPÇÃO ---
+    cap = None
+    if trafo_kva:
+        cap = buscar_faixa_tabela(cursor, "capacidade_interrupcao_transformador", "transformador_kva", "transformador_kva", trafo_kva)
+
+    # --- CABOS (TABELA 11 - 1 de 2) ---
+    cursor.execute("SELECT * FROM tabela11_cabos_bt ORDER BY secao_mm2")
+    cabos = cursor.fetchall()
+    col_cabos = [d[0] for d in cursor.description]
+    col_corrente = metodo_inst if metodo_inst in ("A","B","C","D","E","F") else "C"
+    idx_corrente = col_cabos.index(col_corrente)
+    idx_secao = col_cabos.index("secao_mm2")
+
+    # --- FATOR DE CORREÇÃO (TABELA 11 - 2 de 2) ---
+    cursor.execute("SELECT * FROM tabela11_fatores_correcao")
+    fatores = cursor.fetchall()
+    col_fat = [d[0] for d in cursor.description]
+
+    fator_correcao = 1.0
+    for linha in fatores:
+        if linha[1] == forma_agrup:
+            idx_map = {1:2,2:3,3:4,4:5,5:6,6:7,7:8,8:9}
+            if num_circuitos in idx_map:
+                fator_correcao = linha[idx_map[num_circuitos]]
+            elif num_circuitos <= 11:
+                fator_correcao = linha[10]
+            elif num_circuitos <= 15:
+                fator_correcao = linha[11]
+            elif num_circuitos <= 19:
+                fator_correcao = linha[12]
+            else:
+                fator_correcao = linha[13]
+            break
+
+    if fator_correcao is None or fator_correcao == 0:
+        fator_correcao = 1.0
+
+    I_corrigida = I / fator_correcao
+
+    # Selecionar cabo
+    cabo_sel = None
+    for cabo in cabos:
+        capacidade = cabo[idx_corrente]
+        if fator_380 > 1:
+            capacidade = capacidade * fator_380
+        if capacidade >= I_corrigida:
+            cabo_sel = dict(zip(col_cabos, cabo))
+            break
+
+    secao = cabo_sel['secao_mm2'] if cabo_sel else None
+    diametro = cabo_sel['diametro_externo_mm'] if cabo_sel and 'diametro_externo_mm' in col_cabos else None
+    cap_tabela = cabo_sel[col_corrente] if cabo_sel else None
+
+    # --- BARRAMENTO BT (TABELA 12) ---
+    barra = buscar_faixa_tabela(cursor, "tabela12_barramento_bt", "demanda_min_kva", "demanda_max_kva", dg)
+
+    # --- DISJUNTOR ---
+    cursor.execute("SELECT corrente_nominal_A FROM disjuntores_termomagneticos ORDER BY corrente_nominal_A")
+    disjuntores = [r[0] for r in cursor.fetchall()]
+    disjuntor_sel = None
+    for d in disjuntores:
+        if d >= I:
+            disjuntor_sel = d
+            break
+
+    conn.close()
+
+    return {
+        'dg': round(dg, 2),
+        'tipo': tipo,
+        'limite': limite,
+        'acima_limite': acima_limite,
+        'tensao': tensao_opcao,
+        'V': V,
+        'I': round(I, 2),
+        'trafo_kva': trafo_kva,
+        'trafo_faixa_min': round(trafo['demanda_min'], 1) if trafo else None,
+        'trafo_faixa_max': round(trafo['demanda_max'], 1) if trafo else None,
+        'cap_interrupcao_kA': round(cap['capacidade_interrupcao_ka'], 2) if cap else None,
+        'cap_z_percent': round(cap['z_percent'], 2) if cap else None,
+        'metodo_inst': metodo_inst,
+        'forma_agrup': forma_agrup,
+        'num_circuitos': num_circuitos,
+        'fator_correcao': round(fator_correcao, 2),
+        'I_corrigida': round(I_corrigida, 2),
+        'secao_mm2': secao,
+        'diametro_externo_mm': round(diametro, 1) if diametro else None,
+        'capacidade_cabo_A': round(cap_tabela, 1) if cap_tabela else None,
+        'fator_380': fator_380,
+        'barramento_mm': barra['barra_mm'] if barra else None,
+        'barramento_pol': barra['barra_polegada'] if barra else None,
+        'disjuntor_A': disjuntor_sel,
+    }
+
 def calcular(dados):
     aptos = int(dados['aptos'])
     area_apto = float(dados['area_apto'])
@@ -71,10 +210,10 @@ def calcular(dados):
     tomadas = float(dados['tomadas'])
     chuveiro_kw = float(dados['chuveiro_kw'])
     torneira_kw = float(dados['torneira_kw'])
-    qtd_chuveiros = int(dados['qtd_chuveiros'])
-    qtd_torneiras = int(dados['qtd_torneiras'])
-    qtd_chuveiros_adm = int(dados.get('qtd_chuveiros_adm', 0))
-    qtd_torneiras_adm = int(dados.get('qtd_torneiras_adm', 0))
+    qtd_chuveiros = int(dados.get('chuveiros_apto', dados.get('qtd_chuveiros', 1)))
+    qtd_torneiras = int(dados.get('torneiras_apto', dados.get('qtd_torneiras', 0)))
+    qtd_chuveiros_adm = int(dados.get('chuveiros_adm', dados.get('qtd_chuveiros_adm', 0)))
+    qtd_torneiras_adm = int(dados.get('torneiras_adm', dados.get('qtd_torneiras_adm', 0)))
     secar_kw = float(dados.get('secar_kw', 0))
     secar_apto = int(dados.get('secar_apto', 0))
     lavar_kw = float(dados.get('lavar_kw', 0))

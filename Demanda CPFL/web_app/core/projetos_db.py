@@ -34,6 +34,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS motores_projeto (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             projeto_id INTEGER,
+            descricao TEXT DEFAULT '',
             cv REAL,
             quantidade INTEGER,
             FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE
@@ -59,6 +60,10 @@ def init_db():
         cursor.execute("ALTER TABLE projetos ADD COLUMN tipo TEXT DEFAULT 'Residencial'")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE motores_projeto ADD COLUMN descricao TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -80,8 +85,8 @@ def carregar_projeto(projeto_id):
         return None
     col_names = [d[0] for d in cursor.description]
     proj_dict = dict(zip(col_names, proj))
-    cursor.execute("SELECT cv, quantidade FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
-    motores = [{'cv': r[0], 'qtd': r[1]} for r in cursor.fetchall()]
+    cursor.execute("SELECT descricao, cv, quantidade FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
+    motores = [{'descricao': r[0], 'cv': r[1], 'qtd': r[2]} for r in cursor.fetchall()]
     cursor.execute("SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'apt'", (projeto_id,))
     outras_apt = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2]} for r in cursor.fetchall()]
     cursor.execute("SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'adm'", (projeto_id,))
@@ -109,8 +114,9 @@ def salvar_projeto(projeto_id, dados):
         projeto_id = cursor.lastrowid
     cursor.execute("DELETE FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
     for m in dados.get('motores', []):
-        cursor.execute("INSERT INTO motores_projeto (projeto_id, cv, quantidade) VALUES (?, ?, ?)",
-                       (projeto_id, float(m['cv']), int(m['qtd'])))
+        desc = m.get('desc', m.get('descricao', ''))
+        cursor.execute("INSERT INTO motores_projeto (projeto_id, descricao, cv, quantidade) VALUES (?, ?, ?, ?)",
+                       (projeto_id, desc, float(m['cv']), int(m['qtd'])))
     cursor.execute("DELETE FROM outras_cargas_projeto WHERE projeto_id = ?", (projeto_id,))
     for c in dados.get('outras_cargas_apt', []):
         cursor.execute("INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES (?, 'apt', ?, ?, ?)",

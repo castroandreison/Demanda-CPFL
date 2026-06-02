@@ -2,15 +2,14 @@
 {% block content %}
 
 <div class="tabs" id="main-tabs">
-    <button class="tab-btn active" data-tab="tab-projetos">Gerenciamento</button>
-    <button class="tab-btn" data-tab="tab-dados">Dados do Edifício</button>
-    <button class="tab-btn" data-tab="tab-aparelhos">Aparelhos</button>
-    <button class="tab-btn" data-tab="tab-eletro">Eletrodomésticos</button>
-    <button class="tab-btn" data-tab="tab-outras-apt">Outras Cargas (Apt)</button>
-    <button class="tab-btn" data-tab="tab-outras-adm">Outras Cargas (Adm)</button>
+    <button class="tab-btn" data-tab="tab-projetos">Gerenciamento</button>
+    <button class="tab-btn active" data-tab="tab-dados">Dados do Edifício</button>
+    <button class="tab-btn" data-tab="tab-apartamentos">Apartamentos</button>
+    <button class="tab-btn" data-tab="tab-administracao">Administração</button>
     <button class="tab-btn" data-tab="tab-motores">Motores</button>
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
-    <button class="tab-btn" data-tab="tab-limites">Limites / Rede Primária</button>
+    <button class="tab-btn" data-tab="tab-transformador">Calcular Transformador</button>
+    <button class="tab-btn" data-tab="tab-limites">Rede Primária</button>
 </div>
 
 <div id="tab-projetos" class="tab-content">
@@ -94,6 +93,14 @@
         </div>
     </div>
 
+    <div style="text-align:center;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-apartamentos')">
+            Próximo: Apartamentos &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-apartamentos" class="tab-content">
     <div class="card">
         <div class="card-header">Aparelhos (por apartamento)</div>
         <div class="form-grid col-4">
@@ -112,20 +119,6 @@
             <div class="form-group">
                 <label>Torneiras por apto</label>
                 <input type="number" id="qtd_torneiras" value="0" min="0">
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">Aparelhos (Administração)</div>
-        <div class="form-grid col-4">
-            <div class="form-group">
-                <label>Qtd. Chuveiros (adm)</label>
-                <input type="number" id="qtd_chuveiros_adm" value="0" min="0">
-            </div>
-            <div class="form-group">
-                <label>Qtd. Torneiras (adm)</label>
-                <input type="number" id="qtd_torneiras_adm" value="0" min="0">
             </div>
         </div>
     </div>
@@ -152,88 +145,6 @@
         </div>
     </div>
 
-    <div style="text-align:center;">
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-aparelhos')">
-            Próximo: Aparelhos &rarr;
-        </button>
-    </div>
-</div>
-
-<div id="tab-aparelhos" class="tab-content">
-    <div class="card">
-        <div class="card-header">Aparelhos (por apartamento)</div>
-        <div class="form-grid col-4">
-            <div class="form-group">
-                <label>Potência do Chuveiro (kW)</label>
-                <input type="number" id="chuveiro_kw2" value="5.5" min="0" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Potência da Torneira (kW)</label>
-                <input type="number" id="torneira_kw2" value="3.5" min="0" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Chuveiros por apto</label>
-                <input type="number" id="qtd_chuveiros2" value="1" min="0">
-            </div>
-            <div class="form-group">
-                <label>Torneiras por apto</label>
-                <input type="number" id="qtd_torneiras2" value="0" min="0">
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">Aparelhos (Administração)</div>
-        <div class="form-grid col-4">
-            <div class="form-group">
-                <label>Qtd. Chuveiros (adm)</label>
-                <input type="number" id="qtd_chuveiros_adm2" value="0" min="0">
-            </div>
-            <div class="form-group">
-                <label>Qtd. Torneiras (adm)</label>
-                <input type="number" id="qtd_torneiras_adm2" value="0" min="0">
-            </div>
-        </div>
-    </div>
-
-    <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-eletro')">
-            Próximo: Eletrodomésticos &rarr;
-        </button>
-    </div>
-</div>
-
-<div id="tab-eletro" class="tab-content">
-    <div class="card">
-        <div class="card-header">Eletrodomésticos (por apartamento)</div>
-        <div class="form-grid col-4">
-            <div class="form-group">
-                <label>Pot. Máq. Secar Roupa (kW)</label>
-                <input type="number" id="secar_kw2" value="0" min="0" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Qtd. por apto</label>
-                <input type="number" id="secar_apto2" value="0" min="0">
-            </div>
-            <div class="form-group">
-                <label>Pot. Máq. Lavar Louça (kW)</label>
-                <input type="number" id="lavar_kw2" value="0" min="0" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Qtd. por apto</label>
-                <input type="number" id="lavar_apto2" value="0" min="0">
-            </div>
-        </div>
-    </div>
-
-    <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-outras-apt')">
-            Próximo: Outras Cargas &rarr;
-        </button>
-    </div>
-</div>
-
-<div id="tab-outras-apt" class="tab-content">
     <div class="card">
         <div class="card-header">Outras Cargas (Apartamentos)</div>
         <div class="form-grid col-3" style="margin-bottom:12px;">
@@ -271,13 +182,27 @@
     </div>
 
     <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-outras-adm')">
-            Próximo: Outras Cargas (Adm) &rarr;
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTab('tab-administracao')">
+            Próximo: Administração &rarr;
         </button>
     </div>
 </div>
 
-<div id="tab-outras-adm" class="tab-content">
+<div id="tab-administracao" class="tab-content">
+    <div class="card">
+        <div class="card-header">Aparelhos (Administração)</div>
+        <div class="form-grid col-4">
+            <div class="form-group">
+                <label>Qtd. Chuveiros (adm)</label>
+                <input type="number" id="qtd_chuveiros_adm" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Qtd. Torneiras (adm)</label>
+                <input type="number" id="qtd_torneiras_adm" value="0" min="0">
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">Outras Cargas (Administração)</div>
         <div class="form-grid col-3" style="margin-bottom:12px;">
@@ -329,6 +254,10 @@
         </div>
         <div class="form-grid col-3" style="margin-bottom:12px;">
             <div class="form-group">
+                <label>Descrição do Uso</label>
+                <input type="text" id="motor_desc" placeholder="Ex: Bomba de recalque">
+            </div>
+            <div class="form-group">
                 <label>Potência (CV)</label>
                 <input type="number" id="motor_cv" step="0.01" min="0">
             </div>
@@ -336,18 +265,17 @@
                 <label>Quantidade</label>
                 <input type="number" id="motor_qtd" min="1" value="1">
             </div>
-            <div class="form-group" style="justify-content:flex-end;">
-                <div class="btn-group" style="margin-top:18px;">
-                    <button class="btn btn-success btn-sm" onclick="adicionarMotor()">+ Adicionar</button>
-                    <button class="btn btn-danger btn-sm" onclick="excluirMotor()">- Excluir</button>
-                </div>
-            </div>
+        </div>
+        <div class="btn-group" style="margin-bottom:12px;">
+            <button class="btn btn-success btn-sm" onclick="adicionarMotor()">+ Adicionar</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirMotor()">- Excluir</button>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th style="width:40px;"></th>
+                        <th>Descrição</th>
                         <th>Potência (CV)</th>
                         <th>Quantidade</th>
                     </tr>
@@ -387,6 +315,55 @@
         <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED119()">
             ⚡ Calcular / Recalcular
         </button>
+    </div>
+</div>
+
+<div id="tab-transformador" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dimensionamento do Transformador</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Demanda Geral (Dg) - kVA</label>
+                <input type="number" id="transf_dg" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Tensão</label>
+                <select id="transf_tensao">
+                    <option value="380/220V (trifásico)">380/220V (trifásico)</option>
+                    <option value="220/127V (trifásico)">220/127V (trifásico)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Método de Instalação</label>
+                <select id="transf_metodo">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C" selected>C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Forma de Agrupamento</label>
+                <input type="text" id="transf_agrup" value="Em feixe ao ar livre">
+            </div>
+            <div class="form-group">
+                <label>Nº Circuitos Agrupados</label>
+                <input type="number" id="transf_circuitos" value="1" min="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-primary" onclick="calcularTransformador()">⚡ Calcular</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="transf-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado do Dimensionamento</div>
+            <div id="transf-content"></div>
+        </div>
     </div>
 </div>
 
@@ -431,6 +408,7 @@
 let motores = [];
 let outrasCargas = { apt: [], adm: [] };
 let currentProjetoId = null;
+let ultimoDg = null;
 
 // --- Project Management ---
 
@@ -488,7 +466,7 @@ function carregarProjeto(projetoId) {
         setField('lavar_kw', p.lavar_kw || 0);
         setField('lavar_apto', p.lavar_apto || 0);
         document.getElementById('tipo').value = p.tipo || 'Residencial';
-        motores = (p.motores || []).map(m => ({ cv: m.cv, qtd: m.qtd }));
+        motores = (p.motores || []).map(m => ({ desc: m.descricao || m.desc || '', cv: m.cv, qtd: m.qtd }));
         renderMotores();
         outrasCargas.apt = (p.outras_cargas_apt || []).map(c => ({ desc: c.descricao, pot: c.potencia, qtd: c.quantidade }));
         renderCargas('apt');
@@ -536,6 +514,7 @@ function novoProjeto() {
      'qtd_chuveiros_adm','qtd_torneiras_adm',
      'secar_kw','secar_apto','lavar_kw','lavar_apto'].forEach(id => setField(id, ''));
     document.getElementById('tipo').value = 'Residencial';
+    document.getElementById('motor_desc').value = '';
     motores = [];
     renderMotores();
     outrasCargas = { apt: [], adm: [] };
@@ -578,10 +557,12 @@ function renderMotores() {
         tr.onclick = function() {
             document.querySelectorAll('#motor-table-body tr').forEach(r => r.classList.remove('selected'));
             tr.classList.add('selected');
+            document.getElementById('motor_desc').value = m.desc || '';
             document.getElementById('motor_cv').value = m.cv;
             document.getElementById('motor_qtd').value = m.qtd;
         };
         tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
+                        <td>${m.desc || '-'}</td>
                         <td>${m.cv}</td>
                         <td>${m.qtd}</td>`;
         tbody.appendChild(tr);
@@ -589,22 +570,25 @@ function renderMotores() {
 }
 
 function adicionarMotor() {
+    const desc = document.getElementById('motor_desc').value.trim();
     const cv = parseFloat(document.getElementById('motor_cv').value);
     const qtd = parseInt(document.getElementById('motor_qtd').value);
+    if (!desc) { alert('Descrição do uso é obrigatória!'); return; }
     if (isNaN(cv) || cv <= 0) { alert('Potência (CV) deve ser um número positivo!'); return; }
     if (isNaN(qtd) || qtd <= 0) { alert('Quantidade deve ser um número positivo!'); return; }
-    motores.push({ cv, qtd });
+    motores.push({ desc, cv, qtd });
     renderMotores();
+    document.getElementById('motor_desc').value = '';
     document.getElementById('motor_cv').value = '';
     document.getElementById('motor_qtd').value = '1';
-    document.getElementById('motor_cv').focus();
+    document.getElementById('motor_desc').focus();
 }
 
 function excluirMotor() {
     const selected = document.querySelector('#motor-table-body tr.selected');
     if (!selected) { alert('Selecione um motor para excluir!'); return; }
     const idx = Array.from(selected.parentElement.children).indexOf(selected);
-    if (confirm(`Excluir motor ${motores[idx].cv} CV (qtd: ${motores[idx].qtd})?`)) {
+    if (confirm(`Excluir motor "${motores[idx].desc}" (${motores[idx].cv} CV x ${motores[idx].qtd})?`)) {
         motores.splice(idx, 1);
         renderMotores();
     }
@@ -677,10 +661,10 @@ function getDados() {
         tomadas: tabPrefix('tomadas'),
         chuveiro_kw: tabPrefix('chuveiro_kw'),
         torneira_kw: tabPrefix('torneira_kw'),
-        qtd_chuveiros: tabPrefix('qtd_chuveiros'),
-        qtd_torneiras: tabPrefix('qtd_torneiras'),
-        qtd_chuveiros_adm: tabPrefix('qtd_chuveiros_adm'),
-        qtd_torneiras_adm: tabPrefix('qtd_torneiras_adm'),
+        chuveiros_apto: tabPrefix('qtd_chuveiros'),
+        torneiras_apto: tabPrefix('qtd_torneiras'),
+        chuveiros_adm: tabPrefix('qtd_chuveiros_adm'),
+        torneiras_adm: tabPrefix('qtd_torneiras_adm'),
         secar_kw: tabPrefix('secar_kw'),
         secar_apto: tabPrefix('secar_apto'),
         lavar_kw: tabPrefix('lavar_kw'),
@@ -753,6 +737,8 @@ function mostrarResultado(d) {
     const container = document.getElementById('result-container');
     const content = document.getElementById('result-content');
     container.style.display = 'block';
+    ultimoDg = d.Dg;
+    document.getElementById('transf_dg').value = d.Dg;
 
     const motoresHtml = d.motores.length > 0
         ? d.motores.map((m, i) =>
@@ -914,6 +900,119 @@ function mostrarResultado(d) {
     `;
 }
 
+function calcularTransformador() {
+    const dg = parseFloat(document.getElementById('transf_dg').value);
+    if (isNaN(dg) || dg <= 0) {
+        alert('Preencha a Demanda Geral (Dg)! Calcule a demanda primeiro ou digite manualmente.');
+        return;
+    }
+    const dados = {
+        dg: dg,
+        tipo: document.getElementById('tipo').value,
+        tensao: document.getElementById('transf_tensao').value,
+        metodo_inst: document.getElementById('transf_metodo').value,
+        forma_agrup: document.getElementById('transf_agrup').value,
+        num_circuitos: parseInt(document.getElementById('transf_circuitos').value) || 1
+    };
+    fetch('/api/ged119/calcular_transformador', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultadoTransformador(resp.data);
+    })
+    .catch(err => alert('Erro: ' + err.message));
+}
+
+function mostrarResultadoTransformador(d) {
+    const container = document.getElementById('transf-result');
+    const content = document.getElementById('transf-content');
+    container.style.display = 'block';
+
+    const limiteStatus = d.acima_limite
+        ? `<span style="color:var(--danger);font-weight:700;">ATENCAO: Dg > ${d.limite} kVA - Alimentacao pela rede primaria (GED-2855)</span>`
+        : `<span style="color:var(--success);font-weight:700;">OK - Demanda dentro do limite para BT (${d.limite} kVA)</span>`;
+
+    const trafoHtml = d.trafo_kva
+        ? `<div class="result-line">Transformador: <span class="value">${d.trafo_kva} kVA</span></div>
+           <div class="result-line">Faixa: ${d.trafo_faixa_min} a ${d.trafo_faixa_max} kVA (Tabela 10)</div>
+           ${d.cap_interrupcao_kA ? `<div class="result-line">Capacidade de Interrupcao: ${d.cap_interrupcao_kA} kA (Z = ${d.cap_z_percent}%)</div>` : ''}`
+        : '<div class="result-line">Nenhum transformador encontrado.</div>';
+
+    const caboHtml = d.secao_mm2
+        ? `<div class="result-line">Secao do Cabo: <span class="value">${d.secao_mm2} mm²</span></div>
+           <div class="result-line">Capacidade (Tabela): ${d.capacidade_cabo_A} A${d.fator_380 > 1 ? ` x ${d.fator_380} = ${(d.capacidade_cabo_A * d.fator_380).toFixed(0)} A` : ''}</div>
+           ${d.diametro_externo_mm ? `<div class="result-line">Diametro Externo: ${d.diametro_externo_mm} mm</div>` : ''}`
+        : '<div class="result-line" style="color:var(--danger);">Nenhum cabo encontrado com capacidade suficiente para os parametros informados.</div>';
+
+    const barraHtml = d.barramento_mm
+        ? `<div class="result-line">Barramento BT: <span class="value">${d.barramento_mm} mm</span> (${d.barramento_pol})</div>`
+        : '<div class="result-line">Nenhum barramento encontrado.</div>';
+
+    const disjHtml = d.disjuntor_A
+        ? `<div class="result-line">Disjuntor: <span class="value">${d.disjuntor_A} A</span></div>`
+        : '<div class="result-line">Nenhum disjuntor padronizado encontrado.</div>';
+
+    content.innerHTML = `
+        <div id="print-area-transf">
+        <div class="result-section">
+            <div class="result-title" style="color:var(--danger);">Regra 7.3 - Limite de Atendimento</div>
+            <div class="result-line">Tipo do Edificio: ${d.tipo}</div>
+            <div class="result-line">Demanda Geral (Dg): ${d.dg} kVA</div>
+            <div class="result-line">Limite para BT: ${d.limite} kVA</div>
+            <div class="result-line">${limiteStatus}</div>
+        </div>
+        <hr class="result-divider">
+        <div class="result-section">
+            <div class="result-title">1 - TRANSFORMADOR (Tabela 10)</div>
+            <div class="result-line">Demanda: ${d.dg} kVA</div>
+            ${trafoHtml}
+        </div>
+        <hr class="result-divider">
+        <div class="result-section">
+            <div class="result-title">2 - CONDUTORES BT (Tabela 11)</div>
+            <div class="result-line">Tensao: ${d.tensao}</div>
+            <div class="result-line">Metodo de Instalacao: ${d.metodo_inst}</div>
+            <div class="result-line">Corrente Calculada: I = <span class="value">${d.I} A</span></div>
+            <div class="result-line">Forma de Agrupamento: ${d.forma_agrup}</div>
+            <div class="result-line">Circuitos Agrupados: ${d.num_circuitos}</div>
+            <div class="result-line">Fator de Correcao (F): ${d.fator_correcao}</div>
+            <div class="result-line">Corrente Corrigida: I' = ${d.I} / ${d.fator_correcao} = <span class="value">${d.I_corrigida} A</span></div>
+            <br>
+            ${caboHtml}
+        </div>
+        <hr class="result-divider">
+        <div class="result-section">
+            <div class="result-title">3 - BARRAMENTO BT (Tabela 12)</div>
+            ${barraHtml}
+        </div>
+        <hr class="result-divider">
+        <div class="result-section">
+            <div class="result-title">4 - DISJUNTOR TERMOMAGNETICO</div>
+            <div class="result-line">Corrente Calculada: ${d.I} A</div>
+            ${disjHtml}
+            <div class="result-line" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Correntes Nominais: 100 - 125 - 150 - 160 - 175 - 200 - 225 - 250 - 300 - 350 - 400 - 450 - 500 - 600 A</div>
+        </div>
+        <hr class="result-divider">
+        <div class="result-final">
+            <div class="label">Resumo do Dimensionamento</div>
+            <div class="value" style="font-size:18px;">
+                ${d.trafo_kva ? d.trafo_kva + ' kVA' : '---'} |
+                ${d.disjuntor_A ? d.disjuntor_A + ' A' : '---'} |
+                ${d.secao_mm2 ? d.secao_mm2 + ' mm²' : '---'}
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Trafo | Disjuntor | Cabo</div>
+        </div>
+        </div>
+        <div style="text-align:right;margin-top:12px;">
+            <button class="btn btn-primary" onclick="window.print()">📄 PDF / Imprimir</button>
+        </div>
+    `;
+}
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -923,18 +1022,5 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.getElementById(this.dataset.tab).classList.add('active');
     });
 });
-
-// Sync input fields across tabs
-function syncField(id) {
-    const el1 = document.getElementById(id);
-    const el2 = document.getElementById(id + '2');
-    if (el1 && el2) {
-        el1.addEventListener('input', () => el2.value = el1.value);
-        el2.addEventListener('input', () => el1.value = el2.value);
-    }
-}
-['chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
- 'qtd_chuveiros_adm','qtd_torneiras_adm',
- 'secar_kw','secar_apto','lavar_kw','lavar_apto'].forEach(syncField);
 </script>
 {% endblock %}

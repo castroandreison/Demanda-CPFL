@@ -6,7 +6,7 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 if _dir not in sys.path:
     sys.path.insert(0, _dir)
 
-from core.ged119 import calcular as calc_ged119
+from core.ged119 import calcular as calc_ged119, calcular_transformador
 from core.ged13 import calcular as calc_ged13
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
 
@@ -29,6 +29,15 @@ def api_ged119():
     try:
         dados = request.get_json()
         resultado = calc_ged119(dados)
+        return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/calcular_transformador', methods=['POST'])
+def api_calcular_transformador():
+    try:
+        dados = request.get_json()
+        resultado = calcular_transformador(dados)
         return jsonify({'success': True, 'data': resultado})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
