@@ -242,6 +242,16 @@ a:hover {
     color: #fff;
 }
 
+.btn-warning {
+    background: transparent;
+    border-color: #ffc107;
+    color: #856404;
+}
+.btn-warning:hover {
+    background: #ffc107;
+    color: #000;
+}
+
 .btn-sm {
     padding: 4px 10px;
     font-size: 12px;
@@ -298,6 +308,32 @@ table tbody tr.selected {
 
 table tbody tr:last-child td {
     border-bottom: none;
+}
+
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 8px 0;
+    font-family: var(--font-mono);
+}
+
+.result-table th {
+    padding: 6px 10px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-hover);
+}
+
+.result-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 /* Results */

@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import re
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 _db_path = os.path.join(_dir, '..', '..', 'Ged13', 'DB13', 'databaseCPFLGed13.db')
@@ -34,6 +35,26 @@ def fd_qtd_faixa(qtd):
     conn.close()
     return float(r[0]) if r else 1
 
+def fd_ar_condicionado(qtd):
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tabela_9")
+    for row in cursor.fetchall():
+        faixa = row[1]
+        fd = row[2]
+        if "Acima" in faixa:
+            parts = faixa.split()
+            if len(parts) >= 3 and qtd >= int(parts[2]):
+                conn.close()
+                return float(fd)
+        elif "a" in faixa:
+            parts = faixa.split(" a ")
+            if len(parts) == 2 and int(parts[0]) <= qtd <= int(parts[1]):
+                conn.close()
+                return float(fd)
+    conn.close()
+    return 1.0
+
 def get_valor(tabela, campo_busca, valor, campo_saida):
     conn = get_conn()
     cursor = conn.cursor()
@@ -42,135 +63,313 @@ def get_valor(tabela, campo_busca, valor, campo_saida):
     conn.close()
     return float(r[0]) if r else 0
 
-def get_categoria(D):
+def get_motor_va(cv_val):
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute("SELECT categoria FROM tabela1a_monofasico WHERE ? BETWEEN carga_min_kw AND carga_max_kw", (D,))
-    mono = cursor.fetchone()
-    mono = mono[0] if mono else None
-    cursor.execute("SELECT categoria FROM tabela1b_bifasico WHERE ? BETWEEN carga_min_kw AND carga_max_kw", (D,))
-    bi = cursor.fetchone()
-    bi = bi[0] if bi else None
-    cursor.execute("SELECT categoria FROM tabela1c_trifasico_127_220 WHERE ? BETWEEN demanda_min_kva AND demanda_max_kva", (D,))
-    tri = cursor.fetchone()
-    tri = tri[0] if tri else None
+    cursor.execute("SELECT potencia_nominal, potencia_kva FROM tabela_14")
+    target = float(cv_val)
+    for row in cursor.fetchall():
+        db_cv = str(row[0]).strip()
+        db_kva = float(row[1])
+        try:
+            if '/' in db_cv and ' ' not in db_cv:
+                a, b = db_cv.split('/')
+                if float(a) / float(b) == target:
+                    conn.close()
+                    return db_kva * 1000
+            if ' ' in db_cv:
+                parts = db_cv.split()
+                total = 0.0
+                for p in parts:
+                    if '/' in p:
+                        a, b = p.split('/')
+                        total += float(a) / float(b)
+                    else:
+                        total += float(p)
+                if abs(total - target) < 0.01:
+                    conn.close()
+                    return db_kva * 1000
+            if abs(float(db_cv) - target) < 0.01:
+                conn.close()
+                return db_kva * 1000
+        except:
+            pass
     conn.close()
-    return mono, bi, tri
+    return 0
+
+TABELA1_MAP = {
+    'Residencial': 15.0,
+    'Comercial': 30.0,
+    'Industrial': 0.0,
+}
+
+def get_sugestao(area, tipo):
+    area = float(area)
+    tipo = str(tipo)
+
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    # Tabela 1: minimum illumination W/m²
+    va_m2 = TABELA1_MAP.get(tipo, 15.0)
+    if va_m2 > 0:
+        sug_ilum = max(100, int(-(-(area * va_m2) // 100)) * 100)
+    else:
+        sug_ilum = 0
+
+    # Tabela 2: minimum outlet VA by area range
+    cursor.execute("SELECT MAX(area_max) FROM tabela2")
+    max_row = cursor.fetchone()
+    max_area = float(max_row[0]) if max_row and max_row[0] else 250
+    if area > max_area:
+        area = max_area
+    cursor.execute("SELECT subtotal_II, total_W FROM tabela2 WHERE ? BETWEEN area_min AND area_max LIMIT 1", (area,))
+    row = cursor.fetchone()
+    if row:
+        sug_tom = row[0]
+        total = row[1]
+    else:
+        sug_tom = 1800
+        total = 0
+
+    conn.close()
+    return {
+        'ilum_sugestao': sug_ilum,
+        'tom_sugestao': sug_tom,
+    }
+
+def get_categoria(D, tensao):
+    conn = get_conn()
+    cursor = conn.cursor()
+    tabela = "tabela1c_trifasico_220_380" if tensao == "220/380V" else "tabela1c_trifasico_127_220"
+    cursor.execute(f"SELECT * FROM {tabela} WHERE ? BETWEEN demanda_min_kva AND demanda_max_kva", (D,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        cols = [d[0] for d in cursor.description]
+        return dict(zip(cols, row))
+    return None
 
 def calcular(dados):
     cargas = dados.get('cargas', [])
+    tensao = dados.get('tensao', '127/220V')
+    tipo = dados.get('tipo', 'Residencial')
+    fp_padrao = 1.0
 
-    tomadas = 0
-    iluminacao = 0
-    chuveiros = 0
-    torneira = 0
-    ferro = 0
-    eletro = 0
+    # Parse all loads
+    itens_iluminacao = []   # list of (nome, w, fp)
+    chuveiros_w = 0
+    chuveiros_qtd = 0
+    ar_cond_va = 0
     ar_qtd = 0
-    motores_qtd = 0
+    motores = []  # list of (nome, cv, va)
+    solda_va = []  # list of va_per_unit
+    eletro_w = 0
+    eletro_qtd = 0
 
     for c in cargas:
-        nome = c.get('nome', '')
-        pot = float(c.get('potencia', 0))
+        nome = str(c.get('nome', '')).strip().lower()
+        pot_w = float(c.get('potencia', 0))
         qtd = int(c.get('qtd', 1))
-        total = pot * qtd
-        if "Tomada" in nome:
-            tomadas += total
-        elif "Iluminação" in nome or "Iluminacao" in nome:
-            iluminacao += total
-        elif "Chuveiro" in nome:
-            chuveiros += total
-        elif "Torneira" in nome:
-            torneira += total
-        elif "Ferro" in nome:
-            ferro += total
-        elif "Ar" in nome:
+        tipo_carga = c.get('tipo', None)
+
+        # Use explicit tipo if provided (from UI tabs)
+        if tipo_carga is not None:
+            if tipo_carga == 0 or tipo_carga == 1:
+                fp = float(c.get('fp', 1.0))
+                itens_iluminacao.append((nome, pot_w * qtd, fp))
+            elif tipo_carga == 2:
+                chuveiros_w += pot_w * qtd
+                chuveiros_qtd += qtd
+            elif tipo_carga == 3:
+                eletro_w += pot_w * qtd
+                eletro_qtd += qtd
+            elif tipo_carga == 4:
+                btu = c.get('btu', 0)
+                if btu:
+                    ar_cond_va = get_valor("tabela8", "btu_h", btu, "potencia_va")
+                if ar_cond_va == 0:
+                    ar_cond_va = pot_w / fp_padrao
+                ar_qtd += qtd
+            elif tipo_carga == 5:
+                cv = float(c.get('cv', 0))
+                if cv == 0:
+                    cv = pot_w / 1000
+                va = get_motor_va(str(cv))
+                if va == 0:
+                    va = pot_w / 0.8
+                for _ in range(qtd):
+                    motores.append((nome, cv, va))
+            elif tipo_carga == 6:
+                fp = float(c.get('fp', 0.75))
+                va = pot_w / fp
+                for _ in range(qtd):
+                    solda_va.append(va)
+            continue
+
+        # Fallback: name-based detection
+        if 'solda' in nome:
+            fp = float(c.get('fp', 0.75))
+            va = pot_w / fp
+            for _ in range(qtd):
+                solda_va.append(va)
+        elif 'chuveiro' in nome or 'torneira' in nome:
+            chuveiros_w += pot_w * qtd
+            chuveiros_qtd += qtd
+        elif 'ar-condicionado' in nome or 'ar condicionado' in nome:
+            btu = c.get('btu', 0)
+            if btu:
+                ar_cond_va = get_valor("tabela8", "btu_h", btu, "potencia_va")
+            if ar_cond_va == 0:
+                ar_cond_va = pot_w / fp_padrao
             ar_qtd += qtd
-        elif "Motor" in nome:
-            motores_qtd += qtd
+        elif 'motor' in nome or 'compressor' in nome or 'serra' in nome or 'prensa' in nome or 'furadeira' in nome:
+            cv = float(c.get('cv', 0))
+            if cv == 0:
+                # Try to extract CV from name or estimate from watts
+                cv_match = re.search(r'(\d+[\.\d]?)\s*cv', nome)
+                if cv_match:
+                    cv = float(cv_match.group(1))
+                else:
+                    cv = pot_w / 1000  # rough estimate
+            va = get_motor_va(str(cv))
+            if va == 0:
+                va = pot_w / 0.8  # estimate with PF ~0.8
+            for _ in range(qtd):
+                motores.append((nome, cv, va))
+        elif 'reator' in nome:
+            itens_iluminacao.append((nome, pot_w * qtd, fp_padrao))
+        elif 'lampada' in nome or 'luminaria' in nome or 'fluorescente' in nome:
+            fp = float(c.get('fp', 0.95 if 'fluorescente' in nome else 1.0))
+            itens_iluminacao.append((nome, pot_w * qtd, fp))
+        elif 'iluminacao' in nome or 'tomada' in nome or 'ilumina' in nome:
+            itens_iluminacao.append((nome, pot_w * qtd, fp_padrao))
         else:
-            eletro += total
+            eletro_w += pot_w * qtd
 
-    carga_a = (tomadas + iluminacao) / 1000
-    fdA = fd_kw(carga_a)
-    A = carga_a * fdA
-
-    carga_b = (chuveiros + torneira + ferro) / 1000
-    qtd_b = (1 if chuveiros > 0 else 0) + (1 if torneira > 0 else 0) + (1 if ferro > 0 else 0)
-    fdB = fd_qtd_exata(qtd_b if qtd_b else 1)
-    B = carga_b * fdB
-
-    carga_d = eletro / 1000
-    fdD = fd_qtd_faixa(3)
-    Dd = carga_d * fdD
-
-    va_ar = get_valor("tabela8", "btu_h", 14000, "potencia_va")
-    F = (va_ar * ar_qtd) / 1000
-
-    motor_kva = get_valor("tabela_14", "potencia_nominal", "1", "potencia_kva")
-    if motores_qtd >= 2:
-        G = motor_kva * 1 + motor_kva * 0.9
+    # (a) Iluminacao e Tomadas
+    ilum_va = sum(w / fp for _, w, fp in itens_iluminacao)
+    carga_a_kw = ilum_va / 1000
+    if tipo == "Industrial":
+        fd_a = 1.0  # Tabela 15 - Industrias: FD=1
     else:
-        G = motor_kva
+        fd_a = fd_kw(carga_a_kw)
+    a = carga_a_kw * fd_a
 
-    D_total = A + B + Dd + F + G
-    carga_instalada = carga_a + carga_b + carga_d + F + G
+    # (b) Chuveiros
+    carga_b_kw = chuveiros_w / 1000
+    fd_b = fd_qtd_exata(max(chuveiros_qtd, 1)) if chuveiros_qtd > 0 else 0
+    b = carga_b_kw * fd_b if carga_b_kw > 0 else 0
 
-    mono, bi, tri = get_categoria(D_total)
+    # (f) Ar Condicionado
+    fd_f = fd_ar_condicionado(max(ar_qtd, 1))
+    f = (ar_cond_va * ar_qtd * fd_f) / 1000 if ar_qtd > 0 else 0
 
-    padrao = None
-    conn = get_conn()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT categoria,cobre_mm2,aluminio_mm2,eletroduto,disjuntor,
-               aterramento_condutor,poste,caixa,motor_fn,motor_ff,motor_fff
-        FROM tabela1c_trifasico_127_220
-        WHERE ? BETWEEN demanda_min_kva AND demanda_max_kva
-    """, (D_total,))
-    row = cursor.fetchone()
-    if row:
-        padrao = {
-            'categoria': row[0],
-            'cobre_mm2': row[1],
-            'aluminio_mm2': row[2],
-            'eletroduto': row[3],
-            'disjuntor': row[4],
-            'aterramento': row[5],
-            'poste': row[6],
-            'caixa': row[7],
-            'motor_fn': row[8],
-            'motor_ff': row[9],
-            'motor_fff': row[10],
-        }
-    conn.close()
+    # (g) Motores Eletricos
+    # Sort by VA descending, then apply graduated FDs
+    motores.sort(key=lambda m: m[2], reverse=True)
+    g = 0.0
+    motor_detalhes = []
+    for i, (nome, cv, va) in enumerate(motores):
+        if i == 0:
+            fd_motor = 1.0  # 1st (maior)
+        elif i == 1:
+            fd_motor = 0.9  # 2nd
+        elif i <= 4:
+            fd_motor = 0.8  # 3rd-5th
+        else:
+            fd_motor = 0.7  # restante
+        parcela = va * fd_motor
+        g += parcela
+        motor_detalhes.append({
+            'nome': nome, 'cv': cv, 'va': round(va, 0),
+            'fd': fd_motor, 'parcela_kva': round(parcela / 1000, 2)
+        })
+    g_kva = g / 1000
+
+    # (h) Equipamentos Especiais (Maquinas de Solda)
+    h = 0.0
+    solda_detalhes = []
+    for i, va in enumerate(solda_va):
+        if i == 0:
+            fd_solda = 1.0
+        elif i == 1:
+            fd_solda = 0.6
+        elif i == 2:
+            fd_solda = 0.4
+        else:
+            fd_solda = 0.3
+        parcela = va * fd_solda
+        h += parcela
+        solda_detalhes.append({
+            'va': round(va, 0),
+            'fd': fd_solda,
+            'parcela_kva': round(parcela / 1000, 2)
+        })
+    h_kva = h / 1000
+
+    # (d) Outros eletrodomesticos (if any)
+    carga_d_kw = eletro_w / 1000
+    fd_d = fd_qtd_faixa(max(eletro_qtd, 1)) if eletro_qtd > 0 else 0
+    d_kva = carga_d_kw * fd_d if carga_d_kw > 0 else 0
+
+    # Total Demand
+    D_total = a + b + f + g_kva + h_kva + d_kva
+
+    # Carga Instalada
+    total_w_ilum = sum(w for _, w, _ in itens_iluminacao)
+    # For installed load, use nominal W for each category
+    carga_ilum_kw = total_w_ilum / 1000
+    carga_chuveiros_kw = chuveiros_w / 1000
+    carga_eletro_kw = eletro_w / 1000
+    carga_ar_w = ar_cond_va * ar_qtd
+    carga_ar_kw = carga_ar_w / 1000
+    carga_motores_w = sum(m[2] for m in motores)
+    carga_motores_kw = carga_motores_w / 1000
+    carga_solda_w = sum(solda_va)
+    carga_solda_kw = carga_solda_w / 1000
+    carga_instalada_kw = carga_ilum_kw + carga_chuveiros_kw + carga_eletro_kw + carga_ar_kw + carga_motores_kw + carga_solda_kw
+    carga_instalada_kw_arred = int(-(-carga_instalada_kw // 1))  # round up to nearest kW
+    excede_25kw = carga_instalada_kw > 25
+
+    # Enquadramento
+    padrao = get_categoria(D_total, tensao)
 
     return {
-        'tomadas': tomadas,
-        'iluminacao': iluminacao,
-        'chuveiros': chuveiros,
-        'torneira': torneira,
-        'ferro': ferro,
-        'eletro': eletro,
+        'a_ilum_va': round(ilum_va, 0),
+        'carga_a_kw': round(carga_a_kw, 2),
+        'fd_a': round(fd_a, 4),
+        'a_kva': round(a, 2),
+        'b_w': round(chuveiros_w, 0),
+        'carga_b_kw': round(carga_b_kw, 2),
+        'fd_b': round(fd_b, 4),
+        'b_kva': round(b, 2),
+        'qtd_chuveiros': chuveiros_qtd,
+        'ar_va': round(ar_cond_va, 0),
         'ar_qtd': ar_qtd,
-        'motores_qtd': motores_qtd,
-        'carga_a': round(carga_a, 2),
-        'fdA': round(fdA, 4),
-        'A': round(A, 2),
-        'carga_b': round(carga_b, 2),
-        'qtd_b': qtd_b,
-        'fdB': round(fdB, 4),
-        'B': round(B, 2),
-        'carga_d': round(carga_d, 2),
-        'fdD': round(fdD, 4),
-        'D': round(Dd, 2),
-        'va_ar': round(va_ar, 2),
-        'F': round(F, 2),
-        'motor_kva': round(motor_kva, 2),
-        'G': round(G, 2),
+        'fd_f': round(fd_f, 4),
+        'f_kva': round(f, 2),
+        'motores': motor_detalhes,
+        'g_kva': round(g_kva, 2),
+        'solda': solda_detalhes,
+        'h_kva': round(h_kva, 2),
+        'd_kva': round(d_kva, 2),
+        'qtd_eletro': eletro_qtd,
+        'fd_d': round(fd_d, 4),
         'D_total': round(D_total, 2),
-        'carga_instalada': round(carga_instalada, 2),
-        'mono': mono,
-        'bi': bi,
-        'tri': tri,
+        'carga_instalada': round(carga_instalada_kw, 2),
+        'carga_instalada_kw_arred': carga_instalada_kw_arred,
+        'excede_25kw': excede_25kw,
+        'carga_ilum_kw': round(carga_ilum_kw, 2),
+        'carga_chuveiros_kw': round(carga_chuveiros_kw, 2),
+        'carga_eletro_kw': round(carga_eletro_kw, 2),
+        'carga_ar_kw': round(carga_ar_kw, 2),
+        'carga_motores_kw': round(carga_motores_kw, 2),
+        'carga_solda_kw': round(carga_solda_kw, 2),
+        'itens_iluminacao': [{'nome': t[0], 'w': t[1], 'fp': t[2]} for t in itens_iluminacao],
+        'tensao': tensao,
+        'tipo': tipo,
+        'unidade': dados.get('unidade', ''),
+        'm2': dados.get('m2', 0),
         'padrao': padrao,
     }

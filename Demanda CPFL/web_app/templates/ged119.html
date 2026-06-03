@@ -173,6 +173,7 @@
                         <th>Descrição</th>
                         <th>Potência (kW)</th>
                         <th>Quantidade</th>
+                        <th>FD (Tab.2)</th>
                     </tr>
                 </thead>
                 <tbody id="carga-apt-table-body"></tbody>
@@ -231,6 +232,7 @@
                         <th>Descrição</th>
                         <th>Potência (kW)</th>
                         <th>Quantidade</th>
+                        <th>FD (Tab.2)</th>
                     </tr>
                 </thead>
                 <tbody id="carga-adm-table-body"></tbody>
@@ -278,6 +280,7 @@
                         <th>Descrição</th>
                         <th>Potência (CV)</th>
                         <th>Quantidade</th>
+                        <th>FD</th>
                     </tr>
                 </thead>
                 <tbody id="motor-table-body"></tbody>
@@ -485,6 +488,27 @@ function setField(id, val) {
     if (el2) el2.value = v;
 }
 
+let autoSaveTimerG119 = null;
+
+function autoSalvarG119() {
+    clearTimeout(autoSaveTimerG119);
+    autoSaveTimerG119 = setTimeout(function() {
+        const nome = document.getElementById('projeto_nome').value.trim();
+        if (!currentProjetoId || !nome) return;
+        const dados = getDados();
+        dados.id = currentProjetoId;
+        dados.nome = nome;
+        fetch('/api/projetos/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados)
+        })
+        .then(r => r.json())
+        .then(resp => { if (resp.success) { currentProjetoId = resp.data.id; listarProjetos(); } })
+        .catch(function() {});
+    }, 600);
+}
+
 function salvarProjeto() {
     const nome = document.getElementById('projeto_nome').value.trim();
     if (!nome) { alert('Digite um nome para o projeto!'); return; }
@@ -537,8 +561,61 @@ function excluirProjeto() {
     .catch(err => alert('Erro ao excluir projeto: ' + err.message));
 }
 
+let tabela2Data = [];
+
+function carregarTabela2() {
+    fetch('/api/ged119/tabela2')
+    .then(r => r.json())
+    .then(resp => { if (resp.success) tabela2Data = resp.data; })
+    .catch(function() {});
+}
+
+function fdTab2(desc, qtdTotal) {
+    const nome = desc.toLowerCase();
+    let coluna = '';
+    if (nome.indexOf('chuveiro') !== -1 || nome.indexOf('torneira') !== -1 || nome.indexOf('ferro') !== -1) {
+        coluna = 'chuveiro_torneira_ferro';
+    } else if (nome.indexOf('secar') !== -1) {
+        coluna = 'maquina_secar_roupa';
+    } else if (nome.indexOf('lavar') !== -1) {
+        coluna = 'maquinas_lavar_louca';
+    }
+    if (!coluna) return 1.0;
+    for (const r of tabela2Data) {
+        let minV, maxV;
+        if (r.numero_aparelhos.indexOf(' a ') !== -1) {
+            const parts = r.numero_aparelhos.split(' a ');
+            minV = parseInt(parts[0]);
+            maxV = parseInt(parts[1]);
+        } else {
+            minV = maxV = parseInt(r.numero_aparelhos);
+        }
+        if (minV <= qtdTotal && qtdTotal <= maxV) {
+            return (r[coluna] || 100) / 100;
+        }
+    }
+    return 1.0;
+}
+
 // Auto-list on page load
-document.addEventListener('DOMContentLoaded', listarProjetos);
+document.addEventListener('DOMContentLoaded', function() {
+    listarProjetos();
+    carregarTabela2();
+    // auto-save on field changes
+    var campos = ['aptos','area_apto','area_adm','iluminacao','tomadas',
+        'chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
+        'qtd_chuveiros_adm','qtd_torneiras_adm',
+        'secar_kw','secar_apto','lavar_kw','lavar_apto'];
+    campos.forEach(function(id) {
+        var el = document.getElementById(id) || document.getElementById(id + '2');
+        if (el) el.addEventListener('input', autoSalvarG119);
+        if (el) el.addEventListener('change', autoSalvarG119);
+    });
+    var tipoEl = document.getElementById('tipo');
+    if (tipoEl) tipoEl.addEventListener('change', autoSalvarG119);
+    var nomeEl = document.getElementById('projeto_nome');
+    if (nomeEl) nomeEl.addEventListener('input', autoSalvarG119);
+});
 
 function renderMotores() {
     const tbody = document.getElementById('motor-table-body');
@@ -552,6 +629,7 @@ function renderMotores() {
     }
     empty.style.display = 'none';
     count.textContent = motores.length;
+    const sortedIdx = motores.map((_, i) => i).sort((a, b) => (motores[b].cv || 0) - (motores[a].cv || 0));
     motores.forEach((m, i) => {
         const tr = document.createElement('tr');
         tr.onclick = function() {
@@ -561,10 +639,13 @@ function renderMotores() {
             document.getElementById('motor_cv').value = m.cv;
             document.getElementById('motor_qtd').value = m.qtd;
         };
+        const rank = sortedIdx.indexOf(i);
+        const fd = rank === 0 ? 1.0 : 0.5;
         tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
                         <td>${m.desc || '-'}</td>
                         <td>${m.cv}</td>
-                        <td>${m.qtd}</td>`;
+                        <td>${m.qtd}</td>
+                        <td>${fd.toFixed(2)}</td>`;
         tbody.appendChild(tr);
     });
 }
@@ -582,6 +663,7 @@ function adicionarMotor() {
     document.getElementById('motor_cv').value = '';
     document.getElementById('motor_qtd').value = '1';
     document.getElementById('motor_desc').focus();
+    autoSalvarG119();
 }
 
 function excluirMotor() {
@@ -591,7 +673,16 @@ function excluirMotor() {
     if (confirm(`Excluir motor "${motores[idx].desc}" (${motores[idx].cv} CV x ${motores[idx].qtd})?`)) {
         motores.splice(idx, 1);
         renderMotores();
+        autoSalvarG119();
     }
+}
+
+function catCarga(nome) {
+    const n = nome.toLowerCase();
+    if (n.indexOf('chuveiro') !== -1 || n.indexOf('torneira') !== -1 || n.indexOf('ferro') !== -1) return 'chuveiro_torneira_ferro';
+    if (n.indexOf('secar') !== -1) return 'maquina_secar_roupa';
+    if (n.indexOf('lavar') !== -1) return 'maquinas_lavar_louca';
+    return null;
 }
 
 function renderCargas(tipo) {
@@ -613,10 +704,13 @@ function renderCargas(tipo) {
             document.getElementById('carga_' + tipo + '_pot').value = c.pot;
             document.getElementById('carga_' + tipo + '_qtd').value = c.qtd;
         };
+        const cat = catCarga(c.desc);
+        const fd = cat ? fdTab2(c.desc, c.qtd || 1) : 1.0;
         tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
                         <td>${c.desc}</td>
                         <td>${c.pot}</td>
-                        <td>${c.qtd}</td>`;
+                        <td>${c.qtd}</td>
+                        <td>${fd.toFixed(2)}</td>`;
         tbody.appendChild(tr);
     });
 }
@@ -635,6 +729,7 @@ function adicionarCarga(tipo) {
     document.getElementById('carga_' + tipo + '_pot').value = '';
     document.getElementById('carga_' + tipo + '_qtd').value = '1';
     document.getElementById('carga_' + tipo + '_desc').focus();
+    autoSalvarG119();
 }
 
 function excluirCarga(tipo) {
@@ -645,6 +740,7 @@ function excluirCarga(tipo) {
     if (confirm(`Excluir "${outrasCargas[tipo][idx].desc}"?`)) {
         outrasCargas[tipo].splice(idx, 1);
         renderCargas(tipo);
+        autoSalvarG119();
     }
 }
 
