@@ -2,8 +2,8 @@
 {% block content %}
 
 <div class="tabs" id="main-tabs">
-    <button class="tab-btn" data-tab="tab-projetos">Gerenciamento</button>
-    <button class="tab-btn active" data-tab="tab-dados">Dados do Edifício</button>
+    <button class="tab-btn active" data-tab="tab-projetos">Gerenciamento</button>
+    <button class="tab-btn" data-tab="tab-dados">Dados do Edifício</button>
     <button class="tab-btn" data-tab="tab-apartamentos">Apartamentos</button>
     <button class="tab-btn" data-tab="tab-administracao">Administração</button>
     <button class="tab-btn" data-tab="tab-motores">Motores</button>
@@ -12,7 +12,7 @@
     <button class="tab-btn" data-tab="tab-limites">Rede Primária</button>
 </div>
 
-<div id="tab-projetos" class="tab-content">
+<div id="tab-projetos" class="tab-content active">
     <div class="card">
         <div class="card-header">Gerenciamento de Projetos</div>
         <div class="form-grid" style="grid-template-columns:2fr 1fr;">
@@ -289,11 +289,6 @@
         <div class="empty-state" id="motor-empty">Nenhum motor cadastrado</div>
     </div>
 
-    <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED119(); calcTab('tab-resultado');">
-            ⚡ Calcular Demanda
-        </button>
-    </div>
 </div>
 
 <div id="tab-resultado" class="tab-content">
@@ -1116,6 +1111,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         this.classList.add('active');
         document.getElementById(this.dataset.tab).classList.add('active');
+        if (this.dataset.tab === 'tab-resultado') {
+            calcularGED119();
+        }
     });
 });
 </script>

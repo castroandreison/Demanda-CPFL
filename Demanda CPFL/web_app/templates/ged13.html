@@ -12,7 +12,7 @@
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
 </div>
 
-<div id="tab-projetos" class="tab-content">
+<div id="tab-projetos" class="tab-content active">
     <div class="card">
         <div class="card-header">Gerenciamento de Projetos</div>
         <div class="form-grid" style="grid-template-columns:2fr 1fr;">
@@ -290,11 +290,6 @@
         </div>
     </div>
 
-    <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcularGED13()">
-            &#9889; Calcular Demanda
-        </button>
-    </div>
 </div>
 
 <script>
@@ -524,7 +519,12 @@ function calcTabG13(tabId) {
 
 document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        calcTabG13(this.dataset.tab);
+        const tab = this.dataset.tab;
+        if (tab === 'tab-resultado') {
+            calcularGED13();
+        } else {
+            calcTabG13(tab);
+        }
     });
 });
 
@@ -833,8 +833,8 @@ function mostrarResultadoGed13(d) {
         (d.b_w > 0 ? '<tr><td>Chuveiros / Aquecimento</td><td>' + d.b_w + ' W</td></tr>' : '') +
         (d.carga_eletro_kw > 0 ? '<tr><td>Eletrodomésticos</td><td>' + (d.carga_eletro_kw * 1000).toFixed(0) + ' W</td></tr>' : '') +
         (d.carga_ar_kw > 0 ? '<tr><td>Ar Condicionado</td><td>' + (d.carga_ar_kw * 1000).toFixed(0) + ' W</td></tr>' : '') +
-        (motorTotalVA > 0 ? '<tr><td>Motores</td><td>' + motorTotalVA.toFixed(0) + ' VA</td></tr>' : '') +
-        ((d.solda || []).length > 0 ? '<tr><td>Máquinas de Solda</td><td>' + (d.solda || []).reduce((s, x) => s + x.va, 0).toFixed(0) + ' VA</td></tr>' : '') +
+        (motorTotalVA > 0 ? '<tr><td>Motores</td><td>' + motorTotalVA.toFixed(0) + ' W</td></tr>' : '') +
+        ((d.solda || []).length > 0 ? '<tr><td>Máquinas de Solda</td><td>' + (d.solda || []).reduce((s, x) => s + x.va, 0).toFixed(0) + ' W</td></tr>' : '') +
         '<tr style="font-weight:700;background:var(--accent);color:#fff;"><td>TOTAL</td><td>' + (d.carga_instalada * 1000).toFixed(0) + ' W</td></tr>' +
         '</tbody></table>' +
         '<div style="margin-top:8px;color:var(--text-muted);font-size:12px;">Arredondando para unidade em kW imediatamente acima: <strong>' + d.carga_instalada_kw_arred + ' kW</strong></div>' +

@@ -160,7 +160,7 @@ def calcular(dados):
     itens_iluminacao = []   # list of (nome, w, fp)
     chuveiros_w = 0
     chuveiros_qtd = 0
-    ar_cond_va = 0
+    ar_cond_va_total = 0
     ar_qtd = 0
     motores = []  # list of (nome, cv, va)
     solda_va = []  # list of va_per_unit
@@ -186,10 +186,12 @@ def calcular(dados):
                 eletro_qtd += qtd
             elif tipo_carga == 4:
                 btu = c.get('btu', 0)
+                va = 0
                 if btu:
-                    ar_cond_va = get_valor("tabela8", "btu_h", btu, "potencia_va")
-                if ar_cond_va == 0:
-                    ar_cond_va = pot_w / fp_padrao
+                    va = get_valor("tabela8", "btu_h", btu, "potencia_va")
+                if va == 0:
+                    va = pot_w / fp_padrao
+                ar_cond_va_total += va * qtd
                 ar_qtd += qtd
             elif tipo_carga == 5:
                 cv = float(c.get('cv', 0))
@@ -218,10 +220,12 @@ def calcular(dados):
             chuveiros_qtd += qtd
         elif 'ar-condicionado' in nome or 'ar condicionado' in nome:
             btu = c.get('btu', 0)
+            va = 0
             if btu:
-                ar_cond_va = get_valor("tabela8", "btu_h", btu, "potencia_va")
-            if ar_cond_va == 0:
-                ar_cond_va = pot_w / fp_padrao
+                va = get_valor("tabela8", "btu_h", btu, "potencia_va")
+            if va == 0:
+                va = pot_w / fp_padrao
+            ar_cond_va_total += va * qtd
             ar_qtd += qtd
         elif 'motor' in nome or 'compressor' in nome or 'serra' in nome or 'prensa' in nome or 'furadeira' in nome:
             cv = float(c.get('cv', 0))
@@ -263,7 +267,7 @@ def calcular(dados):
 
     # (f) Ar Condicionado
     fd_f = fd_ar_condicionado(max(ar_qtd, 1))
-    f = (ar_cond_va * ar_qtd * fd_f) / 1000 if ar_qtd > 0 else 0
+    f = (ar_cond_va_total * fd_f) / 1000 if ar_qtd > 0 else 0
 
     # (g) Motores Eletricos
     # Sort by VA descending, then apply graduated FDs
@@ -322,7 +326,7 @@ def calcular(dados):
     carga_ilum_kw = total_w_ilum / 1000
     carga_chuveiros_kw = chuveiros_w / 1000
     carga_eletro_kw = eletro_w / 1000
-    carga_ar_w = ar_cond_va * ar_qtd
+    carga_ar_w = ar_cond_va_total
     carga_ar_kw = carga_ar_w / 1000
     carga_motores_w = sum(m[2] for m in motores)
     carga_motores_kw = carga_motores_w / 1000
@@ -345,7 +349,7 @@ def calcular(dados):
         'fd_b': round(fd_b, 4),
         'b_kva': round(b, 2),
         'qtd_chuveiros': chuveiros_qtd,
-        'ar_va': round(ar_cond_va, 0),
+        'ar_va': round(ar_cond_va_total, 0),
         'ar_qtd': ar_qtd,
         'fd_f': round(fd_f, 4),
         'f_kva': round(f, 2),
