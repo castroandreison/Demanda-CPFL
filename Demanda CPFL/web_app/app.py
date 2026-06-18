@@ -6,7 +6,8 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 if _dir not in sys.path:
     sys.path.insert(0, _dir)
 
-from core.ged119 import calcular as calc_ged119, calcular_transformador
+from core.ged119 import calcular as calc_ged119, calcular_transformador, calcular_poste, calcular_ramal_ligacao, get_tabela_ac
+from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neutro
 from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_conn_g13
 import core.ged119 as ged119_mod
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
@@ -44,6 +45,59 @@ def api_calcular_transformador():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+@app.route('/api/ged119/calcular_poste', methods=['POST'])
+def api_calcular_poste():
+    try:
+        dados = request.get_json()
+        resultado = calcular_poste(dados)
+        return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/calcular_ramal', methods=['POST'])
+def api_calcular_ramal():
+    try:
+        dados = request.get_json()
+        resultado = calcular_ramal(dados)
+        return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/calcular_ramal_ligacao', methods=['POST'])
+def api_calcular_ramal_ligacao():
+    try:
+        dados = request.get_json()
+        resultado = calcular_ramal_ligacao(dados)
+        return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/calcular_neutro', methods=['POST'])
+def api_calcular_neutro():
+    try:
+        dados = request.get_json()
+        fase = float(dados.get('fase_mm2', 0))
+        neutro = calcular_neutro(fase)
+        return jsonify({'success': True, 'data': {'fase_mm2': fase, 'neutro_mm2': neutro}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/formas_agrupamento_nbr', methods=['GET'])
+def api_formas_agrupamento_nbr():
+    try:
+        formas = get_formas_agrupamento_nbr()
+        return jsonify({'success': True, 'data': formas})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/formas_agrupamento', methods=['GET'])
+def api_ged119_formas_agrupamento():
+    try:
+        formas = ged119_mod.get_formas_agrupamento()
+        return jsonify({'success': True, 'data': formas})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
 @app.route('/api/ged119/tabela2', methods=['GET'])
 def api_ged119_tabela2():
     try:
@@ -54,6 +108,14 @@ def api_ged119_tabela2():
         cols = [d[0] for d in cursor.description]
         conn.close()
         data = [dict(zip(cols, r)) for r in rows]
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/tabela_ac', methods=['GET'])
+def api_ged119_tabela_ac():
+    try:
+        data = get_tabela_ac()
         return jsonify({'success': True, 'data': data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400

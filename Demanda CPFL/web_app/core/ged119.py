@@ -83,7 +83,7 @@ def calcular_transformador(dados):
     tipo = dados.get('tipo', 'Residencial')
     tensao_opcao = dados.get('tensao', '380/220V (trifásico)')
     metodo_inst = dados.get('metodo_inst', 'C')
-    forma_agrup = dados.get('forma_agrup', 'Em feixe ao ar livre')
+    forma_agrup = dados.get('forma_agrup', 'Em feixe: ao ar livre ou sobre superfície; embutidos; em duto fechado')
     num_circuitos = int(dados.get('num_circuitos', 1))
     if num_circuitos < 1:
         num_circuitos = 1
@@ -107,6 +107,9 @@ def calcular_transformador(dados):
     # --- TRANSFORMADOR (TABELA_10) ---
     trafo = buscar_faixa_tabela(cursor, "TABELA_10", "demanda_min", "demanda_max", dg)
     trafo_kva = trafo['transformador_kva'] if trafo else None
+    trafo_acima_tabela = dg > 308
+    if trafo_acima_tabela:
+        trafo_kva = None
 
     # --- CAPACIDADE DE INTERRUPÇÃO ---
     cap = None
@@ -184,6 +187,7 @@ def calcular_transformador(dados):
         'V': V,
         'I': round(I, 2),
         'trafo_kva': trafo_kva,
+        'trafo_acima_tabela': trafo_acima_tabela,
         'trafo_faixa_min': round(trafo['demanda_min'], 1) if trafo else None,
         'trafo_faixa_max': round(trafo['demanda_max'], 1) if trafo else None,
         'cap_interrupcao_kA': round(cap['capacidade_interrupcao_ka'], 2) if cap else None,
@@ -201,6 +205,89 @@ def calcular_transformador(dados):
         'barramento_pol': barra['barra_polegada'] if barra else None,
         'disjuntor_A': disjuntor_sel,
     }
+
+def get_tabela_ac():
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tabela_ac ORDER BY id")
+    rows = cursor.fetchall()
+    cols = [d[0] for d in cursor.description]
+    conn.close()
+    return [dict(zip(cols, r)) for r in rows]
+
+def get_formas_agrupamento():
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT forma_agrupamento FROM tabela11_fatores_correcao")
+    formas = [r[0] for r in cursor.fetchall()]
+    conn.close()
+    return formas
+
+def calcular_poste(dados):
+    dg = float(dados['dg'])
+    tensao = dados.get('tensao', '220/380')
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tabela20_dimensionamento_poste WHERE tensao_fornecimento = ? ORDER BY demanda_min_kva", (tensao,))
+    linhas = cursor.fetchall()
+    colunas = [d[0] for d in cursor.description]
+    conn.close()
+    for linha in linhas:
+        row = dict(zip(colunas, linha))
+        if row['demanda_min_kva'] <= dg <= row['demanda_max_kva']:
+            return {
+                'dg': round(dg, 2),
+                'tensao': tensao,
+                'tipo_poste': row['tipo_poste'],
+                'capacidade_dan': row['capacidade_dan'],
+                'faixa_min': row['demanda_min_kva'],
+                'faixa_max': row['demanda_max_kva'],
+            }
+    return {
+        'dg': round(dg, 2),
+        'tensao': tensao,
+        'tipo_poste': None,
+        'capacidade_dan': None,
+        'faixa_min': None,
+        'faixa_max': None,
+        'erro': 'Demanda acima do limite da tabela (400 kVA)'
+    }
+
+def calcular_ramal_ligacao(dados):
+    dg = float(dados['dg'])
+    tensao_kv = int(dados.get('tensao_kv', 15))
+    V = tensao_kv * 1000
+    I = dg * 1000 / (V * 3**0.5)
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tabela15_ramal_subterraneo_mt WHERE tensao_kv = ? ORDER BY corrente_A", (tensao_kv,))
+    linhas = cursor.fetchall()
+    colunas = [d[0] for d in cursor.description]
+    conn.close()
+    resultado = {
+        'dg': round(dg, 2),
+        'tensao_kv': tensao_kv,
+        'I': round(I, 2),
+        'cabo_sel': None,
+    }
+    for linha in linhas:
+        row = dict(zip(colunas, linha))
+        if row['corrente_A'] >= I:
+            resultado['cabo_sel'] = {
+                'tipo_cabo': row['tipo_cabo'],
+                'corrente_A': row['corrente_A'],
+                'potencia_MVA': row['potencia_MVA'],
+            }
+            break
+    if not resultado['cabo_sel'] and linhas:
+        row = dict(zip(colunas, linhas[-1]))
+        resultado['cabo_sel'] = {
+            'tipo_cabo': row['tipo_cabo'],
+            'corrente_A': row['corrente_A'],
+            'potencia_MVA': row['potencia_MVA'],
+            'acima_limite': True,
+        }
+    return resultado
 
 def calcular(dados):
     aptos = int(dados['aptos'])
@@ -221,6 +308,8 @@ def calcular(dados):
     motores = dados.get('motores', [])
     outras_cargas_apt = dados.get('outras_cargas_apt', [])
     outras_cargas_adm = dados.get('outras_cargas_adm', [])
+    ac_apt = dados.get('ac_apt', [])
+    ac_adm = dados.get('ac_adm', [])
     tipo = dados.get('tipo', 'Residencial')
 
     w_m2 = 5
@@ -253,6 +342,12 @@ def calcular(dados):
     # --- OUTRAS CARGAS ---
     total_outras_apt = sum(pot * qtd for desc, pot, qtd in outras_cargas_apt) if outras_cargas_apt else 0
     total_outras_adm = sum(pot * qtd for desc, pot, qtd in outras_cargas_adm) if outras_cargas_adm else 0
+
+    # --- AR CONDICIONADO ---
+    total_ac_apt_kw = sum((ac.get('potencia', ac.get('pot', 0)) / 1000) * ac.get('quantidade', ac.get('qtd', 1)) for ac in ac_apt) if ac_apt else 0
+    total_ac_adm_kw = sum((ac.get('potencia', ac.get('pot', 0)) / 1000) * ac.get('quantidade', ac.get('qtd', 1)) for ac in ac_adm) if ac_adm else 0
+    total_outras_apt += total_ac_apt_kw
+    total_outras_adm += total_ac_adm_kw
 
     # --- D3 - MOTORES ---
     total = 0
@@ -314,6 +409,10 @@ def calcular(dados):
         'motores': motores_detalhes,
         'outras_cargas_apt': outras_cargas_apt,
         'outras_cargas_adm': outras_cargas_adm,
+        'ac_apt': ac_apt,
+        'ac_adm': ac_adm,
+        'total_ac_apt_kw': round(total_ac_apt_kw, 2),
+        'total_ac_adm_kw': round(total_ac_adm_kw, 2),
         'total_outras_apt': round(total_outras_apt, 2),
         'total_outras_adm': round(total_outras_adm, 2),
         'area_apto': area_apto,

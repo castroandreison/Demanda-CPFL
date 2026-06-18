@@ -64,6 +64,23 @@ def init_db():
         cursor.execute("ALTER TABLE motores_projeto ADD COLUMN descricao TEXT DEFAULT ''")
     except sqlite3.OperationalError:
         pass
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ac_projeto (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            projeto_id INTEGER,
+            tipo TEXT,
+            descricao TEXT,
+            potencia_w REAL DEFAULT 0,
+            quantidade INTEGER DEFAULT 1,
+            btu INTEGER DEFAULT 0,
+            tipo_equipamento TEXT DEFAULT '',
+            FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE
+        )
+    """)
+    try:
+        cursor.execute("ALTER TABLE ac_projeto ADD COLUMN tipo_equipamento TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -91,10 +108,16 @@ def carregar_projeto(projeto_id):
     outras_apt = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2]} for r in cursor.fetchall()]
     cursor.execute("SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'adm'", (projeto_id,))
     outras_adm = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2]} for r in cursor.fetchall()]
+    cursor.execute("SELECT descricao, potencia_w, quantidade, btu, tipo_equipamento FROM ac_projeto WHERE projeto_id = ? AND tipo = 'apt' ORDER BY id", (projeto_id,))
+    ac_apt = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2], 'btu': r[3], 'tipo_equipamento': r[4]} for r in cursor.fetchall()]
+    cursor.execute("SELECT descricao, potencia_w, quantidade, btu, tipo_equipamento FROM ac_projeto WHERE projeto_id = ? AND tipo = 'adm' ORDER BY id", (projeto_id,))
+    ac_adm = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2], 'btu': r[3], 'tipo_equipamento': r[4]} for r in cursor.fetchall()]
     conn.close()
     proj_dict['motores'] = motores
     proj_dict['outras_cargas_apt'] = outras_apt
     proj_dict['outras_cargas_adm'] = outras_adm
+    proj_dict['ac_apt'] = ac_apt
+    proj_dict['ac_adm'] = ac_adm
     return proj_dict
 
 def salvar_projeto(projeto_id, dados):
@@ -128,6 +151,23 @@ def salvar_projeto(projeto_id, dados):
                        (projeto_id, c[0] if isinstance(c, list) else c['descricao'],
                         float(c[1] if isinstance(c, list) else c['potencia']),
                         int(c[2] if isinstance(c, list) else c['quantidade'])))
+    cursor.execute("DELETE FROM ac_projeto WHERE projeto_id = ?", (projeto_id,))
+    for ac in dados.get('ac_apt', []):
+        desc = ac.get('descricao', ac.get('desc', ''))
+        pot = float(ac.get('potencia', ac.get('pot', 0)))
+        qtd = int(ac.get('quantidade', ac.get('qtd', 1)))
+        btu = int(ac.get('btu', 0))
+        tipo_eq = ac.get('tipo_equipamento', '')
+        cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento) VALUES (?, 'apt', ?, ?, ?, ?, ?)",
+                       (projeto_id, desc, pot, qtd, btu, tipo_eq))
+    for ac in dados.get('ac_adm', []):
+        desc = ac.get('descricao', ac.get('desc', ''))
+        pot = float(ac.get('potencia', ac.get('pot', 0)))
+        qtd = int(ac.get('quantidade', ac.get('qtd', 1)))
+        btu = int(ac.get('btu', 0))
+        tipo_eq = ac.get('tipo_equipamento', '')
+        cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento) VALUES (?, 'adm', ?, ?, ?, ?, ?)",
+                       (projeto_id, desc, pot, qtd, btu, tipo_eq))
     conn.commit()
     conn.close()
     return projeto_id
@@ -137,6 +177,7 @@ def excluir_projeto(projeto_id):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
     cursor.execute("DELETE FROM outras_cargas_projeto WHERE projeto_id = ?", (projeto_id,))
+    cursor.execute("DELETE FROM ac_projeto WHERE projeto_id = ?", (projeto_id,))
     cursor.execute("DELETE FROM projetos WHERE id = ?", (projeto_id,))
     conn.commit()
     conn.close()

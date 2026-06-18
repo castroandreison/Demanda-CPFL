@@ -8,7 +8,10 @@
     <button class="tab-btn" data-tab="tab-administracao">Administração</button>
     <button class="tab-btn" data-tab="tab-motores">Motores</button>
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
+    <button class="tab-btn" data-tab="tab-ramal">Ramal de Entrada</button>
     <button class="tab-btn" data-tab="tab-transformador">Calcular Transformador</button>
+    <button class="tab-btn" data-tab="tab-poste">Poste</button>
+    <button class="tab-btn" data-tab="tab-ramal-ligacao">Ramal de Ligação</button>
     <button class="tab-btn" data-tab="tab-limites">Rede Primária</button>
 </div>
 
@@ -146,6 +149,58 @@
     </div>
 
     <div class="card">
+        <div class="card-header">Ar Condicionado (Apartamentos) <span class="badge" id="ac-apt-count">0</span></div>
+        <div class="form-grid" style="grid-template-columns:1.5fr 1fr 1fr 1fr 70px 1fr;margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="ac_apt_desc" placeholder="Ex: Cassete 4 vias">
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="ac_apt_tipo" style="width:100%;">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Potência (W)</label>
+                <input type="number" id="ac_apt_pot" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>BTU</label>
+                <input type="text" id="ac_apt_btu" list="ac_apt_btu_list" placeholder="Ex: 52000" style="width:100%;">
+                <datalist id="ac_apt_btu_list"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Qtd</label>
+                <input type="number" id="ac_apt_qtd" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="ac_apt_btn_add" onclick="adicionarAc('apt')">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" id="ac_apt_btn_edit" onclick="editarAc('apt')">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirAc('apt')">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Potência (W)</th>
+                        <th>BTU</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody id="ac-apt-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="ac-apt-empty">Nenhum ar condicionado cadastrado</div>
+    </div>
+
+    <div class="card">
         <div class="card-header">Outras Cargas (Apartamentos)</div>
         <div class="form-grid col-3" style="margin-bottom:12px;">
             <div class="form-group">
@@ -202,6 +257,58 @@
                 <input type="number" id="qtd_torneiras_adm" value="0" min="0">
             </div>
         </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Ar Condicionado (Administração) <span class="badge" id="ac-adm-count">0</span></div>
+        <div class="form-grid" style="grid-template-columns:1.5fr 1fr 1fr 1fr 70px 1fr;margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="ac_adm_desc" placeholder="Ex: Cassete 4 vias">
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="ac_adm_tipo" style="width:100%;">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Potência (W)</label>
+                <input type="number" id="ac_adm_pot" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>BTU</label>
+                <input type="text" id="ac_adm_btu" list="ac_adm_btu_list" placeholder="Ex: 52000" style="width:100%;">
+                <datalist id="ac_adm_btu_list"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Qtd</label>
+                <input type="number" id="ac_adm_qtd" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="ac_adm_btn_add" onclick="adicionarAc('adm')">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" id="ac_adm_btn_edit" onclick="editarAc('adm')">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirAc('adm')">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:40px;"></th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Potência (W)</th>
+                        <th>BTU</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody id="ac-adm-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="ac-adm-empty">Nenhum ar condicionado cadastrado</div>
     </div>
 
     <div class="card">
@@ -344,7 +451,7 @@
             </div>
             <div class="form-group">
                 <label>Forma de Agrupamento</label>
-                <input type="text" id="transf_agrup" value="Em feixe ao ar livre">
+                <select id="transf_agrup"></select>
             </div>
             <div class="form-group">
                 <label>Nº Circuitos Agrupados</label>
@@ -361,6 +468,36 @@
         <div class="card">
             <div class="card-header">Resultado do Dimensionamento</div>
             <div id="transf-content"></div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-ramal-ligacao" class="tab-content">
+    <div class="card">
+        <div class="card-header">Ramal Subterrâneo de Ligação (Tabela 15 - GED-119)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Demanda Calculada (Dg) - kVA</label>
+                <input type="number" id="ramal_lig_dg" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Tensão (MT)</label>
+                <select id="ramal_lig_tensao">
+                    <option value="15">15 kV</option>
+                    <option value="25">25 kV</option>
+                </select>
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-primary" onclick="calcularRamalLigacao()">⚡ Calcular</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ramal-lig-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado do Ramal de Ligação</div>
+            <div id="ramal-lig-content"></div>
         </div>
     </div>
 </div>
@@ -402,9 +539,134 @@
     </div>
 </div>
 
+<div id="tab-ramal" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dimensionamento do Ramal de Entrada (NBR 5410)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Corrente Calculada (A)</label>
+                <input type="number" id="ramal_corrente" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+                <label>Isolação</label>
+                <select id="ramal_isolacao">
+                    <option value="PVC">PVC 70°C</option>
+                    <option value="EPR">EPR/XLPE 90°C</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Material</label>
+                <select id="ramal_material">
+                    <option value="cobre">Cobre</option>
+                    <option value="aluminio">Alumínio</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tensão (trifásico)</label>
+                <select id="ramal_tensao">
+                    <option value="380">380/220V</option>
+                    <option value="220">220/127V</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Método de Referência</label>
+                <select id="ramal_metodo">
+                    <optgroup label="Tabelas 36/37 (A1-D)">
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="C" selected>C</option>
+                        <option value="D">D</option>
+                    </optgroup>
+                    <optgroup label="Tabelas 38/39 (E-G)">
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="G">G</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nº Condutores Carregados</label>
+                <select id="ramal_condutores">
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                </select>
+            </div>
+            <div class="form-group" id="ramal_subtipo_group" style="display:none;">
+                <label>Disposição</label>
+                <select id="ramal_subtipo">
+                    <option value="trifolio">Trifólio</option>
+                    <option value="justapostos">Justapostos</option>
+                    <option value="horizontal">Espaçados Horizontal</option>
+                    <option value="vertical">Espaçados Vertical</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Fatores de Correção (Tabela 42 - NBR 5410)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Forma de Agrupamento</label>
+                <select id="ramal_forma_agrup">
+                    <option value="">Nenhum (sem correção)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nº Circuitos Agrupados</label>
+                <input type="number" id="ramal_num_circuitos" value="1" min="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-primary" onclick="calcularRamal()">⚡ Calcular</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ramal-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado do Dimensionamento do Ramal</div>
+            <div id="ramal-content"></div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-poste" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dimensionamento do Poste de Entrada (Tabela 20)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Tensão de Fornecimento</label>
+                <select id="poste_tensao">
+                    <option value="127/220">127/220V</option>
+                    <option value="220/380" selected>220/380V</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Demanda Calculada (Dg) - kVA</label>
+                <input type="number" id="poste_dg" step="0.01" min="0">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-primary" onclick="calcularPoste()">⚡ Calcular</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="poste-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado do Dimensionamento do Poste</div>
+            <div id="poste-content"></div>
+        </div>
+    </div>
+</div>
+
 <script>
 let motores = [];
 let outrasCargas = { apt: [], adm: [] };
+let acData = { apt: [], adm: [] };
+let acEditIndex = { apt: null, adm: null };
 let currentProjetoId = null;
 let ultimoDg = null;
 
@@ -470,6 +732,10 @@ function carregarProjeto(projetoId) {
         renderCargas('apt');
         outrasCargas.adm = (p.outras_cargas_adm || []).map(c => ({ desc: c.descricao, pot: c.potencia, qtd: c.quantidade }));
         renderCargas('adm');
+        acData.apt = (p.ac_apt || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0 }));
+        acData.adm = (p.ac_adm || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0 }));
+        renderAc('apt');
+        renderAc('adm');
         calcTab('tab-dados');
     })
     .catch(err => alert('Erro ao carregar projeto: ' + err.message));
@@ -539,6 +805,10 @@ function novoProjeto() {
     outrasCargas = { apt: [], adm: [] };
     renderCargas('apt');
     renderCargas('adm');
+    acData = { apt: [], adm: [] };
+    acEditIndex = { apt: null, adm: null };
+    renderAc('apt');
+    renderAc('adm');
     calcTab('tab-dados');
 }
 
@@ -557,6 +827,70 @@ function excluirProjeto() {
 }
 
 let tabela2Data = [];
+
+let tabelaAcData = [];
+
+function carregarBtusG119() {
+    fetch('/api/ged119/tabela_ac')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) return;
+        tabelaAcData = resp.data;
+        const tipos = {};
+        const tiposOrdenados = [];
+        resp.data.forEach(function(item) {
+            if (!tipos[item.tipo_equipamento]) {
+                tipos[item.tipo_equipamento] = true;
+                tiposOrdenados.push(item.tipo_equipamento);
+            }
+        });
+        const tipoOptions = '<option value="">Selecione...</option>' +
+            tiposOrdenados.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+        document.getElementById('ac_apt_tipo').innerHTML = tipoOptions;
+        document.getElementById('ac_adm_tipo').innerHTML = tipoOptions;
+    })
+    .catch(function() {});
+}
+
+document.addEventListener('change', function(e) {
+    const match = e.target.id && e.target.id.match(/^ac_(apt|adm)_tipo$/);
+    if (match) {
+        const tipo = match[1];
+        const tipoEq = e.target.value;
+        const selBtu = document.getElementById('ac_' + tipo + '_btu');
+        const datalist = document.getElementById('ac_' + tipo + '_btu_list');
+        document.getElementById('ac_' + tipo + '_pot').value = '';
+        // Mostra TODOS os BTUs da tabela (não filtra por tipo)
+        var btuOptions = tabelaAcData.map(function(item) {
+            var wMed = Math.round((item.potencia_w_min + item.potencia_w_max) / 2);
+            return { btu: item.btu, label: item.btu + ' BTU (~' + wMed + ' W) - ' + item.tipo_equipamento };
+        });
+        btuOptions.sort(function(a, b) { return a.btu - b.btu; });
+        datalist.innerHTML = btuOptions.map(function(o) {
+            return '<option value="' + o.btu + '">' + o.label + '</option>';
+        }).join('');
+        selBtu.value = '';
+        selBtu.focus();
+    }
+});
+
+document.addEventListener('input', function(e) {
+    const match = e.target.id && e.target.id.match(/^ac_(apt|adm)_btu$/);
+    if (match) {
+        const tipo = match[1];
+        const btu = parseInt(e.target.value);
+        if (btu) {
+            const found = tabelaAcData.find(function(item) { return item.btu === btu; });
+            if (found) {
+                const w = Math.round((found.potencia_w_min + found.potencia_w_max) / 2);
+                document.getElementById('ac_' + tipo + '_pot').value = w;
+            } else {
+                const w = Math.round(btu * 0.29307107);
+                document.getElementById('ac_' + tipo + '_pot').value = w;
+            }
+        }
+    }
+});
 
 function carregarTabela2() {
     fetch('/api/ged119/tabela2')
@@ -592,15 +926,54 @@ function fdTab2(desc, qtdTotal) {
     return 1.0;
 }
 
+function carregarFormasAgrupamento() {
+    fetch('/api/ged119/formas_agrupamento')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) return;
+        const sel = document.getElementById('transf_agrup');
+        sel.innerHTML = '';
+        resp.data.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = f;
+            sel.appendChild(opt);
+        });
+    })
+    .catch(function() {});
+}
+
+function carregarFormasAgrupamentoNBR() {
+    fetch('/api/ged119/formas_agrupamento_nbr')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) return;
+        const sel = document.getElementById('ramal_forma_agrup');
+        sel.innerHTML = '<option value="">Nenhum (sem correção)</option>';
+        resp.data.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.forma;
+            opt.textContent = f.forma;
+            sel.appendChild(opt);
+        });
+    })
+    .catch(function() {});
+}
+
 // Auto-list on page load
 document.addEventListener('DOMContentLoaded', function() {
     listarProjetos();
     carregarTabela2();
+    carregarFormasAgrupamento();
+    carregarFormasAgrupamentoNBR();
+    carregarBtusG119();
     // auto-save on field changes
     var campos = ['aptos','area_apto','area_adm','iluminacao','tomadas',
         'chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
         'qtd_chuveiros_adm','qtd_torneiras_adm',
-        'secar_kw','secar_apto','lavar_kw','lavar_apto'];
+        'secar_kw','secar_apto','lavar_kw','lavar_apto',
+        'ac_apt_desc','ac_apt_tipo','ac_apt_pot','ac_apt_qtd','ac_apt_btu',
+        'ac_adm_desc','ac_adm_tipo','ac_adm_pot','ac_adm_qtd','ac_adm_btu'];
     campos.forEach(function(id) {
         var el = document.getElementById(id) || document.getElementById(id + '2');
         if (el) el.addEventListener('input', autoSalvarG119);
@@ -739,6 +1112,104 @@ function excluirCarga(tipo) {
     }
 }
 
+function renderAc(tipo) {
+    const prefix = 'ac-' + tipo;
+    const tbody = document.getElementById(prefix + '-table-body');
+    const empty = document.getElementById(prefix + '-empty');
+    const count = document.getElementById(prefix + '-count');
+    tbody.innerHTML = '';
+    if (!acData[tipo] || acData[tipo].length === 0) {
+        empty.style.display = 'block';
+        count.textContent = '0';
+        return;
+    }
+    empty.style.display = 'none';
+    count.textContent = acData[tipo].length;
+    acData[tipo].forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = function() {
+            document.querySelectorAll('#' + prefix + '-table-body tr').forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById('ac_' + tipo + '_desc').value = c.desc;
+            document.getElementById('ac_' + tipo + '_tipo').value = c.tipoEq || '';
+            // Dispara change no tipo para popular datalist (limpa BTU/POT)
+            var evt = new Event('change');
+            document.getElementById('ac_' + tipo + '_tipo').dispatchEvent(evt);
+            // Re-aplica valores após o change
+            document.getElementById('ac_' + tipo + '_pot').value = c.pot;
+            document.getElementById('ac_' + tipo + '_btu').value = c.btu || '';
+            document.getElementById('ac_' + tipo + '_qtd').value = c.qtd;
+            acEditIndex[tipo] = i;
+            var btnAdd = document.getElementById('ac_' + tipo + '_btn_add');
+            if (btnAdd) btnAdd.textContent = 'Salvar';
+        };
+        tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
+                        <td>${c.desc}</td>
+                        <td>${c.tipoEq || '-'}</td>
+                        <td>${c.pot}</td>
+                        <td>${c.btu || '-'}</td>
+                        <td>${c.qtd}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function limparFormAc(tipo) {
+    document.getElementById('ac_' + tipo + '_desc').value = '';
+    document.getElementById('ac_' + tipo + '_tipo').value = '';
+    document.getElementById('ac_' + tipo + '_pot').value = '';
+    document.getElementById('ac_' + tipo + '_qtd').value = '1';
+    document.getElementById('ac_' + tipo + '_btu').value = '';
+    acEditIndex[tipo] = null;
+    var btnAdd = document.getElementById('ac_' + tipo + '_btn_add');
+    if (btnAdd) btnAdd.textContent = '+ Adicionar';
+}
+
+function adicionarAc(tipo) {
+    const desc = document.getElementById('ac_' + tipo + '_desc').value.trim();
+    const tipoEq = document.getElementById('ac_' + tipo + '_tipo').value;
+    const pot = parseFloat(document.getElementById('ac_' + tipo + '_pot').value);
+    const qtd = parseInt(document.getElementById('ac_' + tipo + '_qtd').value);
+    const btu = parseInt(document.getElementById('ac_' + tipo + '_btu').value) || 0;
+    if (!desc || isNaN(pot) || pot <= 0 || isNaN(qtd) || qtd <= 0) {
+        alert('Descrição, Potência (>0) e Quantidade (>0) são obrigatórios!');
+        return;
+    }
+    const item = { desc, tipoEq, pot, qtd, btu };
+    if (acEditIndex[tipo] !== null) {
+        acData[tipo][acEditIndex[tipo]] = item;
+    } else {
+        acData[tipo].push(item);
+    }
+    renderAc(tipo);
+    limparFormAc(tipo);
+    autoSalvarG119();
+}
+
+function editarAc(tipo) {
+    const prefix = 'ac-' + tipo;
+    const selected = document.querySelector('#' + prefix + '-table-body tr.selected');
+    if (!selected) { alert('Selecione um ar condicionado para editar!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    const c = acData[tipo][idx];
+    if (!c) return;
+    // Click na linha já popula o form e seta editIndex; só precisamos ativar
+    acEditIndex[tipo] = idx;
+    var btnAdd = document.getElementById('ac_' + tipo + '_btn_add');
+    if (btnAdd) btnAdd.textContent = 'Salvar';
+}
+
+function excluirAc(tipo) {
+    const prefix = 'ac-' + tipo;
+    const selected = document.querySelector('#' + prefix + '-table-body tr.selected');
+    if (!selected) { alert('Selecione um ar condicionado para excluir!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    if (confirm(`Excluir "${acData[tipo][idx].desc}"?`)) {
+        acData[tipo].splice(idx, 1);
+        renderAc(tipo);
+        autoSalvarG119();
+    }
+}
+
 function getDados() {
     const tabPrefix = (id) => {
         const v = document.getElementById(id);
@@ -764,6 +1235,8 @@ function getDados() {
         motores: motores,
         outras_cargas_apt: outrasCargas.apt.map(c => [c.desc, c.pot, c.qtd]),
         outras_cargas_adm: outrasCargas.adm.map(c => [c.desc, c.pot, c.qtd]),
+        ac_apt: acData.apt.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu })),
+        ac_adm: acData.adm.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu })),
     };
 }
 
@@ -830,6 +1303,9 @@ function mostrarResultado(d) {
     container.style.display = 'block';
     ultimoDg = d.Dg;
     document.getElementById('transf_dg').value = d.Dg;
+    document.getElementById('poste_dg').value = d.Dg;
+    document.getElementById('ramal_lig_dg').value = d.Dg;
+    atualizarCorrenteRamal();
 
     const motoresHtml = d.motores.length > 0
         ? d.motores.map((m, i) =>
@@ -848,6 +1324,18 @@ function mostrarResultado(d) {
             `<div class="result-line">${c[0]}: ${c[1]} kW x ${c[2]} un = ${(c[1]*c[2]).toFixed(2)} kVA</div>`
           ).join('')
         : '<div class="result-line">Nenhuma.</div>';
+
+    const acAptHtml = d.ac_apt && d.ac_apt.length > 0
+        ? d.ac_apt.map(c =>
+            `<div class="result-line">${c.descricao}${c.tipo_equipamento ? ' ('+c.tipo_equipamento+')' : ''}: ${(c.potencia/1000).toFixed(3)} kW x ${c.quantidade} un = ${((c.potencia/1000)*c.quantidade).toFixed(2)} kVA</div>`
+          ).join('')
+        : '<div class="result-line">Nenhum.</div>';
+
+    const acAdmHtml = d.ac_adm && d.ac_adm.length > 0
+        ? d.ac_adm.map(c =>
+            `<div class="result-line">${c.descricao}${c.tipo_equipamento ? ' ('+c.tipo_equipamento+')' : ''}: ${(c.potencia/1000).toFixed(3)} kW x ${c.quantidade} un = ${((c.potencia/1000)*c.quantidade).toFixed(2)} kVA</div>`
+          ).join('')
+        : '<div class="result-line">Nenhum.</div>';
 
     content.innerHTML = `
         <div class="result-section">
@@ -920,13 +1408,20 @@ function mostrarResultado(d) {
         <hr class="result-divider">
 
         <div class="result-section">
-            <div class="result-title" style="color:var(--cyan);">Outras Cargas</div>
-            <div class="result-line"><span class="label">Apartamentos:</span></div>
+            <div class="result-title" style="color:var(--cyan);">Outras Cargas e Ar Condicionado</div>
+            <div class="result-line"><span class="label">Outras Cargas - Apartamentos:</span></div>
             ${outrasAptHtml}
-            <div class="result-line">Total outras cargas (apt) = <span class="value">${d.total_outras_apt.toFixed(2)} kVA</span></div>
+            <div class="result-line"><span class="label">Ar Condicionado - Apartamentos:</span></div>
+            ${acAptHtml}
+            <div class="result-line">Total AC (apt) = <span class="value">${d.total_ac_apt_kw.toFixed(2)} kVA</span></div>
             <br>
-            <div class="result-line"><span class="label">Administração:</span></div>
+            <div class="result-line"><span class="label">Outras Cargas - Administração:</span></div>
             ${outrasAdmHtml}
+            <div class="result-line"><span class="label">Ar Condicionado - Administração:</span></div>
+            ${acAdmHtml}
+            <div class="result-line">Total AC (adm) = <span class="value">${d.total_ac_adm_kw.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line">Total outras cargas (apt) = <span class="value">${d.total_outras_apt.toFixed(2)} kVA</span></div>
             <div class="result-line">Total outras cargas (adm) = <span class="value">${d.total_outras_adm.toFixed(2)} kVA</span></div>
         </div>
 
@@ -1027,11 +1522,13 @@ function mostrarResultadoTransformador(d) {
         ? `<span style="color:var(--danger);font-weight:700;">ATENCAO: Dg > ${d.limite} kVA - Alimentacao pela rede primaria (GED-2855)</span>`
         : `<span style="color:var(--success);font-weight:700;">OK - Demanda dentro do limite para BT (${d.limite} kVA)</span>`;
 
-    const trafoHtml = d.trafo_kva
-        ? `<div class="result-line">Transformador: <span class="value">${d.trafo_kva} kVA</span></div>
-           <div class="result-line">Faixa: ${d.trafo_faixa_min} a ${d.trafo_faixa_max} kVA (Tabela 10)</div>
-           ${d.cap_interrupcao_kA ? `<div class="result-line">Capacidade de Interrupcao: ${d.cap_interrupcao_kA} kA (Z = ${d.cap_z_percent}%)</div>` : ''}`
-        : '<div class="result-line">Nenhum transformador encontrado.</div>';
+    const trafoHtml = d.trafo_acima_tabela
+        ? '<div class="result-line" style="color:var(--warning);font-weight:700;">Acima de 308 kVA - A critério do cliente (medição em média tensão)</div><div class="result-line" style="font-size:12px;color:var(--text-muted);">Notas: a) Para demandas calculadas, conforme o item 15 desta norma (ou de acordo com o documento GED-2855), de até 308kVA, pode ser aplicada esta tabela, arredondando-se a demanda calculada para a unidade imediatamente superior. b) Podem ser adotados outros limites de demanda calculada para transformadores do tipo a seco.</div>'
+        : d.trafo_kva
+            ? `<div class="result-line">Transformador: <span class="value">${d.trafo_kva} kVA</span></div>
+               <div class="result-line">Faixa: ${d.trafo_faixa_min} a ${d.trafo_faixa_max} kVA (Tabela 10)</div>
+               ${d.cap_interrupcao_kA ? `<div class="result-line">Capacidade de Interrupcao: ${d.cap_interrupcao_kA} kA (Z = ${d.cap_z_percent}%)</div>` : ''}`
+            : '<div class="result-line">Nenhum transformador encontrado.</div>';
 
     const caboHtml = d.secao_mm2
         ? `<div class="result-line">Secao do Cabo: <span class="value">${d.secao_mm2} mm²</span></div>
@@ -1091,11 +1588,247 @@ function mostrarResultadoTransformador(d) {
         <div class="result-final">
             <div class="label">Resumo do Dimensionamento</div>
             <div class="value" style="font-size:18px;">
-                ${d.trafo_kva ? d.trafo_kva + ' kVA' : '---'} |
+                ${d.trafo_acima_tabela ? '>308 kVA' : (d.trafo_kva ? d.trafo_kva + ' kVA' : '---')} |
                 ${d.disjuntor_A ? d.disjuntor_A + ' A' : '---'} |
                 ${d.secao_mm2 ? d.secao_mm2 + ' mm²' : '---'}
             </div>
             <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Trafo | Disjuntor | Cabo</div>
+        </div>
+        </div>
+        <div style="text-align:right;margin-top:12px;">
+            <button class="btn btn-primary" onclick="window.print()">📄 PDF / Imprimir</button>
+        </div>
+    `;
+}
+
+function calcularPoste() {
+    const dg = parseFloat(document.getElementById('poste_dg').value);
+    if (isNaN(dg) || dg <= 0) {
+        alert('Preencha a Demanda Calculada (Dg)!');
+        return;
+    }
+    const dados = {
+        dg: dg,
+        tensao: document.getElementById('poste_tensao').value
+    };
+    fetch('/api/ged119/calcular_poste', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultadoPoste(resp.data);
+    })
+    .catch(err => alert('Erro: ' + err.message));
+}
+
+function mostrarResultadoPoste(d) {
+    const container = document.getElementById('poste-result');
+    const content = document.getElementById('poste-content');
+    container.style.display = 'block';
+
+    if (d.erro) {
+        content.innerHTML = `<div class="result-line" style="color:var(--danger);font-weight:700;">${d.erro}</div>`;
+        return;
+    }
+
+    content.innerHTML = `
+        <div id="print-area-poste">
+        <div class="result-section">
+            <div class="result-title">TABELA 20 - DIMENSIONAMENTO DO POSTE DE ENTRADA</div>
+            <div class="result-line">Tensão de Fornecimento: ${d.tensao}V</div>
+            <div class="result-line">Demanda Calculada (D): <span class="value">${d.dg} kVA</span></div>
+            <br>
+            <div class="result-line">Faixa: ${d.faixa_min} < D ≤ ${d.faixa_max} kVA</div>
+            <div class="result-line">Tipo do Poste: <span class="value">${d.tipo_poste}</span></div>
+            <div class="result-line">Capacidade: <span class="value">${d.capacidade_dan} daN</span></div>
+        </div>
+        <hr class="result-divider">
+        <div class="result-final">
+            <div class="label">Poste Recomendado</div>
+            <div class="value">${d.tipo_poste} - ${d.capacidade_dan} daN</div>
+        </div>
+        </div>
+        <div style="text-align:right;margin-top:12px;">
+            <button class="btn btn-primary" onclick="window.print()">📄 PDF / Imprimir</button>
+        </div>
+    `;
+}
+
+function atualizarCorrenteRamal() {
+    if (!ultimoDg) return;
+    const V = parseInt(document.getElementById('ramal_tensao').value);
+    const I = (ultimoDg * 1000) / (V * 1.732);
+    document.getElementById('ramal_corrente').value = Math.round(I * 100) / 100;
+}
+
+function calcularRamalLigacao() {
+    const dg = parseFloat(document.getElementById('ramal_lig_dg').value);
+    if (isNaN(dg) || dg <= 0) {
+        alert('Preencha a Demanda Calculada (Dg)!');
+        return;
+    }
+    const dados = {
+        dg: dg,
+        tensao_kv: parseInt(document.getElementById('ramal_lig_tensao').value)
+    };
+    fetch('/api/ged119/calcular_ramal_ligacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultadoRamalLigacao(resp.data);
+    })
+    .catch(err => alert('Erro: ' + err.message));
+}
+
+function mostrarResultadoRamalLigacao(d) {
+    const container = document.getElementById('ramal-lig-result');
+    const content = document.getElementById('ramal-lig-content');
+    container.style.display = 'block';
+
+    if (!d.cabo_sel) {
+        content.innerHTML = '<div class="result-line" style="color:var(--danger);font-weight:700;">Nenhum cabo encontrado para os parâmetros informados.</div>';
+        return;
+    }
+
+    const aviso = d.cabo_sel.acima_limite
+        ? '<div class="result-line" style="color:var(--warning);font-weight:700;">Atenção: Demanda acima do maior cabo disponível na tabela. Consulte o fornecedor.</div>'
+        : '';
+
+    content.innerHTML = `
+        <div id="print-area-ramal-lig">
+        <div class="result-section">
+            <div class="result-title">RAMAL SUBTERRÂNEO DE LIGAÇÃO (Tabela 15 - GED-119)</div>
+            <div class="result-line">Classe de Tensão: <span class="value">${d.tensao_kv} kV</span></div>
+            <div class="result-line">Demanda Geral (Dg): ${d.dg} kVA</div>
+            <div class="result-line">Corrente Calculada: I = <span class="value">${d.I} A</span></div>
+            <br>
+            <div class="result-line">Cabo Recomendado: <span class="value">${d.cabo_sel.tipo_cabo}</span></div>
+            <div class="result-line">Capacidade de Corrente: ${d.cabo_sel.corrente_A} A</div>
+            <div class="result-line">Potência Máxima: ${d.cabo_sel.potencia_MVA} MVA</div>
+            ${aviso}
+        </div>
+        <hr class="result-divider">
+        <div class="result-final">
+            <div class="label">Cabo Recomendado</div>
+            <div class="value">${d.cabo_sel.tipo_cabo}</div>
+        </div>
+        </div>
+        <div style="text-align:right;margin-top:12px;">
+            <button class="btn btn-primary" onclick="window.print()">📄 PDF / Imprimir</button>
+        </div>
+    `;
+}
+
+// Show/hide subtipo for methods F/G
+document.getElementById('ramal_metodo').addEventListener('change', function() {
+    const group = document.getElementById('ramal_subtipo_group');
+    group.style.display = (this.value === 'F' || this.value === 'G') ? 'block' : 'none';
+});
+document.getElementById('ramal_tensao').addEventListener('change', function() {
+    atualizarCorrenteRamal();
+    if (document.getElementById('ramal-result').style.display === 'block') {
+        calcularRamal();
+    }
+});
+
+function calcularRamal() {
+    const corrente = parseFloat(document.getElementById('ramal_corrente').value);
+    if (isNaN(corrente) || corrente <= 0) {
+        alert('Preencha a Corrente Calculada!');
+        return;
+    }
+    const dados = {
+        corrente: corrente,
+        isolacao: document.getElementById('ramal_isolacao').value,
+        material: document.getElementById('ramal_material').value,
+        metodo: document.getElementById('ramal_metodo').value,
+        condutores: parseInt(document.getElementById('ramal_condutores').value),
+    };
+    const metodo = dados.metodo;
+    if (metodo === 'F' || metodo === 'G') {
+        dados.sub_tipo = document.getElementById('ramal_subtipo').value;
+        if (metodo === 'G' && dados.condutores === 2) {
+            alert('Método G requer 3 condutores carregados.');
+            return;
+        }
+    }
+    const formaAgrup = document.getElementById('ramal_forma_agrup').value;
+    if (formaAgrup) {
+        dados.forma_agrupamento = formaAgrup;
+        dados.num_circuitos_agrupados = parseInt(document.getElementById('ramal_num_circuitos').value) || 1;
+    }
+
+    fetch('/api/ged119/calcular_ramal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultadoRamal(resp.data);
+    })
+    .catch(err => alert('Erro: ' + err.message));
+}
+
+function mostrarResultadoRamal(d) {
+    const container = document.getElementById('ramal-result');
+    const content = document.getElementById('ramal-content');
+    container.style.display = 'block';
+
+    if (!d.secao_mm2) {
+        content.innerHTML = '<div class="result-line" style="color:var(--danger);font-weight:700;">Nenhum condutor encontrado para os parâmetros informados.</div>';
+        return;
+    }
+
+    let fatorHtml = '';
+    if (d.fator_correcao && d.fator_correcao < 1) {
+        fatorHtml = `
+            <br>
+            <div class="result-line">Fator de Correção (Tabela 42): <span class="value">${d.fator_correcao}</span></div>
+            <div class="result-line">Corrente Corrigida: I' = ${d.corrente} / ${d.fator_correcao} = <span class="value">${d.corrente_corrigida} A</span></div>
+        `;
+    }
+
+    let paraleloHtml = '';
+    if (d.opcoes_paralelo && d.opcoes_paralelo.length > 0) {
+        paraleloHtml = '<div class="result-title">Opções de Condutores em Paralelo</div>';
+        d.opcoes_paralelo.forEach(op => {
+            paraleloHtml += `<div class="result-line" style="margin-bottom:8px;">
+                <span style="font-weight:700;color:var(--warning);">${op.n_condutores}×${op.secao_mm2} mm²</span>
+                &rarr; ${op.capacidade_por_condutor} A/cabo = ${op.capacidade_total} A total
+                ${op.neutro_mm2 ? `<span style="color:var(--text-muted);"> | Neutro: ${op.neutro_mm2} mm²</span>` : ''}
+            </div>`;
+        });
+    }
+
+    content.innerHTML = `
+        <div id="print-area-ramal">
+        <div class="result-section">
+            <div class="result-title">DIMENSIONAMENTO DO RAMAL DE ENTRADA (NBR 5410)</div>
+            <div class="result-line">Corrente de Projeto: <span class="value">${d.corrente} A</span></div>
+            <div class="result-line">Isolação: ${d.isolacao === 'PVC' ? 'PVC 70°C' : 'EPR/XLPE 90°C'}</div>
+            <div class="result-line">Material: ${d.material === 'cobre' ? 'Cobre' : 'Alumínio'}</div>
+            <div class="result-line">Método: ${d.metodo}</div>
+            <div class="result-line">Condutores Carregados: ${d.condutores}</div>
+            ${fatorHtml}
+            <br>
+            <div class="result-line">Seção Recomendada (Fase): <span class="value">${d.secao_mm2} mm²</span></div>
+            <div class="result-line">Capacidade do Condutor: ${d.capacidade_A} A</div>
+            ${d.neutro_mm2 ? `<div class="result-line">Neutro (Tabela 48): <span class="value">${d.neutro_mm2} mm²</span></div>` : ''}
+            ${d.opcoes_paralelo ? '<br>' + paraleloHtml : ''}
+        </div>
+        <hr class="result-divider">
+        <div class="result-final">
+            <div class="label">Condutor Recomendado</div>
+            <div class="value">${d.secao_mm2} mm² - ${d.capacidade_A} A</div>
         </div>
         </div>
         <div style="text-align:right;margin-top:12px;">
@@ -1113,6 +1846,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.getElementById(this.dataset.tab).classList.add('active');
         if (this.dataset.tab === 'tab-resultado') {
             calcularGED119();
+        }
+        if (this.dataset.tab === 'tab-ramal' && document.getElementById('ramal_corrente').value) {
+            calcularRamal();
+        }
+        if (this.dataset.tab === 'tab-poste' && ultimoDg) {
+            document.getElementById('poste_dg').value = ultimoDg;
+            calcularPoste();
+        }
+        if (this.dataset.tab === 'tab-ramal-ligacao' && document.getElementById('ramal_lig_dg').value) {
+            calcularRamalLigacao();
         }
     });
 });
