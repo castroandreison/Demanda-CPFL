@@ -987,6 +987,12 @@ function mostrarResultadoGed13(d) {
     const formulaClose = '</div>';
 
     // Padrao
+    var padraoMotorRows = '';
+    if (d.g_kva > 0) {
+        padraoMotorRows = '<tr><td>Motor FN máx</td><td>' + (d.padrao.motor_fn || '-') + '</td></tr>' +
+            '<tr><td>Motor FF máx</td><td>' + (d.padrao.motor_ff || '-') + '</td></tr>' +
+            '<tr><td>Motor FFF máx</td><td>' + (d.padrao.motor_fff || '-') + '</td></tr>';
+    }
     const padraoHtml = d.padrao ? '<div class="card" style="margin-bottom:16px;"><div class="card-header">🔌 Padrão de Entrada</div>' +
         '<div class="result-section"><table class="result-table"><tbody>' +
         '<tr><td>Tipo de Ligação</td><td><strong>TRIFÁSICO</strong></td></tr>' +
@@ -997,9 +1003,7 @@ function mostrarResultadoGed13(d) {
         '<tr><td>Eletroduto</td><td>' + (d.padrao.eletroduto || '-') + '</td></tr>' +
         '<tr><td>Disjuntor</td><td>' + (d.padrao.disjuntor || '-') + '</td></tr>' +
         '<tr><td>Aterramento</td><td>' + (d.padrao.aterramento_condutor || d.padrao.aterramento || '-') + '</td></tr>' +
-        '<tr><td>Motor FN máx</td><td>' + (d.padrao.motor_fn || '-') + '</td></tr>' +
-        '<tr><td>Motor FF máx</td><td>' + (d.padrao.motor_ff || '-') + '</td></tr>' +
-        '<tr><td>Motor FFF máx</td><td>' + (d.padrao.motor_fff || '-') + '</td></tr>' +
+        padraoMotorRows +
         '<tr><td>Poste</td><td>' + (d.padrao.poste || '-') + '</td></tr>' +
         '<tr><td>Caixa</td><td>' + (d.padrao.caixa || '-') + '</td></tr>' +
         '</tbody></table></div></div>' :
@@ -1180,9 +1184,11 @@ function montarRelatorioG13() {
         html += '<div class="result-line">Eletroduto: ' + (d.padrao.eletroduto || '-') + '</div>';
         html += '<div class="result-line">Disjuntor: ' + (d.padrao.disjuntor || '-') + '</div>';
         html += '<div class="result-line">Aterramento: ' + (d.padrao.aterramento_condutor || d.padrao.aterramento || '-') + '</div>';
-        html += '<div class="result-line">Motor FN: ' + (d.padrao.motor_fn || '-') + '</div>';
-        html += '<div class="result-line">Motor FF: ' + (d.padrao.motor_ff || '-') + '</div>';
-        html += '<div class="result-line">Motor FFF: ' + (d.padrao.motor_fff || '-') + '</div>';
+        if (d.g_kva > 0) {
+            html += '<div class="result-line">Motor FN: ' + (d.padrao.motor_fn || '-') + '</div>';
+            html += '<div class="result-line">Motor FF: ' + (d.padrao.motor_ff || '-') + '</div>';
+            html += '<div class="result-line">Motor FFF: ' + (d.padrao.motor_fff || '-') + '</div>';
+        }
         html += '<div class="result-line">Poste: ' + (d.padrao.poste || '-') + '</div>';
         html += '<div class="result-line">Caixa: ' + (d.padrao.caixa || '-') + '</div>';
         html += '</div>';
