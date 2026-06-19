@@ -81,6 +81,10 @@ def init_db():
         cursor.execute("ALTER TABLE ac_projeto ADD COLUMN tipo_equipamento TEXT DEFAULT ''")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE ac_projeto ADD COLUMN incluir INTEGER DEFAULT 1")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -108,10 +112,10 @@ def carregar_projeto(projeto_id):
     outras_apt = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2]} for r in cursor.fetchall()]
     cursor.execute("SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'adm'", (projeto_id,))
     outras_adm = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2]} for r in cursor.fetchall()]
-    cursor.execute("SELECT descricao, potencia_w, quantidade, btu, tipo_equipamento FROM ac_projeto WHERE projeto_id = ? AND tipo = 'apt' ORDER BY id", (projeto_id,))
-    ac_apt = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2], 'btu': r[3], 'tipo_equipamento': r[4]} for r in cursor.fetchall()]
-    cursor.execute("SELECT descricao, potencia_w, quantidade, btu, tipo_equipamento FROM ac_projeto WHERE projeto_id = ? AND tipo = 'adm' ORDER BY id", (projeto_id,))
-    ac_adm = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2], 'btu': r[3], 'tipo_equipamento': r[4]} for r in cursor.fetchall()]
+    cursor.execute("SELECT descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir FROM ac_projeto WHERE projeto_id = ? AND tipo = 'apt' ORDER BY id", (projeto_id,))
+    ac_apt = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2], 'btu': r[3], 'tipo_equipamento': r[4], 'incluir': r[5]} for r in cursor.fetchall()]
+    cursor.execute("SELECT descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir FROM ac_projeto WHERE projeto_id = ? AND tipo = 'adm' ORDER BY id", (projeto_id,))
+    ac_adm = [{'descricao': r[0], 'potencia': r[1], 'quantidade': r[2], 'btu': r[3], 'tipo_equipamento': r[4], 'incluir': r[5]} for r in cursor.fetchall()]
     conn.close()
     proj_dict['motores'] = motores
     proj_dict['outras_cargas_apt'] = outras_apt
@@ -158,16 +162,18 @@ def salvar_projeto(projeto_id, dados):
         qtd = int(ac.get('quantidade', ac.get('qtd', 1)))
         btu = int(ac.get('btu', 0))
         tipo_eq = ac.get('tipo_equipamento', '')
-        cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento) VALUES (?, 'apt', ?, ?, ?, ?, ?)",
-                       (projeto_id, desc, pot, qtd, btu, tipo_eq))
+        incluir = 1 if ac.get('incluir', 1) else 0
+        cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir) VALUES (?, 'apt', ?, ?, ?, ?, ?, ?)",
+                       (projeto_id, desc, pot, qtd, btu, tipo_eq, incluir))
     for ac in dados.get('ac_adm', []):
         desc = ac.get('descricao', ac.get('desc', ''))
         pot = float(ac.get('potencia', ac.get('pot', 0)))
         qtd = int(ac.get('quantidade', ac.get('qtd', 1)))
         btu = int(ac.get('btu', 0))
         tipo_eq = ac.get('tipo_equipamento', '')
-        cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento) VALUES (?, 'adm', ?, ?, ?, ?, ?)",
-                       (projeto_id, desc, pot, qtd, btu, tipo_eq))
+        incluir = 1 if ac.get('incluir', 1) else 0
+        cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir) VALUES (?, 'adm', ?, ?, ?, ?, ?, ?)",
+                       (projeto_id, desc, pot, qtd, btu, tipo_eq, incluir))
     conn.commit()
     conn.close()
     return projeto_id

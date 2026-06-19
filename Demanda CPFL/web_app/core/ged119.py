@@ -20,14 +20,62 @@ def normalizar_cv(cv):
     }
     return mapa.get(str(cv), str(cv))
 
+def cv_str_para_float(cv_str):
+    cv_str = cv_str.strip()
+    if ' ' in cv_str and '/' in cv_str:
+        parts = cv_str.split(' ')
+        whole = float(parts[0])
+        frac = parts[1].split('/')
+        return whole + float(frac[0]) / float(frac[1])
+    elif '/' in cv_str:
+        parts = cv_str.split('/')
+        return float(parts[0]) / float(parts[1])
+    else:
+        return float(cv_str)
+
 def cv_para_kva(cv):
+    cv = float(cv)
     conn = get_conn()
     cursor = conn.cursor()
     chave = normalizar_cv(cv)
-    cursor.execute("SELECT potencia_kva FROM TABELA_4 WHERE potencia_cv_hp = ?", (chave,))
+    cursor.execute("SELECT potencia_kva, potencia_kw FROM TABELA_4 WHERE potencia_cv_hp = ?", (chave,))
     r = cursor.fetchone()
+    if r:
+        conn.close()
+        return r[0], r[1]
+    cursor.execute("SELECT potencia_cv_hp, potencia_kva, potencia_kw FROM TABELA_4")
+    rows = cursor.fetchall()
     conn.close()
-    return r[0] if r else 0
+    entries = [(cv_str_para_float(row[0]), row[1], row[2]) for row in rows]
+    entries.sort(key=lambda x: x[0])
+    lower = upper = None
+    for e in entries:
+        if e[0] <= cv:
+            lower = e
+        if e[0] >= cv and upper is None:
+            upper = e
+    if lower and upper and lower[0] != upper[0]:
+        ratio = (cv - lower[0]) / (upper[0] - lower[0])
+        kva = lower[1] + ratio * (upper[1] - lower[1])
+        kw = lower[2] + ratio * (upper[2] - lower[2])
+        return round(kva, 4), round(kw, 4)
+    if upper:
+        return upper[1], upper[2]
+    if lower:
+        return lower[1], lower[2]
+    return 0, 0
+
+def get_tabela4():
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT potencia_cv_hp, potencia_kw, potencia_kva FROM TABELA_4 ORDER BY id")
+    rows = cursor.fetchall()
+    conn.close()
+    result = []
+    for r in rows:
+        cv_num = cv_str_para_float(r[0])
+        result.append({'cv_label': r[0], 'cv': cv_num, 'kw': r[1], 'kva': r[2]})
+    return result
 
 def fator_aparelho(coluna, qtd):
     conn = get_conn()
@@ -344,8 +392,8 @@ def calcular(dados):
     total_outras_adm = sum(pot * qtd for desc, pot, qtd in outras_cargas_adm) if outras_cargas_adm else 0
 
     # --- AR CONDICIONADO ---
-    total_ac_apt_kw = sum((ac.get('potencia', ac.get('pot', 0)) / 1000) * ac.get('quantidade', ac.get('qtd', 1)) for ac in ac_apt) if ac_apt else 0
-    total_ac_adm_kw = sum((ac.get('potencia', ac.get('pot', 0)) / 1000) * ac.get('quantidade', ac.get('qtd', 1)) for ac in ac_adm) if ac_adm else 0
+    total_ac_apt_kw = sum((ac.get('potencia', ac.get('pot', 0)) / 1000) * ac.get('quantidade', ac.get('qtd', 1)) for ac in ac_apt if ac.get('incluir', 1)) if ac_apt else 0
+    total_ac_adm_kw = sum((ac.get('potencia', ac.get('pot', 0)) / 1000) * ac.get('quantidade', ac.get('qtd', 1)) for ac in ac_adm if ac.get('incluir', 1)) if ac_adm else 0
     total_outras_apt += total_ac_apt_kw
     total_outras_adm += total_ac_adm_kw
 
@@ -356,11 +404,11 @@ def calcular(dados):
     for m in motores:
         cv = float(m['cv'])
         qtd = int(m['qtd'])
-        kva = cv_para_kva(cv)
+        kva, kw = cv_para_kva(cv)
         total_kva = kva * qtd
         total += total_kva
         maior = max(maior, kva)
-        motores_detalhes.append({'cv': cv, 'qtd': qtd, 'kva': kva, 'total_kva': total_kva})
+        motores_detalhes.append({'cv': cv, 'qtd': qtd, 'kva': kva, 'kw': kw, 'total_kva': total_kva, 'total_kw': kw * qtd})
 
     restantes = total - maior
     D3 = (maior * 1.0) + (restantes * 0.5)

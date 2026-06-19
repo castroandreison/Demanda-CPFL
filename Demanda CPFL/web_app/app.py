@@ -6,7 +6,7 @@ _dir = os.path.dirname(os.path.abspath(__file__))
 if _dir not in sys.path:
     sys.path.insert(0, _dir)
 
-from core.ged119 import calcular as calc_ged119, calcular_transformador, calcular_poste, calcular_ramal_ligacao, get_tabela_ac
+from core.ged119 import calcular as calc_ged119, calcular_transformador, calcular_poste, calcular_ramal_ligacao, get_tabela_ac, get_tabela4
 from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neutro
 from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_conn_g13
 import core.ged119 as ged119_mod
@@ -116,6 +116,14 @@ def api_ged119_tabela2():
 def api_ged119_tabela_ac():
     try:
         data = get_tabela_ac()
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/tabela4', methods=['GET'])
+def api_ged119_tabela4():
+    try:
+        data = get_tabela4()
         return jsonify({'success': True, 'data': data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400

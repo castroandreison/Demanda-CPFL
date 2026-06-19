@@ -174,6 +174,12 @@
                 <label>Qtd</label>
                 <input type="number" id="ac_apt_qtd" min="1" step="1" value="1">
             </div>
+            <div class="form-group" style="justify-content:center;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:18px;">
+                    <input type="checkbox" id="ac_apt_incluir" checked style="width:18px;height:18px;cursor:pointer;">
+                    Incluir no cálculo
+                </label>
+            </div>
             <div class="form-group" style="justify-content:flex-end;">
                 <div class="btn-group" style="margin-top:18px;">
                     <button class="btn btn-success btn-sm" id="ac_apt_btn_add" onclick="adicionarAc('apt')">+ Adicionar</button>
@@ -187,6 +193,7 @@
                 <thead>
                     <tr>
                         <th style="width:40px;"></th>
+                        <th>Incluir</th>
                         <th>Descrição</th>
                         <th>Tipo</th>
                         <th>Potência (W)</th>
@@ -285,6 +292,12 @@
                 <label>Qtd</label>
                 <input type="number" id="ac_adm_qtd" min="1" step="1" value="1">
             </div>
+            <div class="form-group" style="justify-content:center;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:18px;">
+                    <input type="checkbox" id="ac_adm_incluir" checked style="width:18px;height:18px;cursor:pointer;">
+                    Incluir no cálculo
+                </label>
+            </div>
             <div class="form-group" style="justify-content:flex-end;">
                 <div class="btn-group" style="margin-top:18px;">
                     <button class="btn btn-success btn-sm" id="ac_adm_btn_add" onclick="adicionarAc('adm')">+ Adicionar</button>
@@ -298,6 +311,7 @@
                 <thead>
                     <tr>
                         <th style="width:40px;"></th>
+                        <th>Incluir</th>
                         <th>Descrição</th>
                         <th>Tipo</th>
                         <th>Potência (W)</th>
@@ -386,6 +400,7 @@
                         <th style="width:40px;"></th>
                         <th>Descrição</th>
                         <th>Potência (CV)</th>
+                        <th>Potência (kW)</th>
                         <th>Quantidade</th>
                         <th>FD</th>
                     </tr>
@@ -732,8 +747,8 @@ function carregarProjeto(projetoId) {
         renderCargas('apt');
         outrasCargas.adm = (p.outras_cargas_adm || []).map(c => ({ desc: c.descricao, pot: c.potencia, qtd: c.quantidade }));
         renderCargas('adm');
-        acData.apt = (p.ac_apt || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0 }));
-        acData.adm = (p.ac_adm || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0 }));
+        acData.apt = (p.ac_apt || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0, incluir: c.incluir !== 0 ? 1 : 0 }));
+        acData.adm = (p.ac_adm || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0, incluir: c.incluir !== 0 ? 1 : 0 }));
         renderAc('apt');
         renderAc('adm');
         calcTab('tab-dados');
@@ -830,6 +845,8 @@ let tabela2Data = [];
 
 let tabelaAcData = [];
 
+let tabela4Data = [];
+
 function carregarBtusG119() {
     fetch('/api/ged119/tabela_ac')
     .then(r => r.json())
@@ -849,6 +866,13 @@ function carregarBtusG119() {
         document.getElementById('ac_apt_tipo').innerHTML = tipoOptions;
         document.getElementById('ac_adm_tipo').innerHTML = tipoOptions;
     })
+    .catch(function() {});
+}
+
+function carregarTabela4() {
+    fetch('/api/ged119/tabela4')
+    .then(r => r.json())
+    .then(resp => { if (resp.success) tabela4Data = resp.data; renderMotores(); })
     .catch(function() {});
 }
 
@@ -885,7 +909,31 @@ document.addEventListener('input', function(e) {
                 const w = Math.round((found.potencia_w_min + found.potencia_w_max) / 2);
                 document.getElementById('ac_' + tipo + '_pot').value = w;
             } else {
-                const w = Math.round(btu * 0.29307107);
+                // Estimar potência elétrica pela média do tipo selecionado
+                const tipoEq = document.getElementById('ac_' + tipo + '_tipo').value;
+                var ratio = null;
+                if (tipoEq) {
+                    var entries = tabelaAcData.filter(function(item) { return item.tipo_equipamento === tipoEq; });
+                    if (entries.length > 0) {
+                        var sum = 0, count = 0;
+                        entries.forEach(function(item) {
+                            var wMed = (item.potencia_w_min + item.potencia_w_max) / 2;
+                            sum += wMed / item.btu;
+                            count++;
+                        });
+                        ratio = sum / count;
+                    }
+                }
+                if (ratio === null) {
+                    var sum = 0, count = 0;
+                    tabelaAcData.forEach(function(item) {
+                        var wMed = (item.potencia_w_min + item.potencia_w_max) / 2;
+                        sum += wMed / item.btu;
+                        count++;
+                    });
+                    ratio = sum / count;
+                }
+                const w = Math.round(btu * ratio);
                 document.getElementById('ac_' + tipo + '_pot').value = w;
             }
         }
@@ -967,13 +1015,14 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarFormasAgrupamento();
     carregarFormasAgrupamentoNBR();
     carregarBtusG119();
+    carregarTabela4();
     // auto-save on field changes
     var campos = ['aptos','area_apto','area_adm','iluminacao','tomadas',
         'chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
         'qtd_chuveiros_adm','qtd_torneiras_adm',
         'secar_kw','secar_apto','lavar_kw','lavar_apto',
-        'ac_apt_desc','ac_apt_tipo','ac_apt_pot','ac_apt_qtd','ac_apt_btu',
-        'ac_adm_desc','ac_adm_tipo','ac_adm_pot','ac_adm_qtd','ac_adm_btu'];
+        'ac_apt_desc','ac_apt_tipo','ac_apt_pot','ac_apt_qtd','ac_apt_btu','ac_apt_incluir',
+        'ac_adm_desc','ac_adm_tipo','ac_adm_pot','ac_adm_qtd','ac_adm_btu','ac_adm_incluir'];
     campos.forEach(function(id) {
         var el = document.getElementById(id) || document.getElementById(id + '2');
         if (el) el.addEventListener('input', autoSalvarG119);
@@ -984,6 +1033,26 @@ document.addEventListener('DOMContentLoaded', function() {
     var nomeEl = document.getElementById('projeto_nome');
     if (nomeEl) nomeEl.addEventListener('input', autoSalvarG119);
 });
+
+function motorKva(cv) {
+    for (var i = 0; i < tabela4Data.length; i++) {
+        if (tabela4Data[i].cv_label === String(cv)) return tabela4Data[i];
+        if (tabela4Data[i].cv === cv) return tabela4Data[i];
+    }
+    var lower = null, upper = null;
+    for (var i = 0; i < tabela4Data.length; i++) {
+        if (tabela4Data[i].cv <= cv) lower = tabela4Data[i];
+        if (tabela4Data[i].cv >= cv && !upper) upper = tabela4Data[i];
+    }
+    if (lower && upper && lower.cv !== upper.cv) {
+        var ratio = (cv - lower.cv) / (upper.cv - lower.cv);
+        return {
+            kw: lower.kw + ratio * (upper.kw - lower.kw),
+            kva: lower.kva + ratio * (upper.kva - lower.kva)
+        };
+    }
+    return upper || lower || { kw: 0, kva: 0 };
+}
 
 function renderMotores() {
     const tbody = document.getElementById('motor-table-body');
@@ -1009,9 +1078,12 @@ function renderMotores() {
         };
         const rank = sortedIdx.indexOf(i);
         const fd = rank === 0 ? 1.0 : 0.5;
+        const tbl4 = motorKva(m.cv);
+        const kw = tbl4 ? tbl4.kw : 0;
         tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
                         <td>${m.desc || '-'}</td>
                         <td>${m.cv}</td>
+                        <td>${kw.toFixed(2)}</td>
                         <td>${m.qtd}</td>
                         <td>${fd.toFixed(2)}</td>`;
         tbody.appendChild(tr);
@@ -1139,11 +1211,14 @@ function renderAc(tipo) {
             document.getElementById('ac_' + tipo + '_pot').value = c.pot;
             document.getElementById('ac_' + tipo + '_btu').value = c.btu || '';
             document.getElementById('ac_' + tipo + '_qtd').value = c.qtd;
+            document.getElementById('ac_' + tipo + '_incluir').checked = c.incluir !== 0;
             acEditIndex[tipo] = i;
             var btnAdd = document.getElementById('ac_' + tipo + '_btn_add');
             if (btnAdd) btnAdd.textContent = 'Salvar';
         };
+        var checked = c.incluir !== 0;
         tr.innerHTML = `<td style="text-align:center;color:var(--text-muted);">${i+1}</td>
+                        <td style="text-align:center;"><input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation();toggleAcIncluir('${tipo}', ${i}, this.checked);"></td>
                         <td>${c.desc}</td>
                         <td>${c.tipoEq || '-'}</td>
                         <td>${c.pot}</td>
@@ -1153,12 +1228,20 @@ function renderAc(tipo) {
     });
 }
 
+function toggleAcIncluir(tipo, idx, checked) {
+    if (acData[tipo] && acData[tipo][idx]) {
+        acData[tipo][idx].incluir = checked ? 1 : 0;
+        autoSalvarG119();
+    }
+}
+
 function limparFormAc(tipo) {
     document.getElementById('ac_' + tipo + '_desc').value = '';
     document.getElementById('ac_' + tipo + '_tipo').value = '';
     document.getElementById('ac_' + tipo + '_pot').value = '';
     document.getElementById('ac_' + tipo + '_qtd').value = '1';
     document.getElementById('ac_' + tipo + '_btu').value = '';
+    document.getElementById('ac_' + tipo + '_incluir').checked = true;
     acEditIndex[tipo] = null;
     var btnAdd = document.getElementById('ac_' + tipo + '_btn_add');
     if (btnAdd) btnAdd.textContent = '+ Adicionar';
@@ -1170,11 +1253,12 @@ function adicionarAc(tipo) {
     const pot = parseFloat(document.getElementById('ac_' + tipo + '_pot').value);
     const qtd = parseInt(document.getElementById('ac_' + tipo + '_qtd').value);
     const btu = parseInt(document.getElementById('ac_' + tipo + '_btu').value) || 0;
+    const incluir = document.getElementById('ac_' + tipo + '_incluir').checked ? 1 : 0;
     if (!desc || isNaN(pot) || pot <= 0 || isNaN(qtd) || qtd <= 0) {
         alert('Descrição, Potência (>0) e Quantidade (>0) são obrigatórios!');
         return;
     }
-    const item = { desc, tipoEq, pot, qtd, btu };
+    const item = { desc, tipoEq, pot, qtd, btu, incluir };
     if (acEditIndex[tipo] !== null) {
         acData[tipo][acEditIndex[tipo]] = item;
     } else {
@@ -1235,8 +1319,8 @@ function getDados() {
         motores: motores,
         outras_cargas_apt: outrasCargas.apt.map(c => [c.desc, c.pot, c.qtd]),
         outras_cargas_adm: outrasCargas.adm.map(c => [c.desc, c.pot, c.qtd]),
-        ac_apt: acData.apt.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu })),
-        ac_adm: acData.adm.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu })),
+        ac_apt: acData.apt.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu, incluir: c.incluir !== 0 ? 1 : 0 })),
+        ac_adm: acData.adm.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu, incluir: c.incluir !== 0 ? 1 : 0 })),
     };
 }
 
@@ -1309,7 +1393,7 @@ function mostrarResultado(d) {
 
     const motoresHtml = d.motores.length > 0
         ? d.motores.map((m, i) =>
-            `<div class="result-line">${i+1}) ${m.cv} CV x ${m.qtd} un = ${m.total_kva.toFixed(2)} kVA (Tabela 4)</div>`
+            `<div class="result-line">${i+1}) ${m.cv} CV x ${m.qtd} un = ${m.kw.toFixed(2)} kW (${m.total_kva.toFixed(2)} kVA) (Tabela 4)</div>`
           ).join('')
         : '<div class="result-line">Nenhum motor cadastrado.</div>';
 
@@ -1326,15 +1410,17 @@ function mostrarResultado(d) {
         : '<div class="result-line">Nenhuma.</div>';
 
     const acAptHtml = d.ac_apt && d.ac_apt.length > 0
-        ? d.ac_apt.map(c =>
-            `<div class="result-line">${c.descricao}${c.tipo_equipamento ? ' ('+c.tipo_equipamento+')' : ''}: ${(c.potencia/1000).toFixed(3)} kW x ${c.quantidade} un = ${((c.potencia/1000)*c.quantidade).toFixed(2)} kVA</div>`
-          ).join('')
+        ? d.ac_apt.map(c => {
+            const incl = c.incluir !== 0;
+            return `<div class="result-line" style="${incl ? '' : 'opacity:0.5;text-decoration:line-through;'}">${c.descricao}${c.tipo_equipamento ? ' ('+c.tipo_equipamento+')' : ''}: ${(c.potencia/1000).toFixed(3)} kW x ${c.quantidade} un = ${((c.potencia/1000)*c.quantidade).toFixed(2)} kVA ${incl ? '' : '(excluído)'}</div>`;
+          }).join('')
         : '<div class="result-line">Nenhum.</div>';
 
     const acAdmHtml = d.ac_adm && d.ac_adm.length > 0
-        ? d.ac_adm.map(c =>
-            `<div class="result-line">${c.descricao}${c.tipo_equipamento ? ' ('+c.tipo_equipamento+')' : ''}: ${(c.potencia/1000).toFixed(3)} kW x ${c.quantidade} un = ${((c.potencia/1000)*c.quantidade).toFixed(2)} kVA</div>`
-          ).join('')
+        ? d.ac_adm.map(c => {
+            const incl = c.incluir !== 0;
+            return `<div class="result-line" style="${incl ? '' : 'opacity:0.5;text-decoration:line-through;'}">${c.descricao}${c.tipo_equipamento ? ' ('+c.tipo_equipamento+')' : ''}: ${(c.potencia/1000).toFixed(3)} kW x ${c.quantidade} un = ${((c.potencia/1000)*c.quantidade).toFixed(2)} kVA ${incl ? '' : '(excluído)'}</div>`;
+          }).join('')
         : '<div class="result-line">Nenhum.</div>';
 
     content.innerHTML = `
