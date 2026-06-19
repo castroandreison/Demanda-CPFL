@@ -502,6 +502,10 @@
                     <option value="25">25 kV</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Comprimento (m)</label>
+                <input type="number" id="ramal_lig_comprimento" min="0" step="1" value="50">
+            </div>
             <div class="form-group" style="justify-content:flex-end;">
                 <div class="btn-group" style="margin-top:18px;">
                     <button class="btn btn-primary" onclick="calcularRamalLigacao()">⚡ Calcular</button>
@@ -570,6 +574,10 @@
                 <label class="print-checkbox"><input type="checkbox" id="chk_outras" checked onchange="montarRelatorio()"> Outras Cargas e AC</label>
                 <label class="print-checkbox"><input type="checkbox" id="chk_dg" checked onchange="montarRelatorio()"> Demanda Geral (Dg)</label>
                 <label class="print-checkbox"><input type="checkbox" id="chk_limites" checked onchange="montarRelatorio()"> Limites / Rede Primária</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_transformador" checked onchange="montarRelatorio()"> Transformador</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_poste" checked onchange="montarRelatorio()"> Poste</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_ramal_lig" checked onchange="montarRelatorio()"> Ramal de Ligação</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_ramal" checked onchange="montarRelatorio()"> Ramal de Entrada</label>
                 <hr style="margin:12px 0;border-color:var(--border);">
                 <div style="font-size:11px;color:var(--text-muted);">Calcule os resultados nas abas correspondentes antes de gerar o relatório.</div>
             </div>
@@ -660,6 +668,10 @@
                 <label>Nº Circuitos Agrupados</label>
                 <input type="number" id="ramal_num_circuitos" value="1" min="1">
             </div>
+            <div class="form-group">
+                <label>Comprimento (m) <small style="color:var(--text-muted);">(cobre, K=58)</small></label>
+                <input type="number" id="ramal_comprimento" min="0" step="1" value="50">
+            </div>
             <div class="form-group" style="justify-content:flex-end;">
                 <div class="btn-group" style="margin-top:18px;">
                     <button class="btn btn-primary" onclick="calcularRamal()">⚡ Calcular</button>
@@ -713,6 +725,10 @@ let acEditIndex = { apt: null, adm: null };
 let currentProjetoId = null;
 let ultimoDg = null;
 let ultimoResultado = null;
+let ultimoResultadoTransformador = null;
+let ultimoResultadoPoste = null;
+let ultimoResultadoRamalLig = null;
+let ultimoResultadoRamal = null;
 
 // --- Project Management ---
 
@@ -1501,6 +1517,22 @@ function mostrarResultado(d) {
             <div class="result-line">FD (Tabela 2 - maquinas_lavar_louca): para ${d.total_lavar} un = ${d.f_lavar}</div>
             <div class="result-line">D2c = ${d.total_lavar} × ${(d.D2c / (d.total_lavar || 1) / (d.f_lavar || 1)).toFixed(1)} kW × ${d.f_lavar} = <span class="value">${d.D2c.toFixed(2)} kVA</span></div>
             <br>
+            <div class="result-title" style="color:var(--cyan);font-size:13px;">Outras Cargas e Ar Condicionado</div>
+            <div class="result-line"><span class="label">Outras Cargas - Apartamentos:</span></div>
+            ${outrasAptHtml}
+            <div class="result-line"><span class="label">Ar Condicionado - Apartamentos:</span></div>
+            ${acAptHtml}
+            <div class="result-line">Total AC (apt) = <span class="value">${d.total_ac_apt_kw.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line"><span class="label">Outras Cargas - Administração:</span></div>
+            ${outrasAdmHtml}
+            <div class="result-line"><span class="label">Ar Condicionado - Administração:</span></div>
+            ${acAdmHtml}
+            <div class="result-line">Total AC (adm) = <span class="value">${d.total_ac_adm_kw.toFixed(2)} kVA</span></div>
+            <br>
+            <div class="result-line">Total outras cargas (apt) = <span class="value">${d.total_outras_apt.toFixed(2)} kVA</span></div>
+            <div class="result-line">Total outras cargas (adm) = <span class="value">${d.total_outras_adm.toFixed(2)} kVA</span></div>
+            <br>
             <div class="result-line"><span class="highlight">D2 (Apartamentos) = ${d.D2_apt.toFixed(2)} kVA</span></div>
             <div class="result-line"><span class="highlight">D2 (Administração) = ${d.D2_adm.toFixed(2)} kVA</span></div>
             <div class="result-line"><span class="highlight">D2 Total = ${d.D2.toFixed(2)} kVA</span></div>
@@ -1519,26 +1551,6 @@ function mostrarResultado(d) {
             <div class="result-line">Restante = ${d.total_motores_kva.toFixed(2)} - ${d.maior_motor_kva.toFixed(2)} = ${d.restantes_kva.toFixed(2)} kVA</div>
             <br>
             <div class="result-line"><span class="highlight">D3 = ${d.maior_motor_kva.toFixed(2)} × 1,0 + ${d.restantes_kva.toFixed(2)} × 0,5 = ${d.D3.toFixed(2)} kVA</span></div>
-        </div>
-
-        <hr class="result-divider">
-
-        <div class="result-section">
-            <div class="result-title" style="color:var(--cyan);">Outras Cargas e Ar Condicionado</div>
-            <div class="result-line"><span class="label">Outras Cargas - Apartamentos:</span></div>
-            ${outrasAptHtml}
-            <div class="result-line"><span class="label">Ar Condicionado - Apartamentos:</span></div>
-            ${acAptHtml}
-            <div class="result-line">Total AC (apt) = <span class="value">${d.total_ac_apt_kw.toFixed(2)} kVA</span></div>
-            <br>
-            <div class="result-line"><span class="label">Outras Cargas - Administração:</span></div>
-            ${outrasAdmHtml}
-            <div class="result-line"><span class="label">Ar Condicionado - Administração:</span></div>
-            ${acAdmHtml}
-            <div class="result-line">Total AC (adm) = <span class="value">${d.total_ac_adm_kw.toFixed(2)} kVA</span></div>
-            <br>
-            <div class="result-line">Total outras cargas (apt) = <span class="value">${d.total_outras_apt.toFixed(2)} kVA</span></div>
-            <div class="result-line">Total outras cargas (adm) = <span class="value">${d.total_outras_adm.toFixed(2)} kVA</span></div>
         </div>
 
         <hr class="result-divider">
@@ -1624,6 +1636,7 @@ function calcularTransformador() {
     .then(r => r.json())
     .then(resp => {
         if (!resp.success) throw new Error(resp.error);
+        ultimoResultadoTransformador = resp.data;
         mostrarResultadoTransformador(resp.data);
     })
     .catch(err => alert('Erro: ' + err.message));
@@ -1732,6 +1745,7 @@ function calcularPoste() {
     .then(r => r.json())
     .then(resp => {
         if (!resp.success) throw new Error(resp.error);
+        ultimoResultadoPoste = resp.data;
         mostrarResultadoPoste(resp.data);
     })
     .catch(err => alert('Erro: ' + err.message));
@@ -1792,6 +1806,7 @@ function calcularRamalLigacao() {
     .then(r => r.json())
     .then(resp => {
         if (!resp.success) throw new Error(resp.error);
+        ultimoResultadoRamalLig = resp.data;
         mostrarResultadoRamalLigacao(resp.data);
     })
     .catch(err => alert('Erro: ' + err.message));
@@ -1811,18 +1826,55 @@ function mostrarResultadoRamalLigacao(d) {
         ? '<div class="result-line" style="color:var(--warning);font-weight:700;">Atenção: Demanda acima do maior cabo disponível na tabela. Consulte o fornecedor.</div>'
         : '';
 
+    const L = parseFloat(document.getElementById('ramal_lig_comprimento').value) || 0;
+    const K = 35.5;
+    const Vn = d.tensao_kv * 1000;
+    const cosPhi = 0.92;
+    const secaoMatch = d.cabo_sel.tipo_cabo.match(/(\d+)/);
+    const S = secaoMatch ? parseFloat(secaoMatch[1]) : 0;
+    let quedaHtml = '';
+    if (L > 0 && S > 0) {
+        const dV = 1.732 * L * d.I * cosPhi / (K * S);
+        const dVpct = (dV / Vn) * 100;
+        quedaHtml = `
+            <br>
+            <div class="result-title">Queda de Tensão (Alumínio, K=${K} m/Ω·mm², cosφ=${cosPhi})</div>
+            <div class="result-line"><b>1) Corrente de projeto:</b></div>
+            <div class="result-line">I = Dg × 1000 / (√3 × Vn)</div>
+            <div class="result-line">I = ${d.dg} × 1000 / (1,73 × ${Vn})</div>
+            <div class="result-line">I = <span class="value">${d.I} A</span></div>
+            <br>
+            <div class="result-line"><b>2) Seção do condutor (Tabela 15):</b></div>
+            <div class="result-line">Cabo adotado: ${d.cabo_sel.tipo_cabo}</div>
+            <div class="result-line">Seção (S) = <span class="value">${S} mm²</span></div>
+            <div class="result-line">Capacidade: ${d.cabo_sel.corrente_A} A | Potência: ${d.cabo_sel.potencia_MVA} MVA</div>
+            <br>
+            <div class="result-line"><b>3) Queda de Tensão (trifásico):</b></div>
+            <div class="result-line">ΔV = √3 × L × I × cosφ / (K × S)</div>
+            <div class="result-line">ΔV = 1,73 × ${L} m × ${d.I} A × ${cosPhi} / (${K} × ${S} mm²)</div>
+            <div class="result-line">ΔV = ${(1.732 * d.I * cosPhi / (K * S)).toFixed(4)} V/m × ${L} m</div>
+            <div class="result-line">ΔV = <span class="value">${dV.toFixed(2)} V</span></div>
+            <br>
+            <div class="result-line"><b>4) Queda percentual:</b></div>
+            <div class="result-line">u% = ΔV / Vn × 100</div>
+            <div class="result-line">u% = ${dV.toFixed(2)} / ${Vn} × 100</div>
+            <div class="result-line">u% = <span class="value">${dVpct.toFixed(4)}%</span></div>
+        `;
+    }
+
     content.innerHTML = `
         <div id="print-area-ramal-lig">
         <div class="result-section">
             <div class="result-title">RAMAL SUBTERRÂNEO DE LIGAÇÃO (Tabela 15 - GED-119)</div>
             <div class="result-line">Classe de Tensão: <span class="value">${d.tensao_kv} kV</span></div>
             <div class="result-line">Demanda Geral (Dg): ${d.dg} kVA</div>
-            <div class="result-line">Corrente Calculada: I = <span class="value">${d.I} A</span></div>
+            <div class="result-line">Corrente Calculada: I = ${d.dg} × 1000 / (1,73 × ${Vn}) = <span class="value">${d.I} A</span></div>
             <br>
             <div class="result-line">Cabo Recomendado: <span class="value">${d.cabo_sel.tipo_cabo}</span></div>
             <div class="result-line">Capacidade de Corrente: ${d.cabo_sel.corrente_A} A</div>
             <div class="result-line">Potência Máxima: ${d.cabo_sel.potencia_MVA} MVA</div>
             ${aviso}
+            ${quedaHtml}
         </div>
         <hr class="result-divider">
         <div class="result-final">
@@ -1880,6 +1932,7 @@ function calcularRamal() {
     .then(r => r.json())
     .then(resp => {
         if (!resp.success) throw new Error(resp.error);
+        ultimoResultadoRamal = resp.data;
         mostrarResultadoRamal(resp.data);
     })
     .catch(err => alert('Erro: ' + err.message));
@@ -1905,15 +1958,54 @@ function mostrarResultadoRamal(d) {
     }
 
     let paraleloHtml = '';
+    let paraleloSelecionado = null;
     if (d.opcoes_paralelo && d.opcoes_paralelo.length > 0) {
-        paraleloHtml = '<div class="result-title">Opções de Condutores em Paralelo</div>';
-        d.opcoes_paralelo.forEach(op => {
-            paraleloHtml += `<div class="result-line" style="margin-bottom:8px;">
+        const idxSalvo = parseInt(document.getElementById('ramal_paralelo_idx')?.value || -1);
+        paraleloHtml = '<div class="result-title">Opções de Condutores em Paralelo <small style="font-weight:400;color:var(--text-muted);">(selecione uma opção)</small></div>';
+        d.opcoes_paralelo.forEach((op, i) => {
+            const sel = (idxSalvo === i) || (idxSalvo < 0 && i === 0);
+            if (sel) paraleloSelecionado = op;
+            paraleloHtml += `<div class="result-line" style="margin-bottom:6px;cursor:pointer;" onclick="selecionarRamalParalelo(${i})">
+                <input type="radio" name="ramal_paralelo_radio" value="${i}" ${sel ? 'checked' : ''} style="margin-right:6px;cursor:pointer;">
                 <span style="font-weight:700;color:var(--warning);">${op.n_condutores}×${op.secao_mm2} mm²</span>
                 &rarr; ${op.capacidade_por_condutor} A/cabo = ${op.capacidade_total} A total
                 ${op.neutro_mm2 ? `<span style="color:var(--text-muted);"> | Neutro: ${op.neutro_mm2} mm²</span>` : ''}
             </div>`;
         });
+        if (!paraleloSelecionado) paraleloSelecionado = d.opcoes_paralelo[0];
+    }
+
+    const L = parseFloat(document.getElementById('ramal_comprimento').value) || 0;
+    const K = 58;
+    const Vn = 380;
+    const cosPhi = 0.92;
+    let quedaHtml = '';
+    if (L > 0 && d.secao_mm2) {
+        const dV = 1.732 * L * d.corrente * cosPhi / (K * d.secao_mm2);
+        const dVpct = (dV / Vn) * 100;
+        const dVpm = 1.732 * d.corrente * cosPhi / (K * d.secao_mm2);
+        quedaHtml = `
+            <br>
+            <div class="result-title">Queda de Tensão (Cobre, K=${K} m/Ω·mm², cosφ=${cosPhi}, Vn=${Vn}V)</div>
+            <div class="result-line"><b>1) Dados de entrada:</b></div>
+            <div class="result-line">Corrente de Projeto: I = ${d.corrente} A</div>
+            <div class="result-line">Tensão Nominal: Vn = ${Vn} V (trifásico)</div>
+            <div class="result-line">Comprimento: L = ${L} m</div>
+            <div class="result-line">Condutividade (Cobre): K = ${K} m/Ω·mm²</div>
+            <div class="result-line">Seção do condutor: S = ${d.secao_mm2} mm²</div>
+            <br>
+            <div class="result-line"><b>2) Queda de Tensão (trifásico):</b></div>
+            <div class="result-line">Fórmula: ΔV = √3 × L × I × cosφ / (K × S)</div>
+            <div class="result-line">ΔV = 1,73 × ${L} m × ${d.corrente} A × ${cosPhi} / (${K} × ${d.secao_mm2} mm²)</div>
+            <div class="result-line">ΔV = ${dVpm.toFixed(4)} V/m × ${L} m</div>
+            <div class="result-line">ΔV = <span class="value">${dV.toFixed(2)} V</span></div>
+            <br>
+            <div class="result-line"><b>3) Queda percentual:</b></div>
+            <div class="result-line">Fórmula: u% = ΔV / Vn × 100</div>
+            <div class="result-line">u% = ${dV.toFixed(2)} / ${Vn} × 100</div>
+            <div class="result-line">u% = <span class="value">${dVpct.toFixed(2)}%</span></div>
+            ${dVpct > 5 ? '<div class="result-line" style="color:var(--danger);">⚠ Queda de tensão acima de 5%! Considere aumentar a seção do condutor.</div>' : ''}
+        `;
     }
 
     content.innerHTML = `
@@ -1931,14 +2023,23 @@ function mostrarResultadoRamal(d) {
             <div class="result-line">Capacidade do Condutor: ${d.capacidade_A} A</div>
             ${d.neutro_mm2 ? `<div class="result-line">Neutro (Tabela 48): <span class="value">${d.neutro_mm2} mm²</span></div>` : ''}
             ${d.opcoes_paralelo ? '<br>' + paraleloHtml : ''}
+            ${quedaHtml}
         </div>
         <hr class="result-divider">
         <div class="result-final">
             <div class="label">Condutor Recomendado</div>
-            <div class="value">${d.secao_mm2} mm² - ${d.capacidade_A} A</div>
+            <div class="value">${paraleloSelecionado ? `${paraleloSelecionado.n_condutores}×${paraleloSelecionado.secao_mm2} mm² - ${paraleloSelecionado.capacidade_total} A total${paraleloSelecionado.neutro_mm2 ? ` (Neutro: ${paraleloSelecionado.neutro_mm2} mm²)` : ''}` : `${d.secao_mm2} mm² - ${d.capacidade_A} A`}</div>
         </div>
+        <input type="hidden" id="ramal_paralelo_idx" value="${paraleloSelecionado ? d.opcoes_paralelo.indexOf(paraleloSelecionado) : -1}">
         </div>
     `;
+}
+
+function selecionarRamalParalelo(idx) {
+    document.getElementById('ramal_paralelo_idx').value = idx;
+    if (typeof ultimoResultadoRamal !== 'undefined' && ultimoResultadoRamal) {
+        mostrarResultadoRamal(ultimoResultadoRamal);
+    }
 }
 
 function montarRelatorio() {
@@ -2025,18 +2126,18 @@ function montarRelatorio() {
                 html += '<div class="result-line">' + c[0] + ': ' + c[1] + ' kW x ' + c[2] + ' un = ' + (c[1]*c[2]).toFixed(2) + ' kVA</div>';
             });
         }
-        if (d.ac_apt && d.ac_apt.length > 0) {
+        var ac_apt_incl = d.ac_apt ? d.ac_apt.filter(function(c) { return c.incluir !== 0; }) : [];
+        if (ac_apt_incl.length > 0) {
             html += '<div class="result-line"><span class="label">Ar Condicionado - Apartamentos:</span></div>';
-            d.ac_apt.forEach(function(c) {
-                var incl = c.incluir !== 0;
-                html += '<div class="result-line" style="' + (incl ? '' : 'opacity:0.5;') + '">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA' + (incl ? '' : ' (excluído)') + '</div>';
+            ac_apt_incl.forEach(function(c) {
+                html += '<div class="result-line">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA</div>';
             });
         }
-        if (d.ac_adm && d.ac_adm.length > 0) {
+        var ac_adm_incl = d.ac_adm ? d.ac_adm.filter(function(c) { return c.incluir !== 0; }) : [];
+        if (ac_adm_incl.length > 0) {
             html += '<div class="result-line"><span class="label">Ar Condicionado - Administração:</span></div>';
-            d.ac_adm.forEach(function(c) {
-                var incl = c.incluir !== 0;
-                html += '<div class="result-line" style="' + (incl ? '' : 'opacity:0.5;') + '">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA' + (incl ? '' : ' (excluído)') + '</div>';
+            ac_adm_incl.forEach(function(c) {
+                html += '<div class="result-line">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA</div>';
             });
         }
         html += '<br><div class="result-line">Total AC (apt) = <span class="value">' + d.total_ac_apt_kw.toFixed(2) + ' kVA</span></div>';
@@ -2066,6 +2167,129 @@ function montarRelatorio() {
         html += '<div class="result-line">Limite para BT: ' + d.limite + ' kVA</div>';
         html += '<div class="result-line" style="font-weight:700;color:' + (acima ? 'red' : 'green') + ';">' + (acima ? 'ATENÇÃO: Dg (' + d.Dg.toFixed(2) + ' kVA) > ' + d.limite + ' kVA - Alimentação pela rede primária (GED-2855)' : 'OK - Demanda (' + d.Dg.toFixed(2) + ' kVA) dentro do limite de BT (' + d.limite + ' kVA)') + '</div>';
         html += '</div>';
+    }
+    // --- TRANSFORMADOR ---
+    if (document.getElementById('chk_transformador').checked && ultimoResultadoTransformador) {
+        var td = ultimoResultadoTransformador;
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Transformador (Tabela 10)</div>';
+        html += '<div class="result-line">Demanda: ' + td.dg + ' kVA</div>';
+        if (td.trafo_acima_tabela) {
+            html += '<div class="result-line" style="font-weight:700;">Acima de 308 kVA - A critério do cliente</div>';
+        } else if (td.trafo_kva) {
+            html += '<div class="result-line">Transformador: <span class="value">' + td.trafo_kva + ' kVA</span></div>';
+            html += '<div class="result-line">Faixa: ' + td.trafo_faixa_min + ' a ' + td.trafo_faixa_max + ' kVA</div>';
+            if (td.cap_interrupcao_kA) html += '<div class="result-line">Cap. Interrupção: ' + td.cap_interrupcao_kA + ' kA (Z=' + td.cap_z_percent + '%)</div>';
+        } else {
+            html += '<div class="result-line">Nenhum transformador encontrado.</div>';
+        }
+        html += '<br><div class="result-title">Condutores BT (Tabela 11)</div>';
+        html += '<div class="result-line">Tensão: ' + td.tensao + ' | Método: ' + td.metodo_inst + '</div>';
+        html += '<div class="result-line">I = <span class="value">' + td.I + ' A</span> | Fator Cor.: ' + td.fator_correcao + ' | I\' = ' + td.I_corrigida + ' A</div>';
+        if (td.secao_mm2) {
+            html += '<div class="result-line">Cabo: <span class="value">' + td.secao_mm2 + ' mm²</span> (' + td.capacidade_cabo_A + ' A)</div>';
+        }
+        html += '<br><div class="result-title">Barramento BT (Tabela 12)</div>';
+        html += '<div class="result-line">Barramento: ' + (td.barramento_mm ? '<span class="value">' + td.barramento_mm + ' mm</span> (' + td.barramento_pol + ')' : 'Nenhum') + '</div>';
+        html += '<br><div class="result-title">Disjuntor Termomagnético</div>';
+        html += '<div class="result-line">Disjuntor: ' + (td.disjuntor_A ? '<span class="value">' + td.disjuntor_A + ' A</span>' : 'Nenhum') + '</div>';
+        html += '</div>';
+    }
+    // --- POSTE ---
+    if (document.getElementById('chk_poste').checked && ultimoResultadoPoste) {
+        var pd = ultimoResultadoPoste;
+        if (!pd.erro) {
+            html += '<hr class="result-divider">';
+            html += '<div class="result-section">';
+            html += '<div class="result-title">Poste de Entrada (Tabela 20)</div>';
+            html += '<div class="result-line">Tensão: ' + pd.tensao + 'V | Demanda: ' + pd.dg + ' kVA</div>';
+            html += '<div class="result-line">Faixa: ' + pd.faixa_min + ' < D ≤ ' + pd.faixa_max + ' kVA</div>';
+            html += '<div class="result-line">Poste: <span class="value">' + pd.tipo_poste + '</span> - ' + pd.capacidade_dan + ' daN</div>';
+            html += '</div>';
+        }
+    }
+    // --- RAMAL DE LIGAÇÃO ---
+    if (document.getElementById('chk_ramal_lig').checked && ultimoResultadoRamalLig) {
+        var rl = ultimoResultadoRamalLig;
+        if (rl.cabo_sel) {
+            var rl_L = parseFloat(document.getElementById('ramal_lig_comprimento').value) || 0;
+            var rl_S_match = rl.cabo_sel.tipo_cabo.match(/(\d+)/);
+            var rl_S = rl_S_match ? parseFloat(rl_S_match[1]) : 0;
+            var rl_Vn = rl.tensao_kv * 1000;
+            var rl_queda = '';
+            if (rl_L > 0 && rl_S > 0) {
+                var rl_dV = 1.732 * rl_L * rl.I * 0.92 / (35.5 * rl_S);
+                var rl_dVpct = (rl_dV / rl_Vn) * 100;
+                var rl_dVpm = 1.732 * rl.I * 0.92 / (35.5 * rl_S);
+                rl_queda = '<div class="result-title" style="margin-top:8px;">Queda de Tensão (Alumínio, K=35,5 m/Ω·mm²)</div>'
+                    + '<div class="result-line"><b>1) Corrente:</b> I = Dg × 1000 / (√3 × Vn)</div>'
+                    + '<div class="result-line">I = ' + rl.dg + ' × 1000 / (1,73 × ' + rl_Vn + ') = <span class="value">' + rl.I + ' A</span></div>'
+                    + '<div class="result-line"><b>2) Seção:</b> S = ' + rl_S + ' mm² (Cabo: ' + rl.cabo_sel.tipo_cabo + ')</div>'
+                    + '<div class="result-line"><b>3) Queda trifásica:</b> ΔV = √3 × L × I × cosφ / (K × S)</div>'
+                    + '<div class="result-line">ΔV = 1,73 × ' + rl_L + ' × ' + rl.I + ' × 0,92 / (35,5 × ' + rl_S + ')</div>'
+                    + '<div class="result-line">ΔV = ' + rl_dVpm.toFixed(4) + ' V/m × ' + rl_L + ' m = <span class="value">' + rl_dV.toFixed(2) + ' V</span></div>'
+                    + '<div class="result-line"><b>4) Queda %:</b> u% = ' + rl_dV.toFixed(2) + ' / ' + rl_Vn + ' × 100 = <span class="value">' + rl_dVpct.toFixed(4) + '%</span></div>';
+            }
+            html += '<hr class="result-divider">';
+            html += '<div class="result-section">';
+            html += '<div class="result-title">Ramal Subterrâneo de Ligação (Tabela 15)</div>';
+            html += '<div class="result-line">Tensão: ' + rl.tensao_kv + ' kV | Dg: ' + rl.dg + ' kVA</div>';
+            html += '<div class="result-line">Corrente: I = ' + rl.dg + ' × 1000 / (1,73 × ' + rl_Vn + ') = <span class="value">' + rl.I + ' A</span></div>';
+            html += '<div class="result-line">Cabo: <span class="value">' + rl.cabo_sel.tipo_cabo + '</span> (' + rl.cabo_sel.corrente_A + ' A, ' + rl.cabo_sel.potencia_MVA + ' MVA)</div>';
+            if (rl.cabo_sel.acima_limite) html += '<div class="result-line" style="font-weight:700;color:red;">Demanda acima do maior cabo disponível.</div>';
+            if (rl_queda) html += rl_queda;
+            html += '</div>';
+        }
+    }
+    // --- RAMAL DE ENTRADA ---
+    if (document.getElementById('chk_ramal').checked && ultimoResultadoRamal) {
+        var rd = ultimoResultadoRamal;
+        if (rd.secao_mm2) {
+            var rd_L = parseFloat(document.getElementById('ramal_comprimento').value) || 0;
+            var rd_queda = '';
+            if (rd_L > 0) {
+                var rd_dV = 1.732 * rd_L * rd.corrente * 0.92 / (58 * rd.secao_mm2);
+                var rd_dVpct = (rd_dV / 380) * 100;
+                var rd_dVpm = 1.732 * rd.corrente * 0.92 / (58 * rd.secao_mm2);
+                rd_queda = '<div class="result-title" style="margin-top:8px;">Queda de Tensão (Cobre, K=58 m/Ω·mm², Vn=380V)</div>'
+                    + '<div class="result-line"><b>1) Dados:</b> I = ' + rd.corrente + ' A, L = ' + rd_L + ' m, S = ' + rd.secao_mm2 + ' mm², K = 58, cosφ = 0,92</div>'
+                    + '<div class="result-line"><b>2) Queda trifásica:</b> ΔV = √3 × L × I × cosφ / (K × S)</div>'
+                    + '<div class="result-line">ΔV = 1,73 × ' + rd_L + ' × ' + rd.corrente + ' × 0,92 / (58 × ' + rd.secao_mm2 + ')</div>'
+                    + '<div class="result-line">ΔV = ' + rd_dVpm.toFixed(4) + ' V/m × ' + rd_L + ' m = <span class="value">' + rd_dV.toFixed(2) + ' V</span></div>'
+                    + '<div class="result-line"><b>3) Queda %:</b> u% = ' + rd_dV.toFixed(2) + ' / 380 × 100 = <span class="value">' + rd_dVpct.toFixed(2) + '%</span></div>'
+                    + (rd_dVpct > 5 ? '<div class="result-line" style="color:red;">⚠ Acima de 5% - Aumentar seção do condutor.</div>' : '');
+            }
+            html += '<hr class="result-divider">';
+            html += '<div class="result-section">';
+            html += '<div class="result-title">Ramal de Entrada (NBR 5410)</div>';
+            html += '<div class="result-line">Corrente de Projeto: <span class="value">' + rd.corrente + ' A</span></div>';
+            html += '<div class="result-line">Isolação: ' + (rd.isolacao === 'PVC' ? 'PVC 70°C' : 'EPR/XLPE 90°C') + ' | Material: ' + (rd.material === 'cobre' ? 'Cobre' : 'Alumínio') + ' | Método: ' + rd.metodo + '</div>';
+            if (rd.fator_correcao && rd.fator_correcao < 1) {
+                html += '<div class="result-line">Fator Cor. (Tabela 42): ' + rd.fator_correcao + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
+            }
+            html += '<div class="result-line">Seção (Fase): <span class="value">' + rd.secao_mm2 + ' mm²</span> (' + rd.capacidade_A + ' A)</div>';
+            if (rd.neutro_mm2) html += '<div class="result-line">Neutro (Tab. 48): ' + rd.neutro_mm2 + ' mm²</div>';
+            if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
+                var rd_paralelo_idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || 0);
+                var rd_paralelo_sel = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
+                html += '<div class="result-title" style="margin-top:8px;">Opções de Condutores em Paralelo</div>';
+                rd.opcoes_paralelo.forEach(function(op, i) {
+                    var isSel = i === rd_paralelo_idx;
+                    html += '<div class="result-line" style="' + (isSel ? 'font-weight:700;' : '') + '">'
+                        + (isSel ? '▸ <span class="value">' : '') + op.n_condutores + '×' + op.secao_mm2 + ' mm² → ' + op.capacidade_por_condutor + ' A/cabo = ' + op.capacidade_total + ' A total' + (op.neutro_mm2 ? ' | Neutro: ' + op.neutro_mm2 + ' mm²' : '') + (isSel ? '</span>' : '')
+                        + '</div>';
+                });
+            }
+            if (rd_queda) html += rd_queda;
+            if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
+                var rd_par_final = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
+                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + rd_par_final.neutro_mm2 + ' mm²)' : '') + '</div></div>';
+            } else {
+                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A</div></div>';
+            }
+            html += '</div>';
+        }
     }
     html += '</div>';
     preview.innerHTML = html;

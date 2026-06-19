@@ -10,6 +10,7 @@
     <button class="tab-btn" data-tab="tab-4">Ar Condicionado</button>
     <button class="tab-btn" data-tab="tab-5">Motores</button>
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
+    <button class="tab-btn" data-tab="tab-impressao" style="background:var(--warning);color:#000;font-weight:700;">🖨️ Impressão</button>
 </div>
 
 <div id="tab-projetos" class="tab-content active">
@@ -284,7 +285,7 @@
         <div class="card">
             <div class="card-header">
                 Memorial de C&aacute;lculo - GED-13
-                <button class="btn btn-primary btn-sm" onclick="window.print()" style="margin-left:auto;">&#128196; PDF / Imprimir</button>
+                <button class="btn btn-primary btn-sm" onclick="calcTabG13('tab-impressao')" style="margin-left:auto;">&#128196; Gerar Relatório</button>
             </div>
             <div id="result-content"></div>
         </div>
@@ -292,8 +293,40 @@
 
 </div>
 
+<div id="tab-impressao" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <span>🖨️ Relatório de Impressão</span>
+            <button class="btn btn-primary btn-sm" onclick="gerarPDFG13()" style="margin-left:auto;">📄 Gerar PDF</button>
+        </div>
+        <div class="print-report-layout">
+            <div class="print-report-sidebar">
+                <h4 style="margin:0 0 12px 0;font-size:14px;">Seções do Relatório</h4>
+                <label class="print-checkbox"><input type="checkbox" id="chk_dados_gerais" checked onchange="montarRelatorioG13()"> Dados Gerais</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_carga_instalada" checked onchange="montarRelatorioG13()"> Carga Instalada</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_iluminacao_a" checked onchange="montarRelatorioG13()"> Iluminação e Tomadas (a)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_chuveiros_b" checked onchange="montarRelatorioG13()"> Chuveiros e Aquecimento (b)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_eletro_d" checked onchange="montarRelatorioG13()"> Eletrodomésticos (d)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_ar_f" checked onchange="montarRelatorioG13()"> Ar Condicionado (f)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_motores_g" checked onchange="montarRelatorioG13()"> Motores (g)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_solda_h" checked onchange="montarRelatorioG13()"> Equipamentos Especiais (h)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_demanda_total" checked onchange="montarRelatorioG13()"> Demanda Total (D)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_padrao" checked onchange="montarRelatorioG13()"> Padrão de Entrada</label>
+                <hr style="margin:12px 0;border-color:var(--border);">
+                <div style="font-size:11px;color:var(--text-muted);">Calcule o resultado primeiro na aba Resultado antes de gerar o relatório.</div>
+            </div>
+            <div class="print-report-preview" id="relatorio-preview">
+                <div style="text-align:center;padding:40px;color:var(--text-muted);">
+                    Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let currentProjetoIdG13 = null;
+let ultimoResultadoG13 = null;
 const cargas = { 2: [], 3: [], 4: [], 5: [] };
 const editIndexG13 = { 2: null, 3: null, 4: null, 5: null };
 
@@ -522,6 +555,9 @@ document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
         const tab = this.dataset.tab;
         if (tab === 'tab-resultado') {
             calcularGED13();
+        } else if (tab === 'tab-impressao') {
+            calcTabG13(tab);
+            montarRelatorioG13();
         } else {
             calcTabG13(tab);
         }
@@ -796,6 +832,7 @@ function calcularGED13() {
 }
 
 function mostrarResultadoGed13(d) {
+    ultimoResultadoG13 = d;
     const container = document.getElementById('result-container');
     const content = document.getElementById('result-content');
     container.style.display = 'block';
@@ -971,5 +1008,286 @@ function mostrarResultadoGed13(d) {
     content.innerHTML = cargaInstHtml + formulaHtml + sectionA + sectionB + sectionC + sectionD + sectionE + sectionF + sectionG + sectionH + sectionI + totalHtml + formulaClose + padraoHtml;
     content.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+function montarRelatorioG13() {
+    const d = ultimoResultadoG13;
+    const preview = document.getElementById('relatorio-preview');
+    if (!d) {
+        preview.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.</div>';
+        return;
+    }
+    const unidade = document.getElementById('in-unidade').value || d.unidade || '-';
+    const area = document.getElementById('in-m2').value || d.m2 || 0;
+    const tipo = document.getElementById('in-tipo').value || d.tipo || '-';
+    const tensao = document.getElementById('in-tensao').value || d.tensao || '-';
+    var html = '<div class="print-report" id="print-report-content">';
+    html += '<h2 style="text-align:center;margin-bottom:8px;">Memorial de Cálculo - GED-13</h2>';
+
+    // Dados Gerais
+    if (document.getElementById('chk_dados_gerais').checked) {
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Dados Gerais</div>';
+        html += '<div class="result-line">Unidade: ' + unidade + '</div>';
+        html += '<div class="result-line">Área: ' + area + ' m²</div>';
+        html += '<div class="result-line">Tipo: ' + tipo + '</div>';
+        html += '<div class="result-line">Tensão: ' + tensao + '</div>';
+        html += '</div>';
+    }
+
+    // Carga Instalada
+    if (document.getElementById('chk_carga_instalada').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Carga Instalada</div>';
+        html += '<div class="result-line">Iluminação: ' + (d.carga_ilum_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Chuveiros/Aquecimento: ' + (d.carga_chuveiros_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Eletrodomésticos: ' + (d.carga_eletro_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Ar Condicionado: ' + (d.carga_ar_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Motores: ' + (d.carga_motores_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Equip. Especiais: ' + (d.carga_solda_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line" style="font-weight:700;">Total: ' + (d.carga_instalada_kw_arred || 0) + ' kW</div>';
+        if (d.excede_25kw) html += '<div class="result-line" style="color:red;">Acima de 25 kW - dimensionamento obrigatório.</div>';
+        html += '</div>';
+    }
+
+    // Section a
+    if (document.getElementById('chk_iluminacao_a').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">a) Iluminação e Tomadas</div>';
+        var ilumTotalW = (d.itens_iluminacao || []).reduce(function(s, i) { return s + i.w; }, 0);
+        html += '<div class="result-line">Carga Instalada: ' + ilumTotalW + ' W = ' + d.carga_a_kw + ' kW</div>';
+        html += '<div class="result-line">FD (Tabela 3): ' + d.fd_a + '</div>';
+        html += '<div class="result-line">a = ' + d.carga_a_kw + ' × ' + d.fd_a + ' = <span class="value">' + d.a_kva + ' kVA</span></div>';
+        html += '</div>';
+    }
+
+    // Section b - Chuveiros
+    if (document.getElementById('chk_chuveiros_b').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">b) Chuveiros e Aquecimento</div>';
+        if (d.b_kva > 0) {
+            html += '<div class="result-line">Carga: ' + (d.b_w || 0) + ' W = ' + d.carga_b_kw + ' kW</div>';
+            html += '<div class="result-line">Quantidade: ' + d.qtd_chuveiros + ' aparelho(s)</div>';
+            html += '<div class="result-line">FD (Tabela 4): ' + d.fd_b + '</div>';
+            html += '<div class="result-line">b = ' + d.carga_b_kw + ' × ' + d.fd_b + ' = <span class="value">' + d.b_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">b = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section d - Eletrodomésticos
+    if (document.getElementById('chk_eletro_d').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">d) Eletrodomésticos</div>';
+        if (d.d_kva > 0) {
+            html += '<div class="result-line">Carga: ' + (d.carga_eletro_kw || 0).toFixed(2) + ' kW</div>';
+            html += '<div class="result-line">Quantidade: ' + d.qtd_eletro + ' aparelho(s)</div>';
+            html += '<div class="result-line">FD (Tabela 6): ' + d.fd_d + '</div>';
+            html += '<div class="result-line">d = ' + d.carga_eletro_kw + ' × ' + d.fd_d + ' = <span class="value">' + d.d_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">d = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section f - Ar Condicionado
+    if (document.getElementById('chk_ar_f').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">f) Ar Condicionado (Tabela 8)</div>';
+        if (d.f_kva > 0) {
+            html += '<div class="result-line">Quantidade: ' + d.ar_qtd + ' aparelho(s) de ' + d.ar_va + ' VA</div>';
+            html += '<div class="result-line">Total: ' + (d.ar_va * d.ar_qtd).toFixed(0) + ' VA = ' + d.carga_ar_kw + ' kW</div>';
+            html += '<div class="result-line">FD (Tabela 9): ' + d.fd_f + '</div>';
+            html += '<div class="result-line">f = ' + (d.ar_va * d.ar_qtd / 1000).toFixed(2) + ' × ' + d.fd_f + ' = <span class="value">' + d.f_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">f = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section g - Motores
+    if (document.getElementById('chk_motores_g').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">g) Motores (Tabelas 10, 13 e 14)</div>';
+        if (d.g_kva > 0 && d.motores && d.motores.length > 0) {
+            d.motores.forEach(function(m) {
+                html += '<div class="result-line">' + m.nome + ': ' + m.cv + ' cv → ' + m.va + ' VA, FD ' + m.fd + ' = ' + m.parcela_kva + ' kVA</div>';
+            });
+            html += '<div class="result-line" style="font-weight:700;">g = <span class="value">' + d.g_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">g = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section h - Equipamentos Especiais
+    if (document.getElementById('chk_solda_h').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">h) Equipamentos Especiais (Tabela 11)</div>';
+        if (d.h_kva > 0 && d.solda && d.solda.length > 0) {
+            d.solda.forEach(function(s, i) {
+                html += '<div class="result-line">Máq. ' + (i+1) + ': ' + s.va + ' VA, FD ' + s.fd + ' = ' + s.parcela_kva + ' kVA</div>';
+            });
+            html += '<div class="result-line" style="font-weight:700;">h = <span class="value">' + d.h_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">h = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Demanda Total
+    if (document.getElementById('chk_demanda_total').checked) {
+        var cats = [
+            { label: 'a (Iluminação/Tomadas)', val: d.a_kva },
+            { label: 'b (Chuveiros)', val: d.b_kva },
+            { label: 'c (Boiler)', val: 0 },
+            { label: 'd (Eletrodomésticos)', val: d.d_kva },
+            { label: 'e (Fogões)', val: 0 },
+            { label: 'f (Ar Condicionado)', val: d.f_kva },
+            { label: 'g (Motores)', val: d.g_kva },
+            { label: 'h (Solda)', val: d.h_kva },
+            { label: 'i (Hidromassagem)', val: 0 }
+        ];
+        var totalD = cats.reduce(function(s, c) { return s + c.val; }, 0);
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Demanda Total (D)</div>';
+        cats.forEach(function(c) {
+            html += '<div class="result-line">' + c.label + ' = ' + c.val.toFixed(2) + ' kVA</div>';
+        });
+        html += '<hr class="result-divider">';
+        html += '<div class="result-final"><div class="label">D = a + b + c + d + e + f + g + h + i</div>';
+        html += '<div class="value">' + totalD.toFixed(2) + ' kVA</div></div>';
+        html += '</div>';
+    }
+
+    // Padrão de Entrada
+    if (document.getElementById('chk_padrao').checked && d.padrao) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Padrão de Entrada</div>';
+        html += '<div class="result-line">Categoria: <span class="value">' + (d.padrao.categoria || '-') + '</span></div>';
+        html += '<div class="result-line">Tensão: ' + d.tensao + '</div>';
+        html += '<div class="result-line">Cabo Cobre: ' + (d.padrao.cobre_mm2 || '-') + '</div>';
+        html += '<div class="result-line">Cabo Alumínio: ' + (d.padrao.aluminio_mm2 || '-') + '</div>';
+        html += '<div class="result-line">Eletroduto: ' + (d.padrao.eletroduto || '-') + '</div>';
+        html += '<div class="result-line">Disjuntor: ' + (d.padrao.disjuntor || '-') + '</div>';
+        html += '<div class="result-line">Aterramento: ' + (d.padrao.aterramento_condutor || d.padrao.aterramento || '-') + '</div>';
+        html += '<div class="result-line">Motor FN: ' + (d.padrao.motor_fn || '-') + '</div>';
+        html += '<div class="result-line">Motor FF: ' + (d.padrao.motor_ff || '-') + '</div>';
+        html += '<div class="result-line">Motor FFF: ' + (d.padrao.motor_fff || '-') + '</div>';
+        html += '<div class="result-line">Poste: ' + (d.padrao.poste || '-') + '</div>';
+        html += '<div class="result-line">Caixa: ' + (d.padrao.caixa || '-') + '</div>';
+        html += '</div>';
+    }
+
+    html += '</div>';
+    preview.innerHTML = html;
+}
+
+function gerarPDFG13() {
+    if (!ultimoResultadoG13) {
+        alert('Calcule o resultado primeiro na aba "Resultado"!');
+        return;
+    }
+    montarRelatorioG13();
+    var content = document.getElementById('print-report-content').innerHTML;
+    var css = 'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#333;line-height:1.6;}' +
+        '.result-section{margin-bottom:12px;}' +
+        '.result-title{font-size:14px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#f0f0f0;border-radius:4px;}' +
+        '.result-line{margin:4px 0;font-size:12px;}' +
+        '.label{font-weight:600;}.value{font-weight:600;color:#2563eb;}' +
+        '.highlight{background:#fff3cd;padding:2px 6px;border-radius:3px;font-weight:700;}' +
+        '.result-final{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f0f0f0;border-radius:6px;}' +
+        'hr.result-divider{border:none;border-top:1px solid #ddd;margin:16px 0;}' +
+        'h2{font-size:18px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:16px;}';
+    var iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:0;';
+    document.body.appendChild(iframe);
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<html><head><title>Relatório GED-13</title><style>' + css + '@media print{body{padding:0;margin:0;}}</style></head><body>' +
+        '<div style="max-width:800px;margin:0 auto;">' + content + '</div></body></html>');
+    doc.close();
+    iframe.contentWindow.focus();
+    setTimeout(function() {
+        iframe.contentWindow.print();
+        setTimeout(function() { iframe.remove(); }, 200);
+    }, 500);
+}
 </script>
+
+<style>
+.print-report-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+.print-report-sidebar {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    position: sticky;
+    top: 12px;
+    align-self: start;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.print-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 0;
+    cursor: pointer;
+    color: var(--text);
+}
+.print-checkbox input { margin: 0; }
+.print-report-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+    color: var(--text);
+}
+#print-report-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+#print-report-content h2 {
+    font-size: 18px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    color: var(--text);
+}
+#print-report-content .result-section { margin-bottom: 12px; }
+#print-report-content .result-title {
+    font-size: 14px; font-weight: 700; margin-bottom: 8px;
+    padding: 6px 10px; background: var(--bg-hover); border-radius: 4px;
+}
+#print-report-content .result-line { margin: 4px 0; font-size: 12px; }
+#print-report-content .label { font-weight: 600; }
+#print-report-content .value { font-weight: 600; color: #2563eb; }
+#print-report-content .highlight {
+    background: #fff3cd; padding: 2px 6px; border-radius: 3px; font-weight: 700; color: #000;
+}
+#print-report-content .result-final {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; background: var(--bg-hover); border-radius: 6px;
+}
+#print-report-content hr.result-divider {
+    border: none; border-top: 1px solid var(--border); margin: 16px 0;
+}
+</style>
 {% endblock %}
