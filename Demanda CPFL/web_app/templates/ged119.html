@@ -2333,7 +2333,7 @@ function calcularQM() {
     h += '</tbody></table></div>';
     h += '<div class="result-line" style="margin-top:4px;font-size:12px;color:#8b949e;">★ = menor área. Profundidade equip.: 350 mm. Circulação frontal: 1200 mm. Margem: 50 mm. Porta 800 mm na parede frontal.</div>';
     h += '<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-    h += '<label style="font-size:12px;color:#c9d1d9;">Acréscimo % na área:</label>';
+    h += '<label style="font-size:12px;color:#c9d1d9;">Acréscimo % no perímetro:</label>';
     h += '<input type="number" id="layout_acrescimo" value="0" min="0" max="100" step="5" style="width:60px;padding:2px 4px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;font-size:12px;">';
     h += '<span id="layout_area_final" style="font-size:12px;color:#8b949e;"></span></div>';
     h += '</div>';
@@ -2346,26 +2346,36 @@ function calcularQM() {
     document.getElementById('qm-result').style.display = 'block';
 }
 
-// Atualiza áreas com acréscimo percentual na tabela de layouts
+// Recalcula dimensões com acréscimo percentual no perímetro
 document.addEventListener('input', function(e) {
     if (e.target && e.target.id === 'layout_acrescimo') {
-        var p = parseFloat(e.target.value) || 0;
-        var rows = document.querySelectorAll('#qm-content table:nth-of-type(2) tbody tr');
+        var f = 1 + (parseFloat(e.target.value) || 0) / 100;
+        var tbls = document.querySelectorAll('#qm-content .result-section table');
+        if (tbls.length < 2) return;
+        var tbody = tbls[1].querySelector('tbody');
+        if (!tbody) return;
+        var rows = tbody.querySelectorAll('tr');
         rows.forEach(function(tr) {
-            var td = tr.cells[5];
-            if (td) {
-                var area = parseFloat(td.getAttribute('data-orig'));
-                if (isNaN(area)) {
-                    area = parseFloat(td.textContent);
-                    if (!isNaN(area)) td.setAttribute('data-orig', area);
-                }
-                if (!isNaN(area)) {
-                    td.textContent = (area * (1 + p / 100)).toFixed(2);
-                }
+            if (tr.cells.length < 7) return;
+            var origComp = parseFloat(tr.cells[3].getAttribute('data-orig'));
+            if (isNaN(origComp)) {
+                origComp = parseFloat(tr.cells[3].textContent);
+                if (!isNaN(origComp)) tr.cells[3].setAttribute('data-orig', origComp);
+            }
+            var origLarg = parseFloat(tr.cells[4].getAttribute('data-orig'));
+            if (isNaN(origLarg)) {
+                origLarg = parseFloat(tr.cells[4].textContent);
+                if (!isNaN(origLarg)) tr.cells[4].setAttribute('data-orig', origLarg);
+            }
+            if (!isNaN(origComp) && !isNaN(origLarg)) {
+                tr.cells[3].textContent = Math.round(origComp * f);
+                tr.cells[4].textContent = Math.round(origLarg * f);
+                tr.cells[5].textContent = (origComp * f * origLarg * f / 1e6).toFixed(2);
+                tr.cells[6].textContent = (2 * (origComp * f + origLarg * f) / 1000).toFixed(2);
             }
         });
         var span = document.getElementById('layout_area_final');
-        if (span) span.textContent = p > 0 ? '(com +' + p + '%: áreas ajustadas)' : '';
+        if (span) span.textContent = f > 1 ? '(com +' + e.target.value + '%: dimensões ajustadas)' : '';
     }
 });
 
