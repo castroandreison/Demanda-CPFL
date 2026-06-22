@@ -7,7 +7,7 @@ if _dir not in sys.path:
     sys.path.insert(0, _dir)
 
 from core.ged119 import calcular as calc_ged119, calcular_transformador, calcular_poste, calcular_ramal_ligacao, get_tabela_ac, get_tabela4
-from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neutro
+from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neutro, get_tipos_eletroduto, calcular_eletroduto
 from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_conn_g13
 import core.ged119 as ged119_mod
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
@@ -79,6 +79,27 @@ def api_calcular_neutro():
         fase = float(dados.get('fase_mm2', 0))
         neutro = calcular_neutro(fase)
         return jsonify({'success': True, 'data': {'fase_mm2': fase, 'neutro_mm2': neutro}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/tipos_eletroduto', methods=['GET'])
+def api_tipos_eletroduto():
+    try:
+        tipos = get_tipos_eletroduto()
+        return jsonify({'success': True, 'data': tipos})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/calcular_eletroduto', methods=['POST'])
+def api_calcular_eletroduto():
+    try:
+        dados = request.get_json()
+        resultado = calcular_eletroduto(
+            dados['tipo_cabo'],
+            float(dados['secao_mm2']),
+            int(dados['n_condutores'])
+        )
+        return jsonify({'success': True, 'data': resultado})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 

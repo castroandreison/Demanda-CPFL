@@ -147,6 +147,27 @@ def calcular_protecao(fase_mm2):
     return f'{fase/2:.0f}'
 
 
+SECOES_DISPONIVEIS = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300, 400, 500]
+
+
+def _next_secao(min_mm2):
+    for s in SECOES_DISPONIVEIS:
+        if s >= min_mm2:
+            return s
+    return None
+
+
+def _format_condutor_display(secao_mm2, n_paralelo=None):
+    if not secao_mm2:
+        return None, None
+    v = float(secao_mm2)
+    if n_paralelo:
+        por_cabo = _next_secao(v / n_paralelo)
+        if por_cabo:
+            return por_cabo, f'{n_paralelo}x{por_cabo}'
+    return v, str(int(v)) if v == int(v) else str(v)
+
+
 def calcular_ramal(dados):
     corrente = float(dados['corrente'])
     isolacao = dados.get('isolacao', 'PVC')
@@ -200,16 +221,30 @@ def calcular_ramal(dados):
                 sub_cond = buscar_condutor(isolacao, material, metodo, condutores, corrente_parcial, sub_tipo)
                 if sub_cond:
                     cap_total = sub_cond['capacidade_A'] * n
+                    neutro_val = calcular_neutro(sub_cond['secao_mm2'])
+                    prot_val = calcular_protecao(sub_cond['secao_mm2'])
+                    neutro_real, neutro_disp = _format_condutor_display(neutro_val, n)
+                    prot_real, prot_disp = _format_condutor_display(prot_val, n)
                     opcoes_paralelo.append({
                         'n_condutores': n,
                         'secao_mm2': sub_cond['secao_mm2'],
                         'capacidade_por_condutor': sub_cond['capacidade_A'],
                         'capacidade_total': cap_total,
-                        'neutro_mm2': calcular_neutro(sub_cond['secao_mm2']),
-                        'protecao_mm2': calcular_protecao(sub_cond['secao_mm2']),
+                        'neutro_mm2': neutro_real or neutro_val,
+                        'neutro_display': neutro_disp or str(neutro_val),
+                        'protecao_mm2': prot_real or prot_val,
+                        'protecao_display': prot_disp or str(prot_val),
                     })
             if opcoes_paralelo:
                 resultado['opcoes_paralelo'] = opcoes_paralelo
+
+        # Also format single-conductor neutro/protecao display
+        neutro_val = resultado.get('neutro_mm2')
+        prot_val = resultado.get('protecao_mm2')
+        if neutro_val:
+            _, resultado['neutro_display'] = _format_condutor_display(neutro_val)
+        if prot_val:
+            _, resultado['protecao_display'] = _format_condutor_display(prot_val)
     else:
         resultado['secao_mm2'] = None
         resultado['capacidade_A'] = None
@@ -229,3 +264,85 @@ def calcular_neutro(fase_mm2):
     row = cursor.fetchone()
     conn.close()
     return row[0] if row else fase_mm2
+
+
+def get_tipos_eletroduto():
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT tipo FROM eletrodutos_cabos ORDER BY tipo")
+    tipos = [r[0] for r in cursor.fetchall()]
+    conn.close()
+    return tipos
+
+
+def calcular_eletroduto(tipo_cabo, secao_mm2, n_condutores):
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    # Try simplified table first (up to 9 conductors)
+    cursor.execute("SELECT eletroduto_pol FROM eletrodutos_resumida WHERE secao_mm2 = ? AND n_condutores = ?",
+                   (secao_mm2, n_condutores))
+    row = cursor.fetchone()
+    if row:
+        conn.close()
+        return {
+            'eletroduto': row[0],
+            'metodo': 'tabela_resumida',
+            'secao_mm2': secao_mm2,
+            'n_condutores': n_condutores,
+            'passos': [
+                f'1) Dados: Seção = {secao_mm2} mm², Condutores = {n_condutores}',
+                f'2) Consulta direta na Tabela Resumida (NBR 5410)',
+                f'3) Eletroduto mínimo: {row[0]}',
+            ]
+        }
+
+    # Fallback: area-based calculation
+    cursor.execute("SELECT diam_externo_mm, area_condutor_mm2 FROM eletrodutos_cabos WHERE tipo = ? AND secao_mm2 = ?",
+                   (tipo_cabo, secao_mm2))
+    cabo = cursor.fetchone()
+    if not cabo:
+        conn.close()
+        return None
+
+    d_ext = cabo[0]
+    if not d_ext or d_ext <= 0:
+        conn.close()
+        return None
+
+    area_cond = 3.14159265 * (d_ext / 2.0) ** 2
+    area_total_necessaria = area_cond * n_condutores
+
+    cursor.execute("""
+        SELECT eletroduto_pol, diam_mm, area_total_mm2, area_ocupavel_40_mm2
+        FROM eletrodutos_conduites WHERE tipo = ?
+        ORDER BY area_total_mm2
+    """, (tipo_cabo,))
+    conduites = cursor.fetchall()
+    conn.close()
+
+    for c in conduites:
+        if c[3] and c[3] >= area_total_necessaria:
+            return {
+                'eletroduto': c[0],
+                'diam_mm': c[1],
+                'area_total': c[2],
+                'area_ocupavel': c[3],
+                'area_necessaria': round(area_total_necessaria, 2),
+                'metodo': 'area_ocupavel',
+                'secao_mm2': secao_mm2,
+                'n_condutores': n_condutores,
+                'diam_externo_mm': d_ext,
+                'area_por_condutor_mm2': round(area_cond, 2),
+                'passos': [
+                    f'1) Dados: Seção = {secao_mm2} mm², Condutores = {n_condutores}, Tipo = {tipo_cabo}',
+                    f'2) Diâmetro externo do condutor (tabela): D_ext = {d_ext} mm',
+                    f'3) Área por condutor: A_cond = π × (D_ext/2)² = 3,1416 × ({d_ext}/2)² = {round(area_cond, 2)} mm²',
+                    f'4) Área total ocupada: A_total = {n_condutores} × {round(area_cond, 2)} = {round(area_total_necessaria, 2)} mm²',
+                    f'5) Conduíte escolhido: {c[0]} (Ø{c[1]} mm)',
+                    f'6) Área útil (40%): A_útil = {round(c[3], 2)} mm²',
+                    f'7) Verificação: {round(area_total_necessaria, 2)} mm² <= {round(c[3], 2)} mm² ✓',
+                ]
+            }
+
+    return None

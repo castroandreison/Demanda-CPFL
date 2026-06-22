@@ -11,6 +11,7 @@
     <button class="tab-btn" data-tab="tab-ramal">Ramal de Entrada</button>
     <button class="tab-btn" data-tab="tab-transformador">Calcular Transformador</button>
     <button class="tab-btn" data-tab="tab-poste">Poste</button>
+    <button class="tab-btn" data-tab="tab-qm">QM's</button>
     <button class="tab-btn" data-tab="tab-ramal-ligacao">Ramal de Ligação</button>
     <button class="tab-btn" data-tab="tab-limites">Rede Primária</button>
     <button class="tab-btn" data-tab="tab-impressao" style="background:var(--warning);color:var(--bg);font-weight:700;">🖨️ Impressão</button>
@@ -576,6 +577,7 @@
                 <label class="print-checkbox"><input type="checkbox" id="chk_limites" checked onchange="montarRelatorio()"> Limites / Rede Primária</label>
                 <label class="print-checkbox"><input type="checkbox" id="chk_transformador" checked onchange="montarRelatorio()"> Transformador</label>
                 <label class="print-checkbox"><input type="checkbox" id="chk_poste" checked onchange="montarRelatorio()"> Poste</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_qm" checked onchange="montarRelatorio()"> QM's</label>
                 <label class="print-checkbox"><input type="checkbox" id="chk_ramal_lig" checked onchange="montarRelatorio()"> Ramal de Ligação</label>
                 <label class="print-checkbox"><input type="checkbox" id="chk_ramal" checked onchange="montarRelatorio()"> Ramal de Entrada</label>
                 <hr style="margin:12px 0;border-color:var(--border);">
@@ -729,6 +731,52 @@
     </div>
 </div>
 
+<div id="tab-qm" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dimensionamento de Quadros de Medidores (QMs)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Nº de Medidores (aptos)</label>
+                <input type="number" id="qm_aptos" min="1" value="12">
+            </div>
+            <div class="form-group">
+                <label>Medidores Adm.</label>
+                <input type="number" id="qm_adm" min="0" value="1" style="width:100px;">
+            </div>
+            <div class="form-group">
+                <label>Material do QM</label>
+                <select id="qm_material">
+                    <option value="metalico" selected>Metálico (Aço Carbono)</option>
+                    <option value="policarbonato">Policarbonato</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Adm com TC?</label>
+                <select id="qm_adm_tc">
+                    <option value="0">Não</option>
+                    <option value="1">Sim</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Demanda Dg (kVA)</label>
+                <input type="number" id="qm_dg" step="0.1" min="0" placeholder="Auto do resultado">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-sm" onclick="qmUserEdit={};autoPreencherQM();" title="Buscar valores do projeto">🔄 Buscar do Projeto</button>
+                    <button class="btn btn-primary" onclick="calcularQM()">📐 Dimensionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="qm-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado do Dimensionamento dos QMs</div>
+            <div id="qm-content"></div>
+        </div>
+    </div>
+</div>
+
 <script>
 let motores = [];
 let outrasCargas = { apt: [], adm: [] };
@@ -808,6 +856,36 @@ function carregarProjeto(projetoId) {
         acData.adm = (p.ac_adm || []).map(c => ({ desc: c.descricao, tipoEq: c.tipo_equipamento || '', pot: c.potencia, qtd: c.quantidade, btu: c.btu || 0, incluir: c.incluir !== 0 ? 1 : 0 }));
         renderAc('apt');
         renderAc('adm');
+        // Ramal de Entrada
+        if (p.ramal_corrente !== undefined) setField('ramal_corrente', p.ramal_corrente);
+        if (p.ramal_isolacao !== undefined) setField('ramal_isolacao', p.ramal_isolacao);
+        if (p.ramal_material !== undefined) setField('ramal_material', p.ramal_material);
+        if (p.ramal_tensao !== undefined) setField('ramal_tensao', p.ramal_tensao);
+        if (p.ramal_metodo !== undefined) setField('ramal_metodo', p.ramal_metodo);
+        if (p.ramal_condutores !== undefined) setField('ramal_condutores', p.ramal_condutores);
+        if (p.ramal_subtipo !== undefined) setField('ramal_subtipo', p.ramal_subtipo);
+        if (p.ramal_forma_agrup !== undefined) setField('ramal_forma_agrup', p.ramal_forma_agrup);
+        if (p.ramal_num_circuitos !== undefined) setField('ramal_num_circuitos', p.ramal_num_circuitos);
+        if (p.ramal_tipo_temp !== undefined) setField('ramal_tipo_temp', p.ramal_tipo_temp);
+        if (p.ramal_temperatura !== undefined) setField('ramal_temperatura', p.ramal_temperatura);
+        if (p.ramal_comprimento !== undefined) setField('ramal_comprimento', p.ramal_comprimento);
+        if (p.ramal_paralelo_idx !== undefined) setField('ramal_paralelo_idx', p.ramal_paralelo_idx);
+        if (p.ramal_tipo_eletroduto !== undefined) setField('ramal_tipo_eletroduto', p.ramal_tipo_eletroduto);
+        // Ramal de Ligação
+        if (p.ramal_lig_dg !== undefined) setField('ramal_lig_dg', p.ramal_lig_dg);
+        if (p.ramal_lig_tensao !== undefined) setField('ramal_lig_tensao', p.ramal_lig_tensao);
+        if (p.ramal_lig_comprimento !== undefined) setField('ramal_lig_comprimento', p.ramal_lig_comprimento);
+        // QM
+        if (p.qm_aptos !== undefined) setField('qm_aptos', p.qm_aptos);
+        if (p.qm_adm !== undefined) setField('qm_adm', p.qm_adm);
+        if (p.qm_material !== undefined) setField('qm_material', p.qm_material);
+        if (p.qm_adm_tc !== undefined) setField('qm_adm_tc', p.qm_adm_tc);
+        if (p.qm_dg !== undefined) setField('qm_dg', p.qm_dg);
+        // Force temperature group visibility based on saved value
+        if (p.ramal_tipo_temp) {
+            var rtg = document.getElementById('ramal_temp_group');
+            if (rtg) rtg.style.display = 'block';
+        }
         calcTab('tab-dados');
     })
     .catch(err => alert('Erro ao carregar projeto: ' + err.message));
@@ -1073,6 +1151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarFormasAgrupamentoNBR();
     carregarBtusG119();
     carregarTabela4();
+    carregarTiposEletroduto();
     // auto-save on field changes
     var campos = ['aptos','area_apto','area_adm','iluminacao','tomadas',
         'chuveiro_kw','torneira_kw','qtd_chuveiros','qtd_torneiras',
@@ -1089,6 +1168,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tipoEl) tipoEl.addEventListener('change', autoSalvarG119);
     var nomeEl = document.getElementById('projeto_nome');
     if (nomeEl) nomeEl.addEventListener('input', autoSalvarG119);
+    // Ramal fields auto-save
+    var ramalCampos = ['ramal_corrente','ramal_isolacao','ramal_material','ramal_tensao',
+        'ramal_metodo','ramal_condutores','ramal_subtipo','ramal_forma_agrup',
+        'ramal_num_circuitos','ramal_tipo_temp','ramal_temperatura','ramal_comprimento',
+        'ramal_lig_dg','ramal_lig_tensao','ramal_lig_comprimento'];
+    ramalCampos.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.addEventListener('change', autoSalvarG119); el.addEventListener('input', autoSalvarG119); }
+    });
+    // QM fields auto-save
+    var qmCampos = ['qm_aptos','qm_adm','qm_material','qm_adm_tc','qm_dg'];
+    qmCampos.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.addEventListener('change', autoSalvarG119); el.addEventListener('input', autoSalvarG119); }
+    });
 });
 
 function motorKva(cv) {
@@ -1356,6 +1450,7 @@ function getDados() {
         const v = document.getElementById(id);
         return v ? v.value : document.getElementById(id.replace(/2$/, '')).value;
     };
+    var el = function(id) { var e = document.getElementById(id); return e ? e.value : null; };
     return {
         aptos: tabPrefix('aptos'),
         area_apto: tabPrefix('area_apto'),
@@ -1378,6 +1473,31 @@ function getDados() {
         outras_cargas_adm: outrasCargas.adm.map(c => [c.desc, c.pot, c.qtd]),
         ac_apt: acData.apt.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu, incluir: c.incluir !== 0 ? 1 : 0 })),
         ac_adm: acData.adm.map(c => ({ descricao: c.desc, tipo_equipamento: c.tipoEq || '', potencia: c.pot, quantidade: c.qtd, btu: c.btu, incluir: c.incluir !== 0 ? 1 : 0 })),
+        // Ramal de Entrada
+        ramal_corrente: el('ramal_corrente'),
+        ramal_isolacao: el('ramal_isolacao'),
+        ramal_material: el('ramal_material'),
+        ramal_tensao: el('ramal_tensao'),
+        ramal_metodo: el('ramal_metodo'),
+        ramal_condutores: el('ramal_condutores'),
+        ramal_subtipo: el('ramal_subtipo'),
+        ramal_forma_agrup: el('ramal_forma_agrup'),
+        ramal_num_circuitos: el('ramal_num_circuitos'),
+        ramal_tipo_temp: el('ramal_tipo_temp'),
+        ramal_temperatura: el('ramal_temperatura'),
+        ramal_comprimento: el('ramal_comprimento'),
+        ramal_paralelo_idx: el('ramal_paralelo_idx'),
+        ramal_tipo_eletroduto: el('ramal_tipo_eletroduto'),
+        // Ramal de Ligação
+        ramal_lig_dg: el('ramal_lig_dg'),
+        ramal_lig_tensao: el('ramal_lig_tensao'),
+        ramal_lig_comprimento: el('ramal_lig_comprimento'),
+        // QM
+        qm_aptos: el('qm_aptos'),
+        qm_adm: el('qm_adm'),
+        qm_material: el('qm_material'),
+        qm_adm_tc: el('qm_adm_tc'),
+        qm_dg: el('qm_dg'),
     };
 }
 
@@ -1897,6 +2017,253 @@ function mostrarResultadoRamalLigacao(d) {
     `;
 }
 
+var qmUserEdit = {}; // track user edits
+
+function autoPreencherQM() {
+    if (typeof ultimoResultado !== 'undefined' && ultimoResultado) {
+        var aptosEl = document.getElementById('qm_aptos');
+        if (ultimoResultado.aptos && !qmUserEdit['qm_aptos']) {
+            aptosEl.value = ultimoResultado.aptos;
+        }
+        if (ultimoResultado.Dg && !parseFloat(document.getElementById('qm_dg').value) && !qmUserEdit['qm_dg']) {
+            document.getElementById('qm_dg').value = ultimoResultado.Dg.toFixed(2);
+        }
+    }
+}
+
+// Mark fields as user-edited when manually changed
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id && e.target.id.indexOf('qm_') === 0) {
+        qmUserEdit[e.target.id] = true;
+    }
+});
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id && e.target.id.indexOf('qm_') === 0) {
+        qmUserEdit[e.target.id] = true;
+    }
+});
+
+// --- Layout de Sala alternativas ---
+function calcularLayoutSala(qmDetalhes, cd, dps) {
+    var margem = 50, largFrente = 1200;
+
+    function m2(c, l) { return Math.round(c * l / 1e6 * 100) / 100; }
+    function perim(c, l) { return Math.round(2 * (c + l) / 1000 * 100) / 100; }
+
+    function layoutReto() {
+        var equip = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0);
+        if (cd) equip += cd.largura;
+        equip += dps.largura;
+        var comp = equip + 2 * margem;
+        var larg = 350 + largFrente;
+        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+    }
+
+    function layoutL() {
+        var compFundo = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
+        var compDir = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
+        var comp = Math.max(compFundo, compDir);
+        var larg = 350 + largFrente;
+        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+    }
+
+    function layoutOpostas() {
+        var compQms = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
+        var compCd = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
+        var comp = Math.max(compQms, compCd);
+        var larg = 350 + largFrente + 350;
+        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+    }
+
+    function layoutU() {
+        var n = qmDetalhes.length;
+        if (n <= 1) return layoutReto();
+        var sorted = qmDetalhes.slice().sort(function(a, b) { return b.largura_total - a.largura_total; });
+        var fundo = [sorted[0], sorted[1]];
+        var esq = sorted.slice(2);
+        var compFundo = fundo.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
+        var compEsq = esq.length > 0 ? esq.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem : 0;
+        var compDir = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
+        var comp = Math.max(compFundo, compEsq, compDir);
+        // largura = prof. equipamentos B (350) + circulação (1200) + prof. equipamentos A (350)
+        var larg = 350 + largFrente + 350;
+        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+    }
+
+    return [
+        { nome: 'TIPO U (3 paredes)', fn: layoutU },
+        { nome: 'L (2 paredes adjac.)', fn: layoutL },
+        { nome: 'Opostas (2 paredes)', fn: layoutOpostas },
+        { nome: 'Reto (1 parede)', fn: layoutReto }
+    ];
+}
+
+function calcularQM() {
+    autoPreencherQM();
+    var aptos = parseInt(document.getElementById('qm_aptos').value) || 0;
+    var adm = parseInt(document.getElementById('qm_adm').value) || 0;
+    var material = document.getElementById('qm_material').value;
+    var admTc = parseInt(document.getElementById('qm_adm_tc').value) || 0;
+    var dgInput = document.getElementById('qm_dg');
+    var dg = parseFloat(dgInput.value) || 0;
+    var totalMedidores = aptos + adm;
+    if (totalMedidores < 1) { alert('Informe ao menos 1 medidor!'); return; }
+
+    // --- QMs necessários ---
+    var qms = Math.ceil(totalMedidores / 36);
+    var medPorQm = [];
+    var restante = totalMedidores;
+    for (var i = 0; i < qms; i++) {
+        var n = Math.min(restante, (i < qms - 1) ? 36 : (restante % 36 || 36));
+        medPorQm.push(n);
+        restante -= n;
+    }
+
+    // --- Caixa de Distribuição (Tabela 9) — só necessária com 2+ QMs ---
+    var cd = null;
+    var cdNecessaria = false;
+    if (qms >= 2) {
+        cdNecessaria = true;
+        if (qms <= 3) cd = { tipo: 'U', norma: 'GED-6262', desenho: 'Des. 7', altura: 1450, largura: 800, profundidade: 350 };
+        else if (qms === 4) cd = { tipo: 'V', norma: 'GED-6263', desenho: 'Des. 8', altura: 2000, largura: 1000, profundidade: 350 };
+        else if (qms === 5) cd = { tipo: 'W', norma: 'GED-6264', desenho: 'Des. 9', altura: 2600, largura: 1200, profundidade: 350 };
+        else cd = { tipo: 'ESPECIAL', descricao: 'Montagem múltipla ou projeto especial. Consultar CPFL.' };
+    }
+
+    // --- QM individual (metálico) ---
+    var qmDetalhes = [];
+    medPorQm.forEach(function(n) {
+        var linhas = Math.ceil(n / 12);
+        var alt = linhas <= 1 ? 650 : (linhas === 2 ? 1050 : 1450);
+        var largBase = 1150;
+        var largAdmTc = admTc ? 900 : 0;
+        qmDetalhes.push({
+            medidores: n,
+            linhas: linhas,
+            altura: alt,
+            largura_base: largBase,
+            largura_adicional_tc: largAdmTc,
+            largura_total: largBase + largAdmTc,
+            profundidade: 350
+        });
+    });
+
+    // --- DPS ---
+    var dps = { altura: 500, largura: 280, profundidade: 240 };
+
+    // --- Espaço na parede ---
+    var folga = 100;
+    var qmW = 0, qmAltMax = 0;
+    qmDetalhes.forEach(function(q) {
+        qmW += q.largura_total;
+        if (q.altura > qmAltMax) qmAltMax = q.altura;
+    });
+    var larguraTotal, alturaTotal, largDetalhe;
+    if (cdNecessaria && cd) {
+        larguraTotal = cd.largura + qmW + dps.largura + folga;
+        alturaTotal = Math.max(cd.altura, qmAltMax, dps.altura);
+        largDetalhe = cd.largura + ' mm CD + ' + qmW + ' mm QMs';
+    } else {
+        larguraTotal = qmW + dps.largura + folga;
+        alturaTotal = Math.max(qmAltMax, dps.altura);
+        largDetalhe = qmW + ' mm QMs';
+    }
+
+    // --- Render ---
+    var div = document.getElementById('qm-content');
+    var h = '<div id="print-area-qm">';
+    h += '<div class="result-section">';
+    h += '<div class="result-title">DADOS DE ENTRADA</div>';
+    h += '<div class="result-line">Medidores (aptos): <span class="value">' + aptos + '</span></div>';
+    h += '<div class="result-line">Administração: <span class="value">' + (adm > 0 ? adm + ' medidor(es)' : 'Sem adm') + '</span></div>';
+    h += '<div class="result-line">Total de Medidores: <span class="value">' + totalMedidores + '</span></div>';
+    h += '<div class="result-line">Material: <span class="value">' + (material === 'metalico' ? 'Metálico (Aço Carbono)' : 'Policarbonato') + '</span></div>';
+    if (dg > 0) h += '<div class="result-line">Demanda Dg: <span class="value">' + dg.toFixed(2) + ' kVA</span></div>';
+    h += '</div>';
+
+    h += '<hr class="result-divider">';
+    h += '<div class="result-section">';
+    h += '<div class="result-title">DIMENSIONAMENTO</div>';
+
+    // QMs
+    h += '<div class="result-title" style="margin-top:8px;">Quadros de Medidores (QMs)</div>';
+    h += '<div class="result-line">QMs necessários: <span class="value">' + qms + '</span></div>';
+    h += '<div class="result-line">Critério: até 36 medidores / 200 kVA por QM</div>';
+    qmDetalhes.forEach(function(q, i) {
+        var det = '';
+        if (material === 'metalico') {
+            det = q.linhas + ' linha(s) | ' + q.altura + '×' + q.largura_total + '×' + q.profundidade + ' mm';
+            if (q.largura_adicional_tc) det += ' (módulo TC: ' + q.largura_adicional_tc + ' mm justaposto)';
+        } else {
+            det = 'Conforme fabricante cadastrado GED-3412 (GED-13 / GED-12903)';
+        }
+        h += '<div class="result-line" style="font-weight:700;">QM ' + (i+1) + ': ' + q.medidores + ' medidores — ' + det + '</div>';
+    });
+    if (admTc) {
+        h += '<div class="result-line" style="color:var(--warning);">ⓘ Adm com TC: módulo justaposto de 900 mm (Des. 29-1/2 item 8). Painel de madeira 200×500×20 mm para suporte dos TCs.</div>';
+    }
+
+    // Caixa de Distribuição (Tabela 9)
+    h += '<div class="result-title" style="margin-top:8px;">Caixa de Distribuição (Tabela 9)</div>';
+    if (cdNecessaria && cd) {
+        h += '<div class="result-line">Tipo: <span class="value">' + cd.tipo + '</span></div>';
+        if (cd.norma) h += '<div class="result-line">Norma: ' + cd.norma + ' | Desenho: ' + cd.desenho + '</div>';
+        if (cd.altura) h += '<div class="result-line">Dimensões: ' + cd.altura + '×' + cd.largura + '×' + cd.profundidade + ' mm</div>';
+        if (cd.descricao) h += '<div class="result-line">' + cd.descricao + '</div>';
+    } else {
+        h += '<div class="result-line"><span class="value">Não necessária</span> — apenas 1 QM. Disjuntor geral e barramento dentro do próprio QM (Des. 29-1/2 itens 3, 6, 7).</div>';
+    }
+
+    // DPS
+    h += '<div class="result-title" style="margin-top:8px;">Caixa de DPS (item 13.4 GED-119)</div>';
+    h += '<div class="result-line">Dimensões min.: <span class="value">' + dps.altura + '×' + dps.largura + '×' + dps.profundidade + ' mm</span></div>';
+    h += '<div class="result-line">Materiais: Aço carbono 16 MSG / Resina poliéster 3mm / Policarbonato 3mm</div>';
+
+    // Espaço na parede
+    h += '<div class="result-title" style="margin-top:8px;">Espaço na Parede</div>';
+    var largDetalhe = cdNecessaria && cd ? cd.largura + ' mm CD + ' + qmW + ' mm QMs' : qmW + ' mm QMs';
+    h += '<div class="result-line">Largura total estimada: <span class="value">' + larguraTotal + ' mm</span> (' + largDetalhe + ' + ' + dps.largura + ' mm DPS + ' + folga + ' mm folga)</div>';
+    h += '<div class="result-line">Altura máxima: <span class="value">' + alturaTotal + ' mm</span></div>';
+    h += '</div>';
+
+    // --- Layout de Sala alternativas ---
+    var layouts = calcularLayoutSala(qmDetalhes, cdNecessaria && cd ? cd : null, dps);
+    h += '<hr class="result-divider">';
+    h += '<div class="result-section">';
+    h += '<div class="result-title">Layout da Sala (Alternativas)</div>';
+    h += '<div style="margin-top:6px;"><table class="layout-table" style="width:100%;border-collapse:collapse;font-size:13px;">';
+    h += '<thead><tr style="background:#161b22;color:#c9d1d9;">';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:left;">Layout</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Comp. (mm)</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Larg. (mm)</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Área (m²)</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Perím. (m)</th>';
+    h += '</tr></thead><tbody>';
+    layouts.forEach(function(l) {
+        var r = l.fn();
+        var best = r.area === layouts.reduce(function(m, x) { return Math.min(m, x.fn().area); }, Infinity);
+        h += '<tr' + (best ? ' style="background:#0d2b1a;border:1px solid #238636;"' : ' style="background:#0d1117;"') + '>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;font-weight:600;">' + l.nome + (best ? ' ★' : '') + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.comp + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.larg + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.area.toFixed(2) + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.perim.toFixed(2) + '</td>';
+        h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    h += '<div class="result-line" style="margin-top:4px;font-size:12px;color:#8b949e;">★ = menor área. Profundidade dos equipamentos: 350 mm. Circulação frontal: 1200 mm. Margem: 50 mm. Porta 800 mm na parede frontal.</div>';
+    h += '</div>';
+
+    // Recomendado
+    h += '<hr class="result-divider">';
+    h += '<div class="result-final"><div class="label">Configuração Recomendada</div>';
+    h += '<div class="value">' + qms + '× QM (' + material + ')' + (cdNecessaria && cd ? ' + CD tipo ' + cd.tipo : '') + ' + Caixa DPS</div></div>';
+    h += '</div>';
+
+    div.innerHTML = h;
+    document.getElementById('qm-result').style.display = 'block';
+}
+
 // Show/hide subtipo for methods F/G
 document.getElementById('ramal_metodo').addEventListener('change', function() {
     const group = document.getElementById('ramal_subtipo_group');
@@ -2020,7 +2387,8 @@ function mostrarResultadoRamal(d) {
                 <input type="radio" name="ramal_paralelo_radio" value="${i}" ${sel ? 'checked' : ''} style="margin-right:6px;cursor:pointer;">
                 <span style="font-weight:700;color:var(--warning);">${op.n_condutores}×${op.secao_mm2} mm²</span>
                 &rarr; ${op.capacidade_por_condutor} A/cabo = ${op.capacidade_total} A total
-                ${op.neutro_mm2 ? `<span style="color:var(--text-muted);"> | Neutro: ${op.neutro_mm2} mm²</span>` : ''}
+                ${op.neutro_mm2 ? `<span style="color:var(--text-muted);"> | Neutro: ${op.neutro_display || op.neutro_mm2} mm²</span>` : ''}
+                ${op.protecao_mm2 ? `<span style="color:var(--text-muted);"> | Proteção: ${op.protecao_display || op.protecao_mm2} mm²</span>` : ''}
             </div>`;
         });
         if (!paraleloSelecionado) paraleloSelecionado = d.opcoes_paralelo[0];
@@ -2030,6 +2398,44 @@ function mostrarResultadoRamal(d) {
     const K = 58;
     const Vn = 380;
     const cosPhi = 0.92;
+
+    // Eletroduto
+    var eletroTipo = document.getElementById('ramal_tipo_eletroduto')?.value || '';
+    var eletroOpt = paraleloSelecionado || (d.secao_mm2 ? { n_condutores: 1, secao_mm2: d.secao_mm2 } : null);
+    var eletroHtml = '';
+    if (eletroOpt) {
+        var eSecao = eletroOpt.secao_mm2;
+        var eNfases = eletroOpt.n_condutores * 3;
+        var eNneutro = (eletroOpt.neutro_display && eletroOpt.neutro_display.indexOf('x') > 0)
+            ? parseInt(eletroOpt.neutro_display.split('x')[0]) : (d.neutro_mm2 ? 1 : 0);
+        var eNprot = (eletroOpt.protecao_display && eletroOpt.protecao_display.indexOf('x') > 0)
+            ? parseInt(eletroOpt.protecao_display.split('x')[0]) : (d.protecao_mm2 ? 1 : 0);
+        var eNtotal = eNfases + eNneutro + eNprot;
+        eletroHtml = '<br><div class="result-title">Eletroduto Calculado</div>';
+        eletroHtml += '<div class="result-line" style="margin-bottom:6px;">';
+        eletroHtml += '<label style="margin-right:8px;">Tipo do Condutor:</label>';
+        eletroHtml += '<select id="ramal_tipo_eletroduto" style="padding:4px 8px;border:1px solid var(--border-color,#30363d);border-radius:4px;background:var(--bg-input,#0d1117);color:var(--text-primary,#e6edf3);" onchange="calcularEletrodutoRamal()">';
+        eletroHtml += '<option value="">Selecione o tipo...</option>';
+        if (typeof window.tiposEletroduto !== 'undefined') {
+            window.tiposEletroduto.forEach(function(t) {
+                eletroHtml += '<option value="' + t + '"' + (t === eletroTipo ? ' selected' : '') + '>' + t + '</option>';
+            });
+        }
+        eletroHtml += '</select>';
+        eletroHtml += ' <span style="color:var(--text-muted);font-size:0.9em;">Condutores: ' + eNtotal + ' (Fases: ' + eNfases + ', Neutro: ' + eNneutro + ', Proteção: ' + eNprot + ') | Seção: ' + eSecao + ' mm²</span>';
+        eletroHtml += '</div>';
+        eletroHtml += '<div id="ramal_eletroduto_result"></div>';
+        if (eletroTipo && window.ultimoEletrodutoRamal) {
+            var er = window.ultimoEletrodutoRamal;
+            eletroHtml += '<div class="result-line" style="font-weight:700;">Eletroduto: <span class="value">' + er.eletroduto + '</span></div>';
+            if (er.passos) {
+                eletroHtml += '<div style="margin-top:4px;padding:6px 10px;background:var(--bg-hover,#21262d);color:var(--text-primary,#e6edf3);border-radius:4px;font-size:0.85em;line-height:1.7;">';
+                er.passos.forEach(function(p) { eletroHtml += '<div>' + p + '</div>'; });
+                eletroHtml += '</div>';
+            }
+        }
+    }
+
     let quedaHtml = '';
     if (L > 0 && d.secao_mm2) {
         const dV = 1.732 * L * d.corrente * cosPhi / (K * d.secao_mm2);
@@ -2072,15 +2478,16 @@ function mostrarResultadoRamal(d) {
             <br>
             <div class="result-line">Seção Recomendada (Fase): <span class="value">${d.secao_mm2} mm²</span></div>
             <div class="result-line">Capacidade do Condutor: ${d.capacidade_A} A</div>
-            ${d.neutro_mm2 ? `<div class="result-line">Neutro (Tabela 48): <span class="value">${d.neutro_mm2} mm²</span></div>` : ''}
-            ${d.protecao_mm2 ? `<div class="result-line">Proteção (Tabela 58): <span class="value">${d.protecao_mm2} mm²</span></div>` : ''}
+            ${d.neutro_mm2 ? `<div class="result-line">Neutro (Tabela 48): <span class="value">${d.neutro_display || d.neutro_mm2} mm²</span></div>` : ''}
+            ${d.protecao_mm2 ? `<div class="result-line">Proteção (Tabela 58): <span class="value">${d.protecao_display || d.protecao_mm2} mm²</span></div>` : ''}
             ${d.opcoes_paralelo ? '<br>' + paraleloHtml : ''}
+            ${eletroHtml}
             ${quedaHtml}
         </div>
         <hr class="result-divider">
         <div class="result-final">
             <div class="label">Condutor Recomendado</div>
-            <div class="value">${paraleloSelecionado ? `${paraleloSelecionado.n_condutores}×${paraleloSelecionado.secao_mm2} mm² - ${paraleloSelecionado.capacidade_total} A total${paraleloSelecionado.neutro_mm2 ? ` (Neutro: ${paraleloSelecionado.neutro_mm2} mm²)` : ''}${paraleloSelecionado.protecao_mm2 ? ` (Proteção: ${paraleloSelecionado.protecao_mm2} mm²)` : ''}` : `${d.secao_mm2} mm² - ${d.capacidade_A} A${d.protecao_mm2 ? ` (Proteção: ${d.protecao_mm2} mm²)` : ''}`}</div>
+            <div class="value">${paraleloSelecionado ? `${paraleloSelecionado.n_condutores}×${paraleloSelecionado.secao_mm2} mm² - ${paraleloSelecionado.capacidade_total} A total${paraleloSelecionado.neutro_mm2 ? ` (Neutro: ${paraleloSelecionado.neutro_display || paraleloSelecionado.neutro_mm2} mm²)` : ''}${paraleloSelecionado.protecao_mm2 ? ` (Proteção: ${paraleloSelecionado.protecao_display || paraleloSelecionado.protecao_mm2} mm²)` : ''}` : `${d.secao_mm2} mm² - ${d.capacidade_A} A${d.neutro_mm2 ? ` (Neutro: ${d.neutro_display || d.neutro_mm2} mm²)` : ''}${d.protecao_mm2 ? ` (Proteção: ${d.protecao_display || d.protecao_mm2} mm²)` : ''}`}</div>
         </div>
         <input type="hidden" id="ramal_paralelo_idx" value="${paraleloSelecionado ? d.opcoes_paralelo.indexOf(paraleloSelecionado) : -1}">
         </div>
@@ -2092,6 +2499,61 @@ function selecionarRamalParalelo(idx) {
     if (typeof ultimoResultadoRamal !== 'undefined' && ultimoResultadoRamal) {
         mostrarResultadoRamal(ultimoResultadoRamal);
     }
+}
+
+function carregarTiposEletroduto() {
+    fetch('/api/ged119/tipos_eletroduto').then(function(r) { return r.json(); }).then(function(resp) {
+        if (resp.success) {
+            window.tiposEletroduto = resp.data;
+        }
+    });
+}
+
+function calcularEletrodutoRamal() {
+    var sel = document.getElementById('ramal_tipo_eletroduto');
+    var tipo = sel ? sel.value : '';
+    var resultDiv = document.getElementById('ramal_eletroduto_result');
+    if (!resultDiv) return;
+    if (!tipo) {
+        resultDiv.innerHTML = '';
+        return;
+    }
+    var d = typeof ultimoResultadoRamal !== 'undefined' ? ultimoResultadoRamal : null;
+    if (!d) return;
+    var idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || -1);
+    var opt = null;
+    if (d.opcoes_paralelo && d.opcoes_paralelo.length > 0) {
+        opt = d.opcoes_paralelo[idx >= 0 ? idx : 0];
+    } else if (d.secao_mm2) {
+        opt = { n_condutores: 1, secao_mm2: d.secao_mm2 };
+    }
+    if (!opt) return;
+    var eNneutro = (opt.neutro_display && opt.neutro_display.indexOf('x') > 0)
+        ? parseInt(opt.neutro_display.split('x')[0]) : (d.neutro_mm2 ? 1 : 0);
+    var eNprot = (opt.protecao_display && opt.protecao_display.indexOf('x') > 0)
+        ? parseInt(opt.protecao_display.split('x')[0]) : (d.protecao_mm2 ? 1 : 0);
+    var eNtotal = opt.n_condutores * 3 + eNneutro + eNprot;
+    resultDiv.innerHTML = '<span style="color:var(--text-muted);">Calculando...</span>';
+    fetch('/api/ged119/calcular_eletroduto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo_cabo: tipo, secao_mm2: opt.secao_mm2, n_condutores: eNtotal })
+    }).then(function(r) { return r.json(); }).then(function(resp) {
+        if (resp.success && resp.data) {
+            window.ultimoEletrodutoRamal = resp.data;
+            var h = '<div class="result-line" style="font-weight:700;">Eletroduto: <span class="value">' + resp.data.eletroduto + '</span></div>';
+            if (resp.data.passos) {
+                h += '<div style="margin-top:4px;padding:6px 10px;background:var(--bg-hover,#21262d);color:var(--text-primary,#e6edf3);border-radius:4px;font-size:0.85em;line-height:1.7;">';
+                resp.data.passos.forEach(function(p) { h += '<div>' + p + '</div>'; });
+                h += '</div>';
+            }
+            resultDiv.innerHTML = h;
+        } else {
+            resultDiv.innerHTML = '<span style="color:var(--danger);">Nenhum eletroduto encontrado para esta configuração.</span>';
+        }
+    }).catch(function() {
+        resultDiv.innerHTML = '<span style="color:var(--danger);">Erro ao consultar.</span>';
+    });
 }
 
 function montarRelatorio() {
@@ -2329,29 +2791,48 @@ function montarRelatorio() {
                 html += '<div class="result-line">Fator Temp. (Tabela 40): ' + rd.fator_temp + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
             }
             html += '<div class="result-line">Seção (Fase): <span class="value">' + rd.secao_mm2 + ' mm²</span> (' + rd.capacidade_A + ' A)</div>';
-            if (rd.neutro_mm2) html += '<div class="result-line">Neutro (Tab. 48): ' + rd.neutro_mm2 + ' mm²</div>';
-            if (rd.protecao_mm2) html += '<div class="result-line">Proteção (Tab. 58): ' + rd.protecao_mm2 + ' mm²</div>';
+            if (rd.neutro_mm2) html += '<div class="result-line">Neutro (Tab. 48): ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²</div>';
+            if (rd.protecao_mm2) html += '<div class="result-line">Proteção (Tab. 58): ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²</div>';
             if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
                 var rd_paralelo_idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || 0);
                 var rd_paralelo_sel = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
-                html += '<div class="result-title" style="margin-top:8px;">Opções de Condutores em Paralelo</div>';
-                rd.opcoes_paralelo.forEach(function(op, i) {
-                    var isSel = i === rd_paralelo_idx;
-                    var rd_op_det = '';
-                    if (op.neutro_mm2) rd_op_det += ' | Neutro: ' + op.neutro_mm2 + ' mm²';
-                    if (op.protecao_mm2) rd_op_det += ' | Proteção: ' + op.protecao_mm2 + ' mm²';
-                    html += '<div class="result-line" style="' + (isSel ? 'font-weight:700;' : '') + '">'
-                        + (isSel ? '▸ <span class="value">' : '') + op.n_condutores + '×' + op.secao_mm2 + ' mm² → ' + op.capacidade_por_condutor + ' A/cabo = ' + op.capacidade_total + ' A total' + rd_op_det + (isSel ? '</span>' : '')
-                        + '</div>';
-                });
+                var rd_op_det = '';
+                if (rd_paralelo_sel.neutro_mm2) rd_op_det += ' | Neutro: ' + (rd_paralelo_sel.neutro_display || rd_paralelo_sel.neutro_mm2) + ' mm²';
+                if (rd_paralelo_sel.protecao_mm2) rd_op_det += ' | Proteção: ' + (rd_paralelo_sel.protecao_display || rd_paralelo_sel.protecao_mm2) + ' mm²';
+                html += '<div class="result-line" style="font-weight:700;">▸ <span class="value">' + rd_paralelo_sel.n_condutores + '×' + rd_paralelo_sel.secao_mm2 + ' mm² → ' + rd_paralelo_sel.capacidade_por_condutor + ' A/cabo = ' + rd_paralelo_sel.capacidade_total + ' A total' + rd_op_det + '</span></div>';
+            }
+            // Eletroduto no relatório
+            if (typeof window.ultimoEletrodutoRamal !== 'undefined' && window.ultimoEletrodutoRamal) {
+                var rd_eletroTipo = document.getElementById('ramal_tipo_eletroduto')?.value || '';
+                if (rd_eletroTipo) {
+                    html += '<div class="result-title" style="margin-top:8px;">Eletroduto Dimensionado</div>';
+                    html += '<div class="result-line">Tipo Condutor: ' + rd_eletroTipo + '</div>';
+                    html += '<div class="result-line">Eletroduto: <span class="value">' + window.ultimoEletrodutoRamal.eletroduto + '</span></div>';
+                    if (window.ultimoEletrodutoRamal.passos) {
+                        html += '<div style="margin-top:4px;padding:6px 10px;background:var(--bg-hover,#21262d);border-radius:4px;font-size:0.85em;line-height:1.7;color:var(--text-primary,#e6edf3);">';
+                        window.ultimoEletrodutoRamal.passos.forEach(function(p) { html += '<div>' + p + '</div>'; });
+                        html += '</div>';
+                    }
+                }
             }
             if (rd_queda) html += rd_queda;
             if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
                 var rd_par_final = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
-                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + rd_par_final.neutro_mm2 + ' mm²)' : '') + (rd_par_final.protecao_mm2 ? ' (Proteção: ' + rd_par_final.protecao_mm2 + ' mm²)' : '') + '</div></div>';
+                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + (rd_par_final.neutro_display || rd_par_final.neutro_mm2) + ' mm²)' : '') + (rd_par_final.protecao_mm2 ? ' (Proteção: ' + (rd_par_final.protecao_display || rd_par_final.protecao_mm2) + ' mm²)' : '') + '</div></div>';
             } else {
-                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.protecao_mm2 ? ' (Proteção: ' + rd.protecao_mm2 + ' mm²)' : '') + '</div></div>';
+                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.neutro_mm2 ? ' (Neutro: ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²)' : '') + (rd.protecao_mm2 ? ' (Proteção: ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²)' : '') + '</div></div>';
             }
+            html += '</div>';
+        }
+    }
+    // --- QM's ---
+    if (document.getElementById('chk_qm').checked) {
+        var qmContainer = document.getElementById('qm-content');
+        if (qmContainer && qmContainer.innerHTML.trim()) {
+            html += '<hr class="result-divider">';
+            html += '<div class="result-section">';
+            html += '<div class="result-title">Quadros de Medidores (QMs)</div>';
+            html += qmContainer.innerHTML;
             html += '</div>';
         }
     }
@@ -2410,6 +2891,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         }
         if (this.dataset.tab === 'tab-ramal-ligacao' && document.getElementById('ramal_lig_dg').value) {
             calcularRamalLigacao();
+        }
+        if (this.dataset.tab === 'tab-qm') {
+            autoPreencherQM();
         }
         if (this.dataset.tab === 'tab-impressao') {
             montarRelatorio();
