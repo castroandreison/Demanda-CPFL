@@ -656,10 +656,10 @@
         </div>
     </div>
     <div class="card">
-        <div class="card-header">Fatores de Correção (Tabela 42 - NBR 5410)</div>
+        <div class="card-header">Fatores de Correção</div>
         <div class="form-grid col-3">
             <div class="form-group">
-                <label>Forma de Agrupamento</label>
+                <label>Forma de Agrupamento (Tabela 42)</label>
                 <select id="ramal_forma_agrup">
                     <option value="">Nenhum (sem correção)</option>
                 </select>
@@ -667,6 +667,18 @@
             <div class="form-group">
                 <label>Nº Circuitos Agrupados</label>
                 <input type="number" id="ramal_num_circuitos" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Temperatura (Tabela 40)</label>
+                <select id="ramal_tipo_temp">
+                    <option value="">Nenhum (sem correção)</option>
+                    <option value="ambiente">Ambiente</option>
+                    <option value="solo">Solo</option>
+                </select>
+            </div>
+            <div class="form-group" id="ramal_temp_group" style="display:none;">
+                <label>Temperatura (°C)</label>
+                <select id="ramal_temperatura"></select>
             </div>
             <div class="form-group">
                 <label>Comprimento (m) <small style="color:var(--text-muted);">(cobre, K=58)</small></label>
@@ -1897,6 +1909,30 @@ document.getElementById('ramal_tensao').addEventListener('change', function() {
     }
 });
 
+// Temperature correction (Tabela 40)
+document.getElementById('ramal_tipo_temp').addEventListener('change', function() {
+    const group = document.getElementById('ramal_temp_group');
+    const sel = document.getElementById('ramal_temperatura');
+    group.style.display = this.value ? 'block' : 'none';
+    sel.innerHTML = '';
+    if (this.value) {
+        var temps = [];
+        if (this.value === 'ambiente') {
+            temps = [10,15,20,25,30,35,40,45,50,55,60,65,70,75,80];
+        } else {
+            temps = [10,15,20,25,30,35,40,45,50,55,60,65,70,75,80];
+        }
+        temps.forEach(function(t) {
+            var opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = t + '°C';
+            if (t === 30 && document.getElementById('ramal_tipo_temp').value === 'ambiente') opt.selected = true;
+            if (t === 20 && document.getElementById('ramal_tipo_temp').value === 'solo') opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+});
+
 function calcularRamal() {
     const corrente = parseFloat(document.getElementById('ramal_corrente').value);
     if (isNaN(corrente) || corrente <= 0) {
@@ -1922,6 +1958,11 @@ function calcularRamal() {
     if (formaAgrup) {
         dados.forma_agrupamento = formaAgrup;
         dados.num_circuitos_agrupados = parseInt(document.getElementById('ramal_num_circuitos').value) || 1;
+    }
+    const tipoTemp = document.getElementById('ramal_tipo_temp').value;
+    if (tipoTemp) {
+        dados.tipo_temperatura = tipoTemp;
+        dados.temperatura = parseInt(document.getElementById('ramal_temperatura').value);
     }
 
     fetch('/api/ged119/calcular_ramal', {
@@ -1950,10 +1991,20 @@ function mostrarResultadoRamal(d) {
 
     let fatorHtml = '';
     if (d.fator_correcao && d.fator_correcao < 1) {
+        var fatorDetalhe = '';
+        if (d.fator_temp && d.fator_temp < 1) {
+            fatorDetalhe = ` (Tabela 42: ${(d.fator_correcao / d.fator_temp).toFixed(2)} × Tabela 40: ${d.fator_temp})`;
+        }
         fatorHtml = `
             <br>
-            <div class="result-line">Fator de Correção (Tabela 42): <span class="value">${d.fator_correcao}</span></div>
+            <div class="result-line">Fator de Correção${d.fator_temp ? ' (Agrupamento × Temperatura)' : ' (Tabela 42)'}: <span class="value">${d.fator_correcao}</span></div>
             <div class="result-line">Corrente Corrigida: I' = ${d.corrente} / ${d.fator_correcao} = <span class="value">${d.corrente_corrigida} A</span></div>
+        `;
+    } else if (d.fator_temp && d.fator_temp < 1) {
+        fatorHtml = `
+            <br>
+            <div class="result-line">Fator de Temperatura (Tabela 40): <span class="value">${d.fator_temp}</span></div>
+            <div class="result-line">Corrente Corrigida: I' = ${d.corrente} / ${d.fator_temp} = <span class="value">${d.corrente_corrigida} A</span></div>
         `;
     }
 
@@ -2022,13 +2073,14 @@ function mostrarResultadoRamal(d) {
             <div class="result-line">Seção Recomendada (Fase): <span class="value">${d.secao_mm2} mm²</span></div>
             <div class="result-line">Capacidade do Condutor: ${d.capacidade_A} A</div>
             ${d.neutro_mm2 ? `<div class="result-line">Neutro (Tabela 48): <span class="value">${d.neutro_mm2} mm²</span></div>` : ''}
+            ${d.protecao_mm2 ? `<div class="result-line">Proteção (Tabela 58): <span class="value">${d.protecao_mm2} mm²</span></div>` : ''}
             ${d.opcoes_paralelo ? '<br>' + paraleloHtml : ''}
             ${quedaHtml}
         </div>
         <hr class="result-divider">
         <div class="result-final">
             <div class="label">Condutor Recomendado</div>
-            <div class="value">${paraleloSelecionado ? `${paraleloSelecionado.n_condutores}×${paraleloSelecionado.secao_mm2} mm² - ${paraleloSelecionado.capacidade_total} A total${paraleloSelecionado.neutro_mm2 ? ` (Neutro: ${paraleloSelecionado.neutro_mm2} mm²)` : ''}` : `${d.secao_mm2} mm² - ${d.capacidade_A} A`}</div>
+            <div class="value">${paraleloSelecionado ? `${paraleloSelecionado.n_condutores}×${paraleloSelecionado.secao_mm2} mm² - ${paraleloSelecionado.capacidade_total} A total${paraleloSelecionado.neutro_mm2 ? ` (Neutro: ${paraleloSelecionado.neutro_mm2} mm²)` : ''}${paraleloSelecionado.protecao_mm2 ? ` (Proteção: ${paraleloSelecionado.protecao_mm2} mm²)` : ''}` : `${d.secao_mm2} mm² - ${d.capacidade_A} A${d.protecao_mm2 ? ` (Proteção: ${d.protecao_mm2} mm²)` : ''}`}</div>
         </div>
         <input type="hidden" id="ramal_paralelo_idx" value="${paraleloSelecionado ? d.opcoes_paralelo.indexOf(paraleloSelecionado) : -1}">
         </div>
@@ -2265,28 +2317,40 @@ function montarRelatorio() {
             html += '<div class="result-title">Ramal de Entrada (NBR 5410)</div>';
             html += '<div class="result-line">Corrente de Projeto: <span class="value">' + rd.corrente + ' A</span></div>';
             html += '<div class="result-line">Isolação: ' + (rd.isolacao === 'PVC' ? 'PVC 70°C' : 'EPR/XLPE 90°C') + ' | Material: ' + (rd.material === 'cobre' ? 'Cobre' : 'Alumínio') + ' | Método: ' + rd.metodo + '</div>';
+            var rd_fator_label = 'Fator Cor.';
             if (rd.fator_correcao && rd.fator_correcao < 1) {
-                html += '<div class="result-line">Fator Cor. (Tabela 42): ' + rd.fator_correcao + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
+                if (rd.fator_temp && rd.fator_temp < 1) {
+                    rd_fator_label += ' (Tab.42 × Tab.40)';
+                } else {
+                    rd_fator_label += ' (Tabela 42)';
+                }
+                html += '<div class="result-line">' + rd_fator_label + ': ' + rd.fator_correcao + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
+            } else if (rd.fator_temp && rd.fator_temp < 1) {
+                html += '<div class="result-line">Fator Temp. (Tabela 40): ' + rd.fator_temp + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
             }
             html += '<div class="result-line">Seção (Fase): <span class="value">' + rd.secao_mm2 + ' mm²</span> (' + rd.capacidade_A + ' A)</div>';
             if (rd.neutro_mm2) html += '<div class="result-line">Neutro (Tab. 48): ' + rd.neutro_mm2 + ' mm²</div>';
+            if (rd.protecao_mm2) html += '<div class="result-line">Proteção (Tab. 58): ' + rd.protecao_mm2 + ' mm²</div>';
             if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
                 var rd_paralelo_idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || 0);
                 var rd_paralelo_sel = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
                 html += '<div class="result-title" style="margin-top:8px;">Opções de Condutores em Paralelo</div>';
                 rd.opcoes_paralelo.forEach(function(op, i) {
                     var isSel = i === rd_paralelo_idx;
+                    var rd_op_det = '';
+                    if (op.neutro_mm2) rd_op_det += ' | Neutro: ' + op.neutro_mm2 + ' mm²';
+                    if (op.protecao_mm2) rd_op_det += ' | Proteção: ' + op.protecao_mm2 + ' mm²';
                     html += '<div class="result-line" style="' + (isSel ? 'font-weight:700;' : '') + '">'
-                        + (isSel ? '▸ <span class="value">' : '') + op.n_condutores + '×' + op.secao_mm2 + ' mm² → ' + op.capacidade_por_condutor + ' A/cabo = ' + op.capacidade_total + ' A total' + (op.neutro_mm2 ? ' | Neutro: ' + op.neutro_mm2 + ' mm²' : '') + (isSel ? '</span>' : '')
+                        + (isSel ? '▸ <span class="value">' : '') + op.n_condutores + '×' + op.secao_mm2 + ' mm² → ' + op.capacidade_por_condutor + ' A/cabo = ' + op.capacidade_total + ' A total' + rd_op_det + (isSel ? '</span>' : '')
                         + '</div>';
                 });
             }
             if (rd_queda) html += rd_queda;
             if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
                 var rd_par_final = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
-                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + rd_par_final.neutro_mm2 + ' mm²)' : '') + '</div></div>';
+                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + rd_par_final.neutro_mm2 + ' mm²)' : '') + (rd_par_final.protecao_mm2 ? ' (Proteção: ' + rd_par_final.protecao_mm2 + ' mm²)' : '') + '</div></div>';
             } else {
-                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A</div></div>';
+                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.protecao_mm2 ? ' (Proteção: ' + rd.protecao_mm2 + ' mm²)' : '') + '</div></div>';
             }
             html += '</div>';
         }
