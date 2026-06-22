@@ -2046,56 +2046,105 @@ document.addEventListener('input', function(e) {
 // --- Layout de Sala alternativas ---
 function calcularLayoutSala(qmDetalhes, cd, dps) {
     var margem = 50, largFrente = 1200;
+    var eqs = [];
+    qmDetalhes.forEach(function(q, i) {
+        eqs.push({ nome: 'QM' + (i+1), larg: q.largura_total });
+    });
+    if (cd) eqs.push({ nome: 'CD', larg: cd.largura });
+    eqs.push({ nome: 'DPS', larg: dps.largura });
+    var totalLinear = eqs.reduce(function(s, e) { return s + e.larg; }, 0);
 
     function m2(c, l) { return Math.round(c * l / 1e6 * 100) / 100; }
     function perim(c, l) { return Math.round(2 * (c + l) / 1000 * 100) / 100; }
 
+    function paredeStr(items) {
+        return items.map(function(e) { return e.nome + ' ' + e.larg + 'mm'; }).join(' + ');
+    }
+
     function layoutReto() {
-        var equip = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0);
-        if (cd) equip += cd.largura;
-        equip += dps.largura;
-        var comp = equip + 2 * margem;
+        var comp = totalLinear + 2 * margem;
         var larg = 350 + largFrente;
-        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+        return {
+            comp: Math.ceil(comp), larg: Math.ceil(larg),
+            area: m2(comp, larg), perim: perim(comp, larg),
+            paredes: [{ nome: 'Fundo (única)', itens: eqs, soma: totalLinear }],
+            perimParede: totalLinear
+        };
     }
 
     function layoutL() {
-        var compFundo = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
-        var compDir = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
-        var comp = Math.max(compFundo, compDir);
+        var qmTotal = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0);
+        var cdDps = (cd ? cd.largura : 0) + dps.largura;
+        var comp = Math.max(qmTotal, cdDps) + 2 * margem;
         var larg = 350 + largFrente;
-        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+        return {
+            comp: Math.ceil(comp), larg: Math.ceil(larg),
+            area: m2(comp, larg), perim: perim(comp, larg),
+            paredes: [
+                { nome: 'Fundo (A)', itens: eqs.slice(0, qmDetalhes.length), soma: qmTotal },
+                { nome: 'Direita (C)', itens: eqs.slice(qmDetalhes.length), soma: cdDps }
+            ],
+            perimParede: qmTotal + cdDps
+        };
     }
 
     function layoutOpostas() {
-        var compQms = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
-        var compCd = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
-        var comp = Math.max(compQms, compCd);
+        var qmTotal = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0);
+        var cdDps = (cd ? cd.largura : 0) + dps.largura;
+        var comp = Math.max(qmTotal, cdDps) + 2 * margem;
         var larg = 350 + largFrente + 350;
-        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+        return {
+            comp: Math.ceil(comp), larg: Math.ceil(larg),
+            area: m2(comp, larg), perim: perim(comp, larg),
+            paredes: [
+                { nome: 'Parede 1', itens: eqs.slice(0, qmDetalhes.length), soma: qmTotal },
+                { nome: 'Parede 2 (oposta)', itens: eqs.slice(qmDetalhes.length), soma: cdDps }
+            ],
+            perimParede: qmTotal + cdDps
+        };
     }
 
     function layoutU() {
         var n = qmDetalhes.length;
         if (n <= 1) return layoutReto();
         var sorted = qmDetalhes.slice().sort(function(a, b) { return b.largura_total - a.largura_total; });
-        var fundo = [sorted[0], sorted[1]];
-        var esq = sorted.slice(2);
-        var compFundo = fundo.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
-        var compEsq = esq.length > 0 ? esq.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem : 0;
+        var fundoList = [sorted[0], sorted[1]];
+        var esqList = sorted.slice(2);
+        var compFundo = fundoList.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
+        var compEsq = esqList.length > 0 ? esqList.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem : 0;
         var compDir = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
         var comp = Math.max(compFundo, compEsq, compDir);
-        // largura = prof. equipamentos B (350) + circulação (1200) + prof. equipamentos A (350)
         var larg = 350 + largFrente + 350;
-        return { comp: Math.ceil(comp), larg: Math.ceil(larg), area: m2(comp, larg), perim: perim(comp, larg) };
+
+        var paredes = [
+            { nome: 'Fundo (A)', itens: fundoList.map(function(q, i) { return { nome: 'QM' + (sorted.indexOf(q)+1), larg: q.largura_total }; }), soma: fundoList.reduce(function(s,q){return s+q.largura_total;},0) }
+        ];
+        if (esqList.length > 0) {
+            paredes.push({ nome: 'Esquerda (B)', itens: esqList.map(function(q, i) { return { nome: 'QM' + (sorted.indexOf(q)+1), larg: q.largura_total }; }), soma: esqList.reduce(function(s,q){return s+q.largura_total;},0) });
+        }
+        var dirItens = [];
+        if (cd) dirItens.push({ nome: 'CD', larg: cd.largura });
+        dirItens.push({ nome: 'DPS', larg: dps.largura });
+        paredes.push({ nome: 'Direita (C)', itens: dirItens, soma: dirItens.reduce(function(s,e){return s+e.larg;},0) });
+
+        return {
+            comp: Math.ceil(comp), larg: Math.ceil(larg),
+            area: m2(comp, larg), perim: perim(comp, larg),
+            paredes: paredes,
+            perimParede: totalLinear
+        };
     }
 
-    return [
-        { nome: 'TIPO U (3 paredes)', fn: layoutU },
-        { nome: 'L (2 paredes adjac.)', fn: layoutL },
-        { nome: 'Opostas (2 paredes)', fn: layoutOpostas },
-        { nome: 'Reto (1 parede)', fn: layoutReto }
-    ];
+    return {
+        equipamentos: eqs,
+        totalLinear: totalLinear,
+        layouts: [
+            { nome: 'TIPO U (3 paredes)', fn: layoutU },
+            { nome: 'L (2 paredes adjac.)', fn: layoutL },
+            { nome: 'Opostas (2 paredes)', fn: layoutOpostas },
+            { nome: 'Reto (1 parede)', fn: layoutReto }
+        ]
+    };
 }
 
 function calcularQM() {
@@ -2227,34 +2276,67 @@ function calcularQM() {
     h += '</div>';
 
     // --- Layout de Sala alternativas ---
-    var layouts = calcularLayoutSala(qmDetalhes, cdNecessaria && cd ? cd : null, dps);
+    var sala = calcularLayoutSala(qmDetalhes, cdNecessaria && cd ? cd : null, dps);
+    var layouts = sala.layouts;
     h += '<hr class="result-divider">';
     h += '<div class="result-section">';
     h += '<div class="result-title">Layout da Sala (Alternativas)</div>';
-    h += '<div style="margin-top:6px;"><table class="layout-table" style="width:100%;border-collapse:collapse;font-size:13px;">';
+
+    // Tabela de perímetro linear ocupado
+    h += '<div class="result-subtitle" style="margin-top:6px;">Perímetro linear de parede ocupado:</div>';
+    h += '<div style="overflow-x:auto;"><table style="width:auto;border-collapse:collapse;font-size:13px;margin:4px 0;">';
+    h += '<thead><tr style="background:#161b22;color:#c9d1d9;">';
+    h += '<th style="padding:4px 10px;border:1px solid #30363d;text-align:left;">Equipamento</th>';
+    h += '<th style="padding:4px 10px;border:1px solid #30363d;text-align:center;">Largura</th>';
+    h += '</tr></thead><tbody>';
+    sala.equipamentos.forEach(function(e) {
+        h += '<tr style="background:#0d1117;"><td style="padding:4px 10px;border:1px solid #30363d;font-weight:600;">' + e.nome + '</td>';
+        h += '<td style="padding:4px 10px;border:1px solid #30363d;text-align:center;">' + e.larg + ' mm</td></tr>';
+    });
+    h += '<tr style="background:#161b22;font-weight:700;"><td style="padding:4px 10px;border:1px solid #30363d;">Total</td>';
+    h += '<td style="padding:4px 10px;border:1px solid #30363d;text-align:center;">' + sala.totalLinear + ' mm</td></tr>';
+    h += '</tbody></table></div>';
+
+    // Tabela comparativa de layouts
+    h += '<div style="margin-top:8px;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
     h += '<thead><tr style="background:#161b22;color:#c9d1d9;">';
     h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:left;">Layout</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:left;">Paredes</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Perímetro<br>parede usado</th>';
     h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Comp. (mm)</th>';
     h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Larg. (mm)</th>';
     h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Área (m²)</th>';
-    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Perím. (m)</th>';
+    h += '<th style="padding:5px 8px;border:1px solid #30363d;text-align:center;">Perím.<br>sala (m)</th>';
     h += '</tr></thead><tbody>';
     layouts.forEach(function(l) {
         var r = l.fn();
         var best = r.area === layouts.reduce(function(m, x) { return Math.min(m, x.fn().area); }, Infinity);
+        var paredesDesc = r.paredes.map(function(p) { return p.nome + '(' + p.soma + 'mm)'; }).join(' + ');
         h += '<tr' + (best ? ' style="background:#0d2b1a;border:1px solid #238636;"' : ' style="background:#0d1117;"') + '>';
-        h += '<td style="padding:5px 8px;border:1px solid #30363d;font-weight:600;">' + l.nome + (best ? ' ★' : '') + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;font-weight:700;">' + l.nome + (best ? ' ★' : '') + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;font-size:12px;">' + paredesDesc + '</td>';
+        h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + (r.perimParede/1000).toFixed(2) + ' m</td>';
         h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.comp + '</td>';
         h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.larg + '</td>';
         h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.area.toFixed(2) + '</td>';
         h += '<td style="padding:5px 8px;border:1px solid #30363d;text-align:center;">' + r.perim.toFixed(2) + '</td>';
         h += '</tr>';
+
+        // Expandir detalhe de cada parede
+        r.paredes.forEach(function(p) {
+            h += '<tr style="background:#0d1117;"><td style="padding:2px 8px;border:1px solid #30363d;font-size:12px;color:#8b949e;" colspan="7">';
+            h += '  ↳ ' + p.nome + ': ' + p.itens.map(function(e) { return e.nome + ' ' + e.larg + 'mm'; }).join(' + ');
+            h += ' = ' + p.soma + ' mm';
+            h += '</td></tr>';
+        });
     });
     h += '</tbody></table></div>';
-    h += '<div class="result-line" style="margin-top:4px;font-size:12px;color:#8b949e;">★ = menor área. Profundidade dos equipamentos: 350 mm. Circulação frontal: 1200 mm. Margem: 50 mm. Porta 800 mm na parede frontal.</div>';
+    h += '<div class="result-line" style="margin-top:4px;font-size:12px;color:#8b949e;">★ = menor área. Profundidade equip.: 350 mm. Circulação frontal: 1200 mm. Margem: 50 mm. Porta 800 mm na parede frontal.</div>';
+    h += '<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+    h += '<label style="font-size:12px;color:#c9d1d9;">Acréscimo % na área:</label>';
+    h += '<input type="number" id="layout_acrescimo" value="0" min="0" max="100" step="5" style="width:60px;padding:2px 4px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;font-size:12px;">';
+    h += '<span id="layout_area_final" style="font-size:12px;color:#8b949e;"></span></div>';
     h += '</div>';
-
-    // Recomendado
     h += '<hr class="result-divider">';
     h += '<div class="result-final"><div class="label">Configuração Recomendada</div>';
     h += '<div class="value">' + qms + '× QM (' + material + ')' + (cdNecessaria && cd ? ' + CD tipo ' + cd.tipo : '') + ' + Caixa DPS</div></div>';
@@ -2263,6 +2345,29 @@ function calcularQM() {
     div.innerHTML = h;
     document.getElementById('qm-result').style.display = 'block';
 }
+
+// Atualiza áreas com acréscimo percentual na tabela de layouts
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'layout_acrescimo') {
+        var p = parseFloat(e.target.value) || 0;
+        var rows = document.querySelectorAll('#qm-content table:nth-of-type(2) tbody tr');
+        rows.forEach(function(tr) {
+            var td = tr.cells[5];
+            if (td) {
+                var area = parseFloat(td.getAttribute('data-orig'));
+                if (isNaN(area)) {
+                    area = parseFloat(td.textContent);
+                    if (!isNaN(area)) td.setAttribute('data-orig', area);
+                }
+                if (!isNaN(area)) {
+                    td.textContent = (area * (1 + p / 100)).toFixed(2);
+                }
+            }
+        });
+        var span = document.getElementById('layout_area_final');
+        if (span) span.textContent = p > 0 ? '(com +' + p + '%: áreas ajustadas)' : '';
+    }
+});
 
 // Show/hide subtipo for methods F/G
 document.getElementById('ramal_metodo').addEventListener('change', function() {
