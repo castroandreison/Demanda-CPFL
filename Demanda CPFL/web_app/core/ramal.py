@@ -225,15 +225,18 @@ def calcular_ramal(dados):
                     prot_val = calcular_protecao(sub_cond['secao_mm2'])
                     neutro_real, neutro_disp = _format_condutor_display(neutro_val, n)
                     prot_real, prot_disp = _format_condutor_display(prot_val, n)
+                    secao_parcial = sub_cond['secao_mm2']
                     opcoes_paralelo.append({
                         'n_condutores': n,
-                        'secao_mm2': sub_cond['secao_mm2'],
+                        'secao_mm2': secao_parcial,
                         'capacidade_por_condutor': sub_cond['capacidade_A'],
                         'capacidade_total': cap_total,
                         'neutro_mm2': neutro_real or neutro_val,
                         'neutro_display': neutro_disp or str(neutro_val),
+                        'neutro_cheio_mm2': secao_parcial,
                         'protecao_mm2': prot_real or prot_val,
                         'protecao_display': prot_disp or str(prot_val),
+                        'protecao_cheio_mm2': secao_parcial,
                     })
             if opcoes_paralelo:
                 resultado['opcoes_paralelo'] = opcoes_paralelo

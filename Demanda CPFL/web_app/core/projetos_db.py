@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import os
 from datetime import datetime
@@ -64,6 +65,11 @@ def init_db():
         cursor.execute("ALTER TABLE motores_projeto ADD COLUMN descricao TEXT DEFAULT ''")
     except sqlite3.OperationalError:
         pass
+    for col in ("campos_extras", "resultados"):
+        try:
+            cursor.execute(f"ALTER TABLE projetos ADD COLUMN {col} TEXT DEFAULT '{{}}'")
+        except sqlite3.OperationalError:
+            pass
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ac_projeto (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,6 +112,17 @@ def carregar_projeto(projeto_id):
         return None
     col_names = [d[0] for d in cursor.description]
     proj_dict = dict(zip(col_names, proj))
+    try:
+        extra = json.loads(proj_dict.pop('campos_extras', '{}'))
+        if isinstance(extra, dict):
+            proj_dict.update(extra)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    try:
+        resultados_raw = proj_dict.pop('resultados', '{}')
+        proj_dict['resultados'] = json.loads(resultados_raw) if isinstance(resultados_raw, str) and resultados_raw else {}
+    except (json.JSONDecodeError, TypeError):
+        proj_dict['resultados'] = {}
     cursor.execute("SELECT descricao, cv, quantidade FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
     motores = [{'descricao': r[0], 'cv': r[1], 'qtd': r[2]} for r in cursor.fetchall()]
     cursor.execute("SELECT descricao, potencia, quantidade FROM outras_cargas_projeto WHERE projeto_id = ? AND tipo = 'apt'", (projeto_id,))
@@ -131,13 +148,26 @@ def salvar_projeto(projeto_id, dados):
             'chuveiro_kw', 'torneira_kw', 'chuveiros_apto', 'torneiras_apto',
             'chuveiros_adm', 'torneiras_adm',
             'secar_kw', 'secar_apto', 'lavar_kw', 'lavar_apto', 'tipo')
+    extra_keys = ('ramal_corrente','ramal_isolacao','ramal_material','ramal_tensao','ramal_metodo',
+                  'ramal_condutores','ramal_subtipo','ramal_forma_agrup','ramal_num_circuitos',
+                  'ramal_tipo_temp','ramal_temperatura','ramal_comprimento','ramal_paralelo_idx',
+                  'ramal_par_chk_neutro_0','ramal_par_chk_neutro_1','ramal_par_chk_neutro_2',
+                  'ramal_par_chk_protecao_0','ramal_par_chk_protecao_1','ramal_par_chk_protecao_2',
+                  'ramal_par_chk_tabela48_0','ramal_par_chk_tabela48_1','ramal_par_chk_tabela48_2',
+                  'ramal_tipo_eletroduto','ramal_lig_dg','ramal_lig_tensao','ramal_lig_comprimento',
+                  'qm_aptos','qm_adm','qm_material','qm_adm_tc','qm_dg',
+                  'dps_spda','dps_ramal_aereo','dps_material','dps_qtd_qms',
+                  'aterr_solo','aterr_multiblocos','aterr_qtd_qms','aterr_num_hastes',
+                  'aterr_haste','aterr_comprimento','aterr_conexao')
+    campos_extras = {k: dados.get(k) for k in extra_keys if k in dados}
+    resultados = dados.get('resultados', {})
     vals = tuple(dados.get(c, 0) for c in cols)
     if projeto_id:
-        sql = f"UPDATE projetos SET {'=?,'.join(cols)}=? WHERE id=?"
-        cursor.execute(sql, vals + (projeto_id,))
+        sql = f"UPDATE projetos SET {'=?,'.join(cols)}=?, campos_extras=?, resultados=? WHERE id=?"
+        cursor.execute(sql, vals + (json.dumps(campos_extras), json.dumps(resultados), projeto_id))
     else:
         placeholders = ','.join('?' * len(cols))
-        cursor.execute(f"INSERT INTO projetos ({','.join(cols)}) VALUES ({placeholders})", vals)
+        cursor.execute(f"INSERT INTO projetos ({','.join(cols)}, campos_extras, resultados) VALUES ({placeholders},?,?)", vals + (json.dumps(campos_extras), json.dumps(resultados)))
         projeto_id = cursor.lastrowid
     cursor.execute("DELETE FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
     for m in dados.get('motores', []):
