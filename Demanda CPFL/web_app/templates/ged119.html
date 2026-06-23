@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+<div class="main-layout">
+
 <div class="tabs" id="main-tabs">
     <button class="tab-btn active" data-tab="tab-projetos">Gerenciamento</button>
     <button class="tab-btn" data-tab="tab-dados">Dados do Edifício</button>
@@ -775,6 +777,7 @@
             <div id="qm-content"></div>
         </div>
     </div>
+</div>
 </div>
 
 <script>
@@ -2158,14 +2161,23 @@ function calcularQM() {
     var totalMedidores = aptos + adm;
     if (totalMedidores < 1) { alert('Informe ao menos 1 medidor!'); return; }
 
-    // --- QMs necessários ---
-    var qms = Math.ceil(totalMedidores / 36);
+    // --- QMs necessários (critério duplo: medidores e demanda) ---
+    var qmsPorMed = Math.ceil(totalMedidores / 36);
+    var qmsPorDemanda = dg > 0 ? Math.ceil(dg / 200) : qmsPorMed;
+    var qms = Math.max(qmsPorMed, qmsPorDemanda);
+    var alertaDemanda = qms > qmsPorMed;
+
+    // Distribuir medidores pelos QMs
     var medPorQm = [];
     var restante = totalMedidores;
     for (var i = 0; i < qms; i++) {
-        var n = Math.min(restante, (i < qms - 1) ? 36 : (restante % 36 || 36));
+        var n = Math.min(restante, (i < qms - 1) ? 36 : restante);
         medPorQm.push(n);
         restante -= n;
+    }
+    // Se sobrou (qms > qmsPorMed), preencher os QMs extras com 0
+    while (medPorQm.length < qms) {
+        medPorQm.push(0);
     }
 
     // --- Caixa de Distribuição (Tabela 9) — só necessária com 2+ QMs ---
@@ -2234,10 +2246,22 @@ function calcularQM() {
     h += '<div class="result-section">';
     h += '<div class="result-title">DIMENSIONAMENTO</div>';
 
-    // QMs
+    // Análise de critérios
     h += '<div class="result-title" style="margin-top:8px;">Quadros de Medidores (QMs)</div>';
-    h += '<div class="result-line">QMs necessários: <span class="value">' + qms + '</span></div>';
-    h += '<div class="result-line">Critério: até 36 medidores / 200 kVA por QM</div>';
+    h += '<div class="result-subtitle" style="color:#8b949e;">Análise de critérios (GED-119 item 13.3):</div>';
+    h += '<div class="result-line">Critério 1 — medidores: ' + totalMedidores + ' med ÷ 36 = <span class="value">' + qmsPorMed + ' QM(s)</span></div>';
+    h += '<div class="result-line">Critério 2 — demanda: ' + (dg > 0 ? dg.toFixed(2) + ' kVA ÷ 200 = <span class="value">' + qmsPorDemanda + ' QM(s)</span>' : 'Dg não informado — usando critério 1') + '</div>';
+    var criterioInfo = '';
+    if (alertaDemanda) {
+        criterioInfo = '<div class="result-line" style="color:#f0883e;">⚠ Demanda (' + dg.toFixed(2) + ' kVA) supera 200 kVA/QM. Critério de demanda determinou <span class="value">' + qms + ' QMs</span>.</div>';
+    } else if (qmsPorMed > qmsPorDemanda) {
+        criterioInfo = '<div class="result-line" style="color:#58a6ff;">ℹ Critério de medidores determinou <span class="value">' + qms + ' QMs</span>.</div>';
+    } else if (qmsPorMed === qmsPorDemanda) {
+        criterioInfo = '<div class="result-line" style="color:#3fb950;">✓ Ambos os critérios convergem para <span class="value">' + qms + ' QM(s)</span>.</div>';
+    }
+    h += criterioInfo;
+    h += '<div class="result-line" style="font-weight:700;">QMs necessários: <span class="value">' + qms + '</span></div>';
+    h += '<div class="result-line" style="font-size:12px;color:#8b949e;">Regra: máximo 36 medidores e 200 kVA por QM. QMs = max(ceil(med/36), ceil(Dg/200)).</div>';
     qmDetalhes.forEach(function(q, i) {
         var det = '';
         if (material === 'metalico') {
@@ -2246,7 +2270,10 @@ function calcularQM() {
         } else {
             det = 'Conforme fabricante cadastrado GED-3412 (GED-13 / GED-12903)';
         }
-        h += '<div class="result-line" style="font-weight:700;">QM ' + (i+1) + ': ' + q.medidores + ' medidores — ' + det + '</div>';
+        var demandaQm = dg > 0 ? (dg / qms).toFixed(2) + ' kVA' : '—';
+        h += '<div class="result-line" style="font-weight:700;">QM ' + (i+1) + ': ' + q.medidores + ' medidores — ' + det;
+        if (dg > 0) h += ' — Demanda: <span class="value">' + demandaQm + '</span>';
+        h += '</div>';
     });
     if (admTc) {
         h += '<div class="result-line" style="color:var(--warning);">ⓘ Adm com TC: módulo justaposto de 900 mm (Des. 29-1/2 item 8). Painel de madeira 200×500×20 mm para suporte dos TCs.</div>';
