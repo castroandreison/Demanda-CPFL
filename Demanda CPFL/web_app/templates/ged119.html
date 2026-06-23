@@ -11,9 +11,12 @@
     <button class="tab-btn" data-tab="tab-motores">Motores</button>
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
     <button class="tab-btn" data-tab="tab-ramal">Ramal de Entrada</button>
+    <button class="tab-btn" data-tab="tab-duto">Duto</button>
     <button class="tab-btn" data-tab="tab-transformador">Calcular Transformador</button>
     <button class="tab-btn" data-tab="tab-poste">Poste</button>
     <button class="tab-btn" data-tab="tab-qm">QM's</button>
+    <button class="tab-btn" data-tab="tab-dps">DPS</button>
+    <button class="tab-btn" data-tab="tab-aterramento">Aterramento</button>
     <button class="tab-btn" data-tab="tab-ramal-ligacao">Ramal de Ligação</button>
     <button class="tab-btn" data-tab="tab-limites">Rede Primária</button>
     <button class="tab-btn" data-tab="tab-impressao" style="background:var(--warning);color:var(--bg);font-weight:700;">🖨️ Impressão</button>
@@ -570,18 +573,23 @@
         <div class="print-report-layout">
             <div class="print-report-sidebar">
                 <h4 style="margin:0 0 12px 0;font-size:14px;">Seções do Relatório</h4>
-                <label class="print-checkbox"><input type="checkbox" id="chk_dados" checked onchange="montarRelatorio()"> Dados do Edifício</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_iluminacao" checked onchange="montarRelatorio()"> Iluminação e Tomadas (D1)</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_aparelhos" checked onchange="montarRelatorio()"> Aparelhos (D2)</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_motores" checked onchange="montarRelatorio()"> Motores (D3)</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_outras" checked onchange="montarRelatorio()"> Outras Cargas e AC</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_dg" checked onchange="montarRelatorio()"> Demanda Geral (Dg)</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_limites" checked onchange="montarRelatorio()"> Limites / Rede Primária</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_transformador" checked onchange="montarRelatorio()"> Transformador</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_poste" checked onchange="montarRelatorio()"> Poste</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_qm" checked onchange="montarRelatorio()"> QM's</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_ramal_lig" checked onchange="montarRelatorio()"> Ramal de Ligação</label>
-                <label class="print-checkbox"><input type="checkbox" id="chk_ramal" checked onchange="montarRelatorio()"> Ramal de Entrada</label>
+                <div id="print-sections">
+                    <label class="print-checkbox" draggable="true" data-section="chk_dados"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_dados" checked onchange="montarRelatorio()"> Dados do Edifício</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_iluminacao"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_iluminacao" checked onchange="montarRelatorio()"> Iluminação e Tomadas (D1)</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_aparelhos"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_aparelhos" checked onchange="montarRelatorio()"> Aparelhos (D2)</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_motores"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_motores" checked onchange="montarRelatorio()"> Motores (D3)</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_outras"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_outras" checked onchange="montarRelatorio()"> Outras Cargas e AC</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_dg"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_dg" checked onchange="montarRelatorio()"> Demanda Geral (Dg)</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_limites"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_limites" checked onchange="montarRelatorio()"> Limites / Rede Primária</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_transformador"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_transformador" checked onchange="montarRelatorio()"> Transformador</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_poste"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_poste" checked onchange="montarRelatorio()"> Poste</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_qm"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_qm" checked onchange="montarRelatorio()"> QM's</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_dps"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_dps" checked onchange="montarRelatorio()"> DPS</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_aterramento"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_aterramento" checked onchange="montarRelatorio()"> Aterramento</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_ramal_lig"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_ramal_lig" checked onchange="montarRelatorio()"> Ramal de Ligação</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_duto"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_duto" checked onchange="montarRelatorio()"> Duto</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_ramal"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_ramal" checked onchange="montarRelatorio()"> Ramal de Entrada</label>
+                </div>
                 <hr style="margin:12px 0;border-color:var(--border);">
                 <div style="font-size:11px;color:var(--text-muted);">Calcule os resultados nas abas correspondentes antes de gerar o relatório.</div>
             </div>
@@ -703,6 +711,39 @@
     </div>
 </div>
 
+<div id="tab-duto" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dimensionamento do Eletroduto (Duto)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Tipo do Condutor</label>
+                <select id="duto_tipo" onchange="calcularDuto()">
+                    <option value="">Selecione o tipo...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Seção (mm²)</label>
+                <input type="text" id="duto_secao" readonly style="background:var(--bg-hover);">
+            </div>
+            <div class="form-group">
+                <label>Condutores</label>
+                <input type="text" id="duto_condutores" readonly style="background:var(--bg-hover);">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-sm" onclick="autoPreencherDuto()" title="Buscar valores do ramal">🔄 Buscar do Ramal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="duto-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado do Dimensionamento do Duto</div>
+            <div id="duto-content"></div>
+        </div>
+    </div>
+</div>
+
 <div id="tab-poste" class="tab-content">
     <div class="card">
         <div class="card-header">Dimensionamento do Poste de Entrada (Tabela 20)</div>
@@ -775,9 +816,153 @@
         <div class="card">
             <div class="card-header">Resultado do Dimensionamento dos QMs</div>
             <div id="qm-content"></div>
+    </div>
+</div>
+</div>
+
+<div id="tab-dps" class="tab-content">
+    <div class="card">
+        <div class="card-header">Seleção de DPS (Dispositivo de Proteção contra Surtos) — GED-119 itens 11.2.4 e 13.4</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Edificação possui SPDA (para-raios)?</label>
+                <select id="dps_spda">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ramal de entrada é aéreo?</label>
+                <select id="dps_ramal_aereo">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Material da caixa do DPS</label>
+                <select id="dps_material">
+                    <option value="aco_carbono">Aço Carbono 16 MSG</option>
+                    <option value="policarbonato">Policarbonato (GED-14586 / GED-13)</option>
+                    <option value="resina_poliester">Resina Poliéster c/ fibra de vidro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Qtd. de QMs (para posição de instalação)</label>
+                <input type="number" id="dps_qtd_qms" min="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-sm" onclick="dpsUserEdit={};autoPreencherDPS();" title="Buscar valores do projeto">🔄 Buscar do Projeto</button>
+                    <button class="btn btn-primary" onclick="calcularDPS()">⚡ Selecionar DPS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dps-result" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resultado da Seleção do DPS</div>
+            <div id="dps-content"></div>
         </div>
     </div>
 </div>
+
+<div id="tab-aterramento" class="tab-content">
+    <div class="card">
+        <div class="card-header">Sistema de Aterramento (GED-119 item 12)</div>
+        <div class="form-grid col-3">
+            <div class="form-group">
+                <label>Tipo de Solo</label>
+                <select id="aterr_solo">
+                    <option value="argila">Argila</option>
+                    <option value="umido">Úmido</option>
+                    <option value="padrao" selected>Padrão</option>
+                    <option value="arenoso">Arenoso</option>
+                    <option value="rochoso">Rochoso</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Múltiplos Blocos?</label>
+                <select id="aterr_multiblocos">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Qtd. de QMs</label>
+                <input type="number" id="aterr_qtd_qms" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>Nº Mínimo de Hastes</label>
+                <input type="number" id="aterr_num_hastes" min="1" value="1">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Seleção da Haste de Aterramento</div>
+        <div class="form-grid col-2">
+            <div class="form-group">
+                <label>Tipo de Haste</label>
+                <select id="aterr_haste">
+                    <option value="">Selecione...</option>
+                    <option value="cantoneira_aco">Cantoneira Aço Zincado 25×25×5 mm</option>
+                    <option value="haste_aco">Haste Aço Zincado 5/8" (16 mm)</option>
+                    <option value="haste_aco_cobre">Haste Aço Revestido Cobre 5/8" (16 mm)</option>
+                    <option value="haste_cobre">Haste Cobre Maciço 5/8" (16 mm)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Comprimento (m)</label>
+                <input type="number" id="aterr_comprimento" value="2.40" step="0.1" min="1.0">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Conexão Haste-Cabo</div>
+        <div class="form-grid col-2">
+            <div class="form-group">
+                <label>Tipo de Conexão</label>
+                <select id="aterr_conexao">
+                    <option value="">Selecione...</option>
+                    <option value="grampo">Grampo Cobre/Bronze</option>
+                    <option value="conector_mecanico">Conector Mecânico (Cobre Estanhado)</option>
+                    <option value="solda_exotermica">Solda Exotérmica (Aluminotérmica)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Caixa de Inspeção</label>
+                <input type="text" id="aterr_caixa" readonly style="background:var(--bg-hover);" value="Ø 250 mm necessária">
+            </div>
+            <div class="form-group">
+                <label>Cabo da Malha (cobre nu)</label>
+                <input type="text" id="aterr_cabo_malha" readonly style="background:var(--bg-hover);" value="50 mm² sem emendas">
+            </div>
+            <div class="form-group">
+                <label>Interligação Malha-Neutro</label>
+                <input type="text" id="aterr_cabo_interlig" readonly style="background:var(--bg-hover);" value="35 mm² cobre nu">
+            </div>
+            <div class="form-group">
+                <label>Partes Metálicas</label>
+                <input type="text" id="aterr_partes_metal" readonly style="background:var(--bg-hover);" value="10 mm² cobre">
+            </div>
+            <div class="form-group">
+                <label>Resistência Alvo</label>
+                <input type="text" id="aterr_resistencia" readonly style="background:var(--bg-hover);" value="≤ 25 Ω">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Materiais e Componentes</div>
+        <div id="aterr-materiais">
+            <div style="padding:12px;color:var(--text-muted);text-align:center;">Preencha as opções acima para gerar a lista de materiais.</div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="montarListaAterramento()" style="padding:12px 40px;font-size:16px;">📋 Montar Lista de Materiais</button>
+    </div>
 </div>
 
 <script>
@@ -873,7 +1058,7 @@ function carregarProjeto(projetoId) {
         if (p.ramal_temperatura !== undefined) setField('ramal_temperatura', p.ramal_temperatura);
         if (p.ramal_comprimento !== undefined) setField('ramal_comprimento', p.ramal_comprimento);
         if (p.ramal_paralelo_idx !== undefined) setField('ramal_paralelo_idx', p.ramal_paralelo_idx);
-        if (p.ramal_tipo_eletroduto !== undefined) setField('ramal_tipo_eletroduto', p.ramal_tipo_eletroduto);
+        if (p.ramal_tipo_eletroduto !== undefined) { var de = document.getElementById('duto_tipo'); if (de) de.value = p.ramal_tipo_eletroduto; }
         // Ramal de Ligação
         if (p.ramal_lig_dg !== undefined) setField('ramal_lig_dg', p.ramal_lig_dg);
         if (p.ramal_lig_tensao !== undefined) setField('ramal_lig_tensao', p.ramal_lig_tensao);
@@ -884,6 +1069,19 @@ function carregarProjeto(projetoId) {
         if (p.qm_material !== undefined) setField('qm_material', p.qm_material);
         if (p.qm_adm_tc !== undefined) setField('qm_adm_tc', p.qm_adm_tc);
         if (p.qm_dg !== undefined) setField('qm_dg', p.qm_dg);
+        // DPS
+        if (p.dps_spda !== undefined) setField('dps_spda', p.dps_spda);
+        if (p.dps_ramal_aereo !== undefined) setField('dps_ramal_aereo', p.dps_ramal_aereo);
+        if (p.dps_material !== undefined) setField('dps_material', p.dps_material);
+        if (p.dps_qtd_qms !== undefined) setField('dps_qtd_qms', p.dps_qtd_qms);
+        // Aterramento
+        if (p.aterr_solo !== undefined) setField('aterr_solo', p.aterr_solo);
+        if (p.aterr_multiblocos !== undefined) setField('aterr_multiblocos', p.aterr_multiblocos);
+        if (p.aterr_qtd_qms !== undefined) setField('aterr_qtd_qms', p.aterr_qtd_qms);
+        if (p.aterr_num_hastes !== undefined) setField('aterr_num_hastes', p.aterr_num_hastes);
+        if (p.aterr_haste !== undefined) setField('aterr_haste', p.aterr_haste);
+        if (p.aterr_comprimento !== undefined) setField('aterr_comprimento', p.aterr_comprimento);
+        if (p.aterr_conexao !== undefined) setField('aterr_conexao', p.aterr_conexao);
         // Force temperature group visibility based on saved value
         if (p.ramal_tipo_temp) {
             var rtg = document.getElementById('ramal_temp_group');
@@ -953,6 +1151,24 @@ function novoProjeto() {
      'secar_kw','secar_apto','lavar_kw','lavar_apto'].forEach(id => setField(id, ''));
     document.getElementById('tipo').value = 'Residencial';
     document.getElementById('motor_desc').value = '';
+    ['dps_spda','dps_ramal_aereo','dps_material','dps_qtd_qms'].forEach(id => {
+        var el = document.getElementById(id);
+        if (el) { el.value = (id === 'dps_qtd_qms') ? '1' : (id === 'dps_material') ? 'aco_carbono' : 'false'; }
+    });
+    document.getElementById('dps-result').style.display = 'none';
+    dpsUserEdit = {};
+    var de = document.getElementById('duto_tipo'); if (de) de.value = '';
+    document.getElementById('duto_secao').value = '';
+    document.getElementById('duto_condutores').value = '';
+    document.getElementById('duto-result').style.display = 'none';
+    ['aterr_solo','aterr_multiblocos','aterr_haste','aterr_conexao'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = (id === 'aterr_solo') ? 'padrao' : (id === 'aterr_multiblocos') ? 'false' : '';
+    });
+    setField('aterr_qtd_qms', 1);
+    setField('aterr_num_hastes', 1);
+    setField('aterr_comprimento', 2.40);
+    document.getElementById('aterr-materiais').innerHTML = '<div style="padding:12px;color:var(--text-muted);text-align:center;">Preencha as opções acima para gerar a lista de materiais.</div>';
     motores = [];
     renderMotores();
     outrasCargas = { apt: [], adm: [] };
@@ -1183,6 +1399,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // QM fields auto-save
     var qmCampos = ['qm_aptos','qm_adm','qm_material','qm_adm_tc','qm_dg'];
     qmCampos.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.addEventListener('change', autoSalvarG119); el.addEventListener('input', autoSalvarG119); }
+    });
+    // DPS fields auto-save
+    var dpsCampos = ['dps_spda','dps_ramal_aereo','dps_material','dps_qtd_qms'];
+    dpsCampos.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) { el.addEventListener('change', autoSalvarG119); el.addEventListener('input', autoSalvarG119); }
     });
@@ -1490,7 +1712,7 @@ function getDados() {
         ramal_temperatura: el('ramal_temperatura'),
         ramal_comprimento: el('ramal_comprimento'),
         ramal_paralelo_idx: el('ramal_paralelo_idx'),
-        ramal_tipo_eletroduto: el('ramal_tipo_eletroduto'),
+        ramal_tipo_eletroduto: (document.getElementById('duto_tipo') || {}).value || '',
         // Ramal de Ligação
         ramal_lig_dg: el('ramal_lig_dg'),
         ramal_lig_tensao: el('ramal_lig_tensao'),
@@ -1501,6 +1723,19 @@ function getDados() {
         qm_material: el('qm_material'),
         qm_adm_tc: el('qm_adm_tc'),
         qm_dg: el('qm_dg'),
+        // DPS
+        dps_spda: el('dps_spda'),
+        dps_ramal_aereo: el('dps_ramal_aereo'),
+        dps_material: el('dps_material'),
+        dps_qtd_qms: el('dps_qtd_qms'),
+        // Aterramento
+        aterr_solo: el('aterr_solo'),
+        aterr_multiblocos: el('aterr_multiblocos'),
+        aterr_qtd_qms: el('aterr_qtd_qms'),
+        aterr_num_hastes: el('aterr_num_hastes'),
+        aterr_haste: el('aterr_haste'),
+        aterr_comprimento: el('aterr_comprimento'),
+        aterr_conexao: el('aterr_conexao'),
     };
 }
 
@@ -2021,6 +2256,17 @@ function mostrarResultadoRamalLigacao(d) {
 }
 
 var qmUserEdit = {}; // track user edits
+var dpsUserEdit = {}; // track DPS user edits
+
+function autoPreencherDPS() {
+    if (typeof ultimoResultado !== 'undefined' && ultimoResultado) {
+        var dg = ultimoResultado.Dg;
+        if (dg && !dpsUserEdit['dps_qtd_qms']) {
+            var qms = Math.max(Math.ceil(ultimoResultado.aptos / 36), Math.ceil(dg / 200));
+            document.getElementById('dps_qtd_qms').value = qms;
+        }
+    }
+}
 
 function autoPreencherQM() {
     if (typeof ultimoResultado !== 'undefined' && ultimoResultado) {
@@ -2043,6 +2289,16 @@ document.addEventListener('change', function(e) {
 document.addEventListener('input', function(e) {
     if (e.target && e.target.id && e.target.id.indexOf('qm_') === 0) {
         qmUserEdit[e.target.id] = true;
+    }
+});
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id && e.target.id.indexOf('dps_') === 0) {
+        dpsUserEdit[e.target.id] = true;
+    }
+});
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id && e.target.id.indexOf('dps_') === 0) {
+        dpsUserEdit[e.target.id] = true;
     }
 });
 
@@ -2148,6 +2404,110 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
             { nome: 'Reto (1 parede)', fn: layoutReto }
         ]
     };
+}
+
+// --- Seletor de DPS ---
+function calcularDPS() {
+    var possuiSPDA = document.getElementById('dps_spda').value === 'true';
+    var ramalAereo = document.getElementById('dps_ramal_aereo').value === 'true';
+    var material = document.getElementById('dps_material').value;
+    var qtdQMs = parseInt(document.getElementById('dps_qtd_qms').value) || 1;
+
+    // Classe do DPS
+    var classe, formaOnda, params, cor;
+    if (possuiSPDA || ramalAereo) {
+        classe = 'Classe I';
+        formaOnda = '10/350 µs';
+        params = { Iimp_kA: 25, configuracao: '3PN', Uc_V: 275, Up_kV: 1.5 };
+        cor = 'Vermelho';
+    } else {
+        classe = 'Classe II';
+        formaOnda = '8/20 µs';
+        params = { In_kA: 20, configuracao: '3PN', Uc_V: 275, Up_kV: 1.5 };
+        cor = 'Amarelo';
+    }
+
+    // Material da caixa
+    var matNome, matDesc;
+    if (material === 'aco_carbono') {
+        matNome = 'Aço Carbono 16 MSG';
+        matDesc = '1,52 mm c/ pintura eletrostática — GED-119 item 13.4';
+    } else if (material === 'policarbonato') {
+        matNome = 'Policarbonato';
+        matDesc = '3 mm (mín.) — GED-14586 / GED-13 — Fabricantes cadastrados GED-3412';
+    } else {
+        matNome = 'Resina Poliéster c/ fibra de vidro';
+        matDesc = '3 mm (mín.) — GED-3948';
+    }
+
+    // Posição de instalação
+    var posicao, desenho;
+    if (qtdQMs >= 2) {
+        posicao = 'Ao lado da Caixa de Distribuição';
+        desenho = 'GED-119 Des. 34';
+    } else {
+        posicao = 'Ao lado do Quadro de Medidores';
+        desenho = 'GED-119 Des. 35-1/2 e 35-2/2';
+    }
+
+    var div = document.getElementById('dps-content');
+    var h = '<div id="print-area-dps">';
+
+    h += '<div class="result-section">';
+    h += '<div class="result-title">DADOS DE ENTRADA</div>';
+    h += '<div class="result-line">Possui SPDA: <span class="value">' + (possuiSPDA ? 'Sim' : 'Não') + '</span></div>';
+    h += '<div class="result-line">Ramal aéreo: <span class="value">' + (ramalAereo ? 'Sim' : 'Não') + '</span></div>';
+    h += '<div class="result-line">Material da caixa: <span class="value">' + matNome + '</span></div>';
+    h += '<div class="result-line">Qtd. de QMs: <span class="value">' + qtdQMs + '</span></div>';
+    h += '</div>';
+
+    h += '<hr class="result-divider">';
+    h += '<div class="result-section">';
+    h += '<div class="result-title">CLASSIFICAÇÃO DO DPS (GED-119 item 11.2.4 / IEC 61643-1)</div>';
+    h += '<div class="result-line">Classe: <span class="value" style="color:' + (classe === 'Classe I' ? '#f85149' : '#d29922') + ';font-weight:700;">' + classe + '</span></div>';
+    h += '<div class="result-line">Forma de onda: <span class="value">' + formaOnda + '</span></div>';
+    h += '<div class="result-line">Cor identificação: <span class="value">' + cor + '</span></div>';
+    h += '<div class="result-line">Configuração: <span class="value">' + params.configuracao + '</span></div>';
+    if (params.Iimp_kA) {
+        h += '<div class="result-line">Iimp (corrente de impulso): <span class="value">' + params.Iimp_kA + ' kA</span></div>';
+        h += '<div class="result-line">Regra: SPDA ou ramal aéreo → Classe I (10/350 µs, Iimp ≥ 25 kA)</div>';
+    } else {
+        h += '<div class="result-line">In (corrente nominal): <span class="value">' + params.In_kA + ' kA</span></div>';
+        h += '<div class="result-line">Regra: Sem SPDA e ramal subterrâneo → Classe II (8/20 µs, In ≥ 20 kA)</div>';
+    }
+    h += '<div class="result-line">Uc (tensão máxima contínua): <span class="value">' + params.Uc_V + ' V</span></div>';
+    h += '<div class="result-line">Up (nível de proteção): <span class="value">' + params.Up_kV + ' kV</span></div>';
+    h += '</div>';
+
+    h += '<hr class="result-divider">';
+    h += '<div class="result-section">';
+    h += '<div class="result-title">CAIXA DO DPS (GED-119 item 13.4)</div>';
+    h += '<div class="result-line">Material: <span class="value">' + matNome + '</span></div>';
+    h += '<div class="result-line">' + matDesc + '</div>';
+    h += '<div class="result-line">Dimensões mínimas: <span class="value">500 × 280 × 240 mm</span> (A × L × P)</div>';
+    h += '<div class="result-line" style="margin-top:4px;">Requisitos construtivos:</div>';
+    h += '<div style="padding-left:16px;font-size:12px;color:var(--text-secondary);">';
+    h += '<div>• Dispositivo para lacre CPFL</div>';
+    h += '<div>• Viseira para inspeção visual do estado do DPS</div>';
+    h += '<div>• Dispositivo de proteção contra sobrecorrente com alavanca acessível sem violar lacre</div>';
+    h += '<div>• BEP (barramento de equipotencialização principal) instalado abaixo da caixa</div>';
+    h += '</div>';
+    h += '<div class="result-line" style="margin-top:4px;font-size:12px;color:var(--text-muted);">Conexão: ' + (qtdQMs >= 2 ? 'Derivar dos barramentos da Caixa de Distribuição' : 'Derivar dos bornes de entrada do disjuntor geral ou barramento de entrada QM') + '</div>';
+    h += '</div>';
+
+    h += '<hr class="result-divider">';
+    h += '<div class="result-section">';
+    h += '<div class="result-title">POSIÇÃO DE INSTALAÇÃO</div>';
+    h += '<div class="result-line">Posição: <span class="value">' + posicao + '</span></div>';
+    h += '<div class="result-line">Desenho: <span class="value">' + desenho + '</span></div>';
+    h += '</div>';
+
+    h += '<hr class="result-divider">';
+    h += '<div class="result-line"><span class="label">DPS Selecionado:</span> <span class="value">' + classe + ' — ' + formaOnda + ' — ' + params.configuracao + ' — Caixa ' + matNome + '</span></div>';
+
+    h += '</div>';
+    div.innerHTML = h;
+    document.getElementById('dps-result').style.display = 'block';
 }
 
 function calcularQM() {
@@ -2541,43 +2901,6 @@ function mostrarResultadoRamal(d) {
     const Vn = 380;
     const cosPhi = 0.92;
 
-    // Eletroduto
-    var eletroTipo = document.getElementById('ramal_tipo_eletroduto')?.value || '';
-    var eletroOpt = paraleloSelecionado || (d.secao_mm2 ? { n_condutores: 1, secao_mm2: d.secao_mm2 } : null);
-    var eletroHtml = '';
-    if (eletroOpt) {
-        var eSecao = eletroOpt.secao_mm2;
-        var eNfases = eletroOpt.n_condutores * 3;
-        var eNneutro = (eletroOpt.neutro_display && eletroOpt.neutro_display.indexOf('x') > 0)
-            ? parseInt(eletroOpt.neutro_display.split('x')[0]) : (d.neutro_mm2 ? 1 : 0);
-        var eNprot = (eletroOpt.protecao_display && eletroOpt.protecao_display.indexOf('x') > 0)
-            ? parseInt(eletroOpt.protecao_display.split('x')[0]) : (d.protecao_mm2 ? 1 : 0);
-        var eNtotal = eNfases + eNneutro + eNprot;
-        eletroHtml = '<br><div class="result-title">Eletroduto Calculado</div>';
-        eletroHtml += '<div class="result-line" style="margin-bottom:6px;">';
-        eletroHtml += '<label style="margin-right:8px;">Tipo do Condutor:</label>';
-        eletroHtml += '<select id="ramal_tipo_eletroduto" style="padding:4px 8px;border:1px solid var(--border-color,#30363d);border-radius:4px;background:var(--bg-input,#0d1117);color:var(--text-primary,#e6edf3);" onchange="calcularEletrodutoRamal()">';
-        eletroHtml += '<option value="">Selecione o tipo...</option>';
-        if (typeof window.tiposEletroduto !== 'undefined') {
-            window.tiposEletroduto.forEach(function(t) {
-                eletroHtml += '<option value="' + t + '"' + (t === eletroTipo ? ' selected' : '') + '>' + t + '</option>';
-            });
-        }
-        eletroHtml += '</select>';
-        eletroHtml += ' <span style="color:var(--text-muted);font-size:0.9em;">Condutores: ' + eNtotal + ' (Fases: ' + eNfases + ', Neutro: ' + eNneutro + ', Proteção: ' + eNprot + ') | Seção: ' + eSecao + ' mm²</span>';
-        eletroHtml += '</div>';
-        eletroHtml += '<div id="ramal_eletroduto_result"></div>';
-        if (eletroTipo && window.ultimoEletrodutoRamal) {
-            var er = window.ultimoEletrodutoRamal;
-            eletroHtml += '<div class="result-line" style="font-weight:700;">Eletroduto: <span class="value">' + er.eletroduto + '</span></div>';
-            if (er.passos) {
-                eletroHtml += '<div style="margin-top:4px;padding:6px 10px;background:var(--bg-hover,#21262d);color:var(--text-primary,#e6edf3);border-radius:4px;font-size:0.85em;line-height:1.7;">';
-                er.passos.forEach(function(p) { eletroHtml += '<div>' + p + '</div>'; });
-                eletroHtml += '</div>';
-            }
-        }
-    }
-
     let quedaHtml = '';
     if (L > 0 && d.secao_mm2) {
         const dV = 1.732 * L * d.corrente * cosPhi / (K * d.secao_mm2);
@@ -2623,7 +2946,6 @@ function mostrarResultadoRamal(d) {
             ${d.neutro_mm2 ? `<div class="result-line">Neutro (Tabela 48): <span class="value">${d.neutro_display || d.neutro_mm2} mm²</span></div>` : ''}
             ${d.protecao_mm2 ? `<div class="result-line">Proteção (Tabela 58): <span class="value">${d.protecao_display || d.protecao_mm2} mm²</span></div>` : ''}
             ${d.opcoes_paralelo ? '<br>' + paraleloHtml : ''}
-            ${eletroHtml}
             ${quedaHtml}
         </div>
         <hr class="result-divider">
@@ -2647,21 +2969,54 @@ function carregarTiposEletroduto() {
     fetch('/api/ged119/tipos_eletroduto').then(function(r) { return r.json(); }).then(function(resp) {
         if (resp.success) {
             window.tiposEletroduto = resp.data;
+            var sel = document.getElementById('duto_tipo');
+            if (sel) {
+                sel.innerHTML = '<option value="">Selecione o tipo...</option>';
+                resp.data.forEach(function(t) {
+                    sel.innerHTML += '<option value="' + t + '">' + t + '</option>';
+                });
+            }
         }
     });
 }
 
-function calcularEletrodutoRamal() {
-    var sel = document.getElementById('ramal_tipo_eletroduto');
+function autoPreencherDuto() {
+    var d = typeof ultimoResultadoRamal !== 'undefined' ? ultimoResultadoRamal : null;
+    if (!d) { alert('Calcule o Ramal de Entrada primeiro!'); return; }
+    var idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || -1);
+    var opt = null;
+    if (d.opcoes_paralelo && d.opcoes_paralelo.length > 0) {
+        opt = d.opcoes_paralelo[idx >= 0 ? idx : 0];
+    } else if (d.secao_mm2) {
+        opt = { n_condutores: 1, secao_mm2: d.secao_mm2 };
+    }
+    if (!opt) return;
+    var eNneutro = (opt.neutro_display && opt.neutro_display.indexOf('x') > 0)
+        ? parseInt(opt.neutro_display.split('x')[0]) : (d.neutro_mm2 ? 1 : 0);
+    var eNprot = (opt.protecao_display && opt.protecao_display.indexOf('x') > 0)
+        ? parseInt(opt.protecao_display.split('x')[0]) : (d.protecao_mm2 ? 1 : 0);
+    var eNtotal = opt.n_condutores * 3 + eNneutro + eNprot;
+    document.getElementById('duto_secao').value = opt.secao_mm2 + ' mm²';
+    document.getElementById('duto_condutores').value = eNtotal + ' (Fases: ' + (opt.n_condutores * 3) + ', Neutro: ' + eNneutro + ', Proteção: ' + eNprot + ')';
+    calcularDuto();
+}
+
+function calcularDuto() {
+    var sel = document.getElementById('duto_tipo');
     var tipo = sel ? sel.value : '';
-    var resultDiv = document.getElementById('ramal_eletroduto_result');
+    var resultDiv = document.getElementById('duto-content');
     if (!resultDiv) return;
     if (!tipo) {
         resultDiv.innerHTML = '';
+        document.getElementById('duto-result').style.display = 'none';
         return;
     }
     var d = typeof ultimoResultadoRamal !== 'undefined' ? ultimoResultadoRamal : null;
-    if (!d) return;
+    if (!d) {
+        resultDiv.innerHTML = '<span style="color:var(--danger);">Calcule o Ramal de Entrada primeiro.</span>';
+        document.getElementById('duto-result').style.display = 'block';
+        return;
+    }
     var idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || -1);
     var opt = null;
     if (d.opcoes_paralelo && d.opcoes_paralelo.length > 0) {
@@ -2676,6 +3031,7 @@ function calcularEletrodutoRamal() {
         ? parseInt(opt.protecao_display.split('x')[0]) : (d.protecao_mm2 ? 1 : 0);
     var eNtotal = opt.n_condutores * 3 + eNneutro + eNprot;
     resultDiv.innerHTML = '<span style="color:var(--text-muted);">Calculando...</span>';
+    document.getElementById('duto-result').style.display = 'block';
     fetch('/api/ged119/calcular_eletroduto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2698,16 +3054,94 @@ function calcularEletrodutoRamal() {
     });
 }
 
-function montarRelatorio() {
-    const preview = document.getElementById('relatorio-preview');
-    if (!ultimoResultado) {
-        preview.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.</div>';
-        return;
+// --- Aterramento ---
+function montarListaAterramento() {
+    var solo = document.getElementById('aterr_solo').value;
+    var multiblocos = document.getElementById('aterr_multiblocos').value === 'true';
+    var qtdQMs = parseInt(document.getElementById('aterr_qtd_qms').value) || 1;
+    var numHastes = parseInt(document.getElementById('aterr_num_hastes').value) || 1;
+    var hasteTipo = document.getElementById('aterr_haste').value;
+    var conexao = document.getElementById('aterr_conexao').value;
+    var comprimento = parseFloat(document.getElementById('aterr_comprimento').value) || 2.40;
+
+    var div = document.getElementById('aterr-materiais');
+    var h = '<div class="result-section">';
+
+    // Tipo de solo info
+    var resistInfo = { argila: '15-30', umido: '20-40', padrao: '25-50', arenoso: '50-100', rochoso: '100-500' };
+    var resistStr = resistInfo[solo] || '25-50';
+    h += '<div class="result-title">Resistência Estimada do Solo</div>';
+    h += '<div class="result-line">' + (document.getElementById('aterr_solo').options[document.getElementById('aterr_solo').selectedIndex].text) + ': ' + resistStr + ' Ω</div>';
+    h += '<div class="result-line">Resistência Alvo: <span class="value">≤ 25 Ω</span></div>';
+    h += '<div class="result-line">Hastes: <span class="value">' + numHastes + ' un</span> (mín. ' + numHastes + ') | Distância entre hastes: ≥ 2,0 m</div>';
+
+    // Haste
+    var hasteMap = {
+        cantoneira_aco: 'Cantoneira Aço Zincado 25×25×5 mm',
+        haste_aco: 'Haste Aço Zincado 5/8" (16 mm)',
+        haste_aco_cobre: 'Haste Aço Revestido Cobre 5/8" (16 mm)',
+        haste_cobre: 'Haste Cobre Maciço 5/8" (16 mm)'
+    };
+    h += '<hr class="result-divider">';
+    h += '<div class="result-title">Haste de Aterramento</div>';
+    h += '<div class="result-line">Tipo: <span class="value">' + (hasteMap[hasteTipo] || '—') + '</span></div>';
+    h += '<div class="result-line">Comprimento: <span class="value">' + comprimento.toFixed(2) + ' m</span> (mín. 2,40 m)</div>';
+    h += '<div class="result-line">Quantidade: <span class="value">' + (numHastes * qtdQMs) + ' un</span> (' + numHastes + ' haste(s) × ' + qtdQMs + ' QM' + (qtdQMs > 1 ? 's' : '') + ')' + (multiblocos ? ' — múltiplos blocos' : '') + '</div>';
+
+    // Conexao
+    var conexaoMap = {
+        grampo: 'Grampo Cobre/Bronze',
+        conector_mecanico: 'Conector Mecânico (Cobre Estanhado)',
+        solda_exotermica: 'Solda Exotérmica (Aluminotérmica)'
+    };
+    var caixaNecessaria = (conexao !== 'solda_exotermica');
+    h += '<hr class="result-divider">';
+    h += '<div class="result-title">Conexão Haste-Cabo</div>';
+    h += '<div class="result-line">Tipo: <span class="value">' + (conexaoMap[conexao] || '—') + '</span></div>';
+    h += '<div class="result-line">Caixa de Inspeção: <span class="value">' + (caixaNecessaria ? 'Ø 250 mm — obrigatória' : 'Dispensada (solda exotérmica entre cobre/cobreados)') + '</span></div>';
+
+    // Cabos
+    h += '<hr class="result-divider">';
+    h += '<div class="result-title">Cabos e Condutores</div>';
+    h += '<div class="result-line">Malha de Aterramento: <span class="value">Cobre nu 50 mm² — sem emendas</span></div>';
+    h += '<div class="result-line">Interligação Malha→Neutro: <span class="value">Cobre nu 35 mm²</span></div>';
+    h += '<div class="result-line">Partes Metálicas (caixas/tampas/portas): <span class="value">Cobre 10 mm²</span></div>';
+
+    // BEP
+    h += '<hr class="result-divider">';
+    h += '<div class="result-title">Barramento de Equipotencialização Principal (BEP)</div>';
+    h += '<div class="result-line">Instalação: <span class="value">Abaixo da caixa do DPS</span></div>';
+    h += '<div class="result-line">Norma: <span class="value">NBR-5410 / GED-119 Des. 34 e 35</span></div>';
+
+    // Lista de materiais
+    h += '<hr class="result-divider">';
+    h += '<div class="result-title">Lista de Materiais</div>';
+    var totalHastes = numHastes * qtdQMs;
+    h += '<div class="result-line">• <span class="value">' + totalHastes + '</span> × ' + (hasteMap[hasteTipo] || 'Haste de aterramento') + ' — ' + comprimento.toFixed(2) + ' m</div>';
+    h += '<div class="result-line">• <span class="value">' + totalHastes + '</span> × ' + (conexaoMap[conexao] || 'Conector') + '</div>';
+    if (caixaNecessaria) {
+        h += '<div class="result-line">• <span class="value">' + totalHastes + '</span> × Caixa de Inspeção Ø 250 mm</div>';
     }
-    const d = ultimoResultado;
-    var html = '<div class="print-report" id="print-report-content">';
-    html += '<h2 style="text-align:center;margin-bottom:8px;">Memorial de Cálculo - GED-119</h2>';
-    if (document.getElementById('chk_dados').checked) {
+    h += '<div class="result-line">• Cabo de Cobre Nu 50 mm² (malha) — conforme projeto</div>';
+    h += '<div class="result-line">• Cabo de Cobre Nu 35 mm² (interligação malha→neutro) — conforme projeto</div>';
+    h += '<div class="result-line">• Cabo de Cobre 10 mm² (partes metálicas) — conforme projeto</div>';
+    h += '<div class="result-line">• Barramento de Equipotencialização Principal (BEP)</div>';
+
+    h += '</div>';
+    div.innerHTML = h;
+}
+
+function autoPreencherAterramento() {
+    var d = typeof ultimoResultadoRamal !== 'undefined' ? ultimoResultadoRamal : null;
+    if (d && d.secao_mm2) {
+        var qmsEst = Math.ceil((ultimoResultado ? ultimoResultado.aptos : 12) / 36) || 1;
+        document.getElementById('aterr_qtd_qms').value = Math.max(qmsEst, 1);
+    }
+}
+
+// --- Section renderers for dynamic report order ---
+var sectionRenderers = {
+    chk_dados: function(html, d) {
         html += '<div class="result-section">';
         html += '<div class="result-title">Dados do Edifício</div>';
         html += '<div class="result-line">Projeto: ' + (document.getElementById('projeto_nome').value || '-') + '</div>';
@@ -2716,10 +3150,10 @@ function montarRelatorio() {
         html += '<div class="result-line">Área de Administração: ' + d.area_adm.toFixed(2) + ' m²</div>';
         html += '<div class="result-line">Tipo do Edifício: ' + d.tipo + '</div>';
         html += '</div>';
-    }
-    if (document.getElementById('chk_iluminacao').checked) {
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
+        return html;
+    },
+    chk_iluminacao: function(html, d) {
+        html += '<hr class="result-divider"><div class="result-section">';
         html += '<div class="result-title gold">1 - Iluminação e Tomadas (Item 5.1 - GED-119)</div>';
         html += '<div class="result-line">Fórmula: D1 = (Área × W/m²) / 1000</div>';
         html += '<div class="result-line">W/m² adotado = ' + d.w_m2 + ' W/m²</div><br>';
@@ -2731,10 +3165,10 @@ function montarRelatorio() {
         html += '<div class="result-line">D1b = <span class="value">' + d.D1b.toFixed(2) + ' kVA</span></div><br>';
         html += '<div class="result-line"><span class="highlight">D1 = D1a + D1b = ' + d.D1a.toFixed(2) + ' + ' + d.D1b.toFixed(2) + ' = ' + d.D1.toFixed(2) + ' kVA</span></div>';
         html += '</div>';
-    }
-    if (document.getElementById('chk_aparelhos').checked) {
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
+        return html;
+    },
+    chk_aparelhos: function(html, d) {
+        html += '<hr class="result-divider"><div class="result-section">';
         html += '<div class="result-title purple">2 - Aparelhos (Item 5.2 - GED-119)</div>';
         html += '<div class="result-line">Fórmula: D2 = Σ(Qtd × Potência × FD)</div><br>';
         var totChuv = d.total_chuveiros_geral - d.chuveiros_adm;
@@ -2747,10 +3181,10 @@ function montarRelatorio() {
         html += '<div class="result-line"><span class="highlight">D2 (Administração) = ' + d.D2_adm.toFixed(2) + ' kVA</span></div>';
         html += '<div class="result-line"><span class="highlight">D2 Total = ' + d.D2.toFixed(2) + ' kVA</span></div>';
         html += '</div>';
-    }
-    if (document.getElementById('chk_motores').checked) {
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
+        return html;
+    },
+    chk_motores: function(html, d) {
+        html += '<hr class="result-divider"><div class="result-section">';
         html += '<div class="result-title gold">3 - Motores (Item 5.3 - GED-119)</div>';
         html += '<div class="result-line">Fórmula: D3 = Maior motor × 1,0 + (Restante) × 0,5</div><br>';
         if (d.motores && d.motores.length > 0) {
@@ -2765,57 +3199,38 @@ function montarRelatorio() {
         html += '<div class="result-line">Restante = ' + d.total_motores_kva.toFixed(2) + ' - ' + d.maior_motor_kva.toFixed(2) + ' = ' + d.restantes_kva.toFixed(2) + ' kVA</div><br>';
         html += '<div class="result-line"><span class="highlight">D3 = ' + d.maior_motor_kva.toFixed(2) + ' × 1,0 + ' + d.restantes_kva.toFixed(2) + ' × 0,5 = ' + d.D3.toFixed(2) + ' kVA</span></div>';
         html += '</div>';
-    }
-    if (document.getElementById('chk_outras').checked) {
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
+        return html;
+    },
+    chk_outras: function(html, d) {
+        html += '<hr class="result-divider"><div class="result-section">';
         html += '<div class="result-title" style="color:var(--cyan);">Outras Cargas e Ar Condicionado</div>';
         if (d.outras_cargas_apt && d.outras_cargas_apt.length > 0) {
             html += '<div class="result-line"><span class="label">Outras Cargas - Apartamentos:</span></div>';
-            d.outras_cargas_apt.forEach(function(c) {
-                html += '<div class="result-line">' + c[0] + ': ' + c[1] + ' kW x ' + c[2] + ' un = ' + (c[1]*c[2]).toFixed(2) + ' kVA</div>';
-            });
+            d.outras_cargas_apt.forEach(function(c) { html += '<div class="result-line">' + c[0] + ': ' + c[1] + ' kW x ' + c[2] + ' un = ' + (c[1]*c[2]).toFixed(2) + ' kVA</div>'; });
         }
         if (d.outras_cargas_adm && d.outras_cargas_adm.length > 0) {
             html += '<div class="result-line"><span class="label">Outras Cargas - Administração:</span></div>';
-            d.outras_cargas_adm.forEach(function(c) {
-                html += '<div class="result-line">' + c[0] + ': ' + c[1] + ' kW x ' + c[2] + ' un = ' + (c[1]*c[2]).toFixed(2) + ' kVA</div>';
-            });
+            d.outras_cargas_adm.forEach(function(c) { html += '<div class="result-line">' + c[0] + ': ' + c[1] + ' kW x ' + c[2] + ' un = ' + (c[1]*c[2]).toFixed(2) + ' kVA</div>'; });
         }
         var ac_apt_incl = d.ac_apt ? d.ac_apt.filter(function(c) { return c.incluir !== 0; }) : [];
         if (ac_apt_incl.length > 0) {
             html += '<div class="result-line"><span class="label">Ar Condicionado - Apartamentos:</span></div>';
-            ac_apt_incl.forEach(function(c) {
-                html += '<div class="result-line">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA</div>';
-            });
+            ac_apt_incl.forEach(function(c) { html += '<div class="result-line">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA</div>'; });
         }
         var ac_adm_incl = d.ac_adm ? d.ac_adm.filter(function(c) { return c.incluir !== 0; }) : [];
         if (ac_adm_incl.length > 0) {
             html += '<div class="result-line"><span class="label">Ar Condicionado - Administração:</span></div>';
-            ac_adm_incl.forEach(function(c) {
-                html += '<div class="result-line">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA</div>';
-            });
+            ac_adm_incl.forEach(function(c) { html += '<div class="result-line">' + c.descricao + ': ' + (c.potencia/1000).toFixed(3) + ' kW x ' + c.quantidade + ' un = ' + ((c.potencia/1000)*c.quantidade).toFixed(2) + ' kVA</div>'; });
         }
         html += '<br><div class="result-line">Total AC (apt) = <span class="value">' + d.total_ac_apt_kw.toFixed(2) + ' kVA</span></div>';
         html += '<div class="result-line">Total AC (adm) = <span class="value">' + d.total_ac_adm_kw.toFixed(2) + ' kVA</span></div>';
         html += '<div class="result-line">Total outras cargas (apt) = <span class="value">' + d.total_outras_apt.toFixed(2) + ' kVA</span></div>';
         html += '<div class="result-line">Total outras cargas (adm) = <span class="value">' + d.total_outras_adm.toFixed(2) + ' kVA</span></div>';
         html += '</div>';
-    }
-    if (document.getElementById('chk_dg').checked) {
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
-        html += '<div class="result-title" style="color:var(--success);">Demanda Geral (Dg)</div>';
-        html += '<div class="result-line">f_sim = ' + d.f_sim + '</div>';
-        html += '<div class="result-line">Dapt = (D1a + D2_apt) × f_sim = (' + d.D1a.toFixed(2) + ' + ' + d.D2_apt.toFixed(2) + ') × ' + d.f_sim + ' = ' + d.Dapt.toFixed(2) + ' kVA</div>';
-        html += '<div class="result-line">Dadm = D1b + D2_adm + D3 + Outras adm = ' + d.D1b.toFixed(2) + ' + ' + d.D2_adm.toFixed(2) + ' + ' + d.D3.toFixed(2) + ' + ' + d.total_outras_adm.toFixed(2) + ' = ' + d.Dadm.toFixed(2) + ' kVA</div>';
-        html += '<div class="result-line">Dg = Dapt + Dadm + Outras apt = ' + d.Dapt.toFixed(2) + ' + ' + d.Dadm.toFixed(2) + ' + ' + d.total_outras_apt.toFixed(2) + '</div>';
-        html += '<div class="result-line" style="font-size:18px;font-weight:700;"><span class="highlight">Dg = ' + d.Dg.toFixed(2) + ' kVA</span></div>';
-        html += '</div>';
-    }
-    if (document.getElementById('chk_limites').checked) {
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
+        return html;
+    },
+    chk_limites: function(html, d) {
+        html += '<hr class="result-divider"><div class="result-section">';
         html += '<div class="result-title" style="color:var(--danger);">Limites e Rede Primária (Regra 7.3)</div>';
         var acima = d.acima_limite;
         html += '<div class="result-line">Tipo do Edifício: ' + d.tipo + '</div>';
@@ -2823,12 +3238,12 @@ function montarRelatorio() {
         html += '<div class="result-line">Limite para BT: ' + d.limite + ' kVA</div>';
         html += '<div class="result-line" style="font-weight:700;color:' + (acima ? 'red' : 'green') + ';">' + (acima ? 'ATENÇÃO: Dg (' + d.Dg.toFixed(2) + ' kVA) > ' + d.limite + ' kVA - Alimentação pela rede primária (GED-2855)' : 'OK - Demanda (' + d.Dg.toFixed(2) + ' kVA) dentro do limite de BT (' + d.limite + ' kVA)') + '</div>';
         html += '</div>';
-    }
-    // --- TRANSFORMADOR ---
-    if (document.getElementById('chk_transformador').checked && ultimoResultadoTransformador) {
+        return html;
+    },
+    chk_transformador: function(html, d) {
+        if (!ultimoResultadoTransformador) return html;
         var td = ultimoResultadoTransformador;
-        html += '<hr class="result-divider">';
-        html += '<div class="result-section">';
+        html += '<hr class="result-divider"><div class="result-section">';
         html += '<div class="result-title">Transformador (Tabela 10)</div>';
         html += '<div class="result-line">Demanda: ' + td.dg + ' kVA</div>';
         if (td.trafo_acima_tabela) {
@@ -2837,145 +3252,187 @@ function montarRelatorio() {
             html += '<div class="result-line">Transformador: <span class="value">' + td.trafo_kva + ' kVA</span></div>';
             html += '<div class="result-line">Faixa: ' + td.trafo_faixa_min + ' a ' + td.trafo_faixa_max + ' kVA</div>';
             if (td.cap_interrupcao_kA) html += '<div class="result-line">Cap. Interrupção: ' + td.cap_interrupcao_kA + ' kA (Z=' + td.cap_z_percent + '%)</div>';
-        } else {
-            html += '<div class="result-line">Nenhum transformador encontrado.</div>';
-        }
+        } else { html += '<div class="result-line">Nenhum transformador encontrado.</div>'; }
         html += '<br><div class="result-title">Condutores BT (Tabela 11)</div>';
         html += '<div class="result-line">Tensão: ' + td.tensao + ' | Método: ' + td.metodo_inst + '</div>';
         html += '<div class="result-line">I = <span class="value">' + td.I + ' A</span> | Fator Cor.: ' + td.fator_correcao + ' | I\' = ' + td.I_corrigida + ' A</div>';
-        if (td.secao_mm2) {
-            html += '<div class="result-line">Cabo: <span class="value">' + td.secao_mm2 + ' mm²</span> (' + td.capacidade_cabo_A + ' A)</div>';
-        }
+        if (td.secao_mm2) { html += '<div class="result-line">Cabo: <span class="value">' + td.secao_mm2 + ' mm²</span> (' + td.capacidade_cabo_A + ' A)</div>'; }
         html += '<br><div class="result-title">Barramento BT (Tabela 12)</div>';
         html += '<div class="result-line">Barramento: ' + (td.barramento_mm ? '<span class="value">' + td.barramento_mm + ' mm</span> (' + td.barramento_pol + ')' : 'Nenhum') + '</div>';
         html += '<br><div class="result-title">Disjuntor Termomagnético</div>';
         html += '<div class="result-line">Disjuntor: ' + (td.disjuntor_A ? '<span class="value">' + td.disjuntor_A + ' A</span>' : 'Nenhum') + '</div>';
         html += '</div>';
-    }
-    // --- POSTE ---
-    if (document.getElementById('chk_poste').checked && ultimoResultadoPoste) {
+        return html;
+    },
+    chk_poste: function(html, d) {
+        if (!ultimoResultadoPoste) return html;
         var pd = ultimoResultadoPoste;
         if (!pd.erro) {
-            html += '<hr class="result-divider">';
-            html += '<div class="result-section">';
+            html += '<hr class="result-divider"><div class="result-section">';
             html += '<div class="result-title">Poste de Entrada (Tabela 20)</div>';
             html += '<div class="result-line">Tensão: ' + pd.tensao + 'V | Demanda: ' + pd.dg + ' kVA</div>';
             html += '<div class="result-line">Faixa: ' + pd.faixa_min + ' < D ≤ ' + pd.faixa_max + ' kVA</div>';
             html += '<div class="result-line">Poste: <span class="value">' + pd.tipo_poste + '</span> - ' + pd.capacidade_dan + ' daN</div>';
             html += '</div>';
         }
-    }
-    // --- RAMAL DE LIGAÇÃO ---
-    if (document.getElementById('chk_ramal_lig').checked && ultimoResultadoRamalLig) {
+        return html;
+    },
+    chk_ramal_lig: function(html, d) {
+        if (!ultimoResultadoRamalLig) return html;
         var rl = ultimoResultadoRamalLig;
-        if (rl.cabo_sel) {
-            var rl_L = parseFloat(document.getElementById('ramal_lig_comprimento').value) || 0;
-            var rl_S_match = rl.cabo_sel.tipo_cabo.match(/(\d+)/);
-            var rl_S = rl_S_match ? parseFloat(rl_S_match[1]) : 0;
-            var rl_Vn = rl.tensao_kv * 1000;
-            var rl_queda = '';
-            if (rl_L > 0 && rl_S > 0) {
-                var rl_dV = 1.732 * rl_L * rl.I * 0.92 / (35.5 * rl_S);
-                var rl_dVpct = (rl_dV / rl_Vn) * 100;
-                var rl_dVpm = 1.732 * rl.I * 0.92 / (35.5 * rl_S);
-                rl_queda = '<div class="result-title" style="margin-top:8px;">Queda de Tensão (Alumínio, K=35,5 m/Ω·mm²)</div>'
-                    + '<div class="result-line"><b>1) Corrente:</b> I = Dg × 1000 / (√3 × Vn)</div>'
-                    + '<div class="result-line">I = ' + rl.dg + ' × 1000 / (1,73 × ' + rl_Vn + ') = <span class="value">' + rl.I + ' A</span></div>'
-                    + '<div class="result-line"><b>2) Seção:</b> S = ' + rl_S + ' mm² (Cabo: ' + rl.cabo_sel.tipo_cabo + ')</div>'
-                    + '<div class="result-line"><b>3) Queda trifásica:</b> ΔV = √3 × L × I × cosφ / (K × S)</div>'
-                    + '<div class="result-line">ΔV = 1,73 × ' + rl_L + ' × ' + rl.I + ' × 0,92 / (35,5 × ' + rl_S + ')</div>'
-                    + '<div class="result-line">ΔV = ' + rl_dVpm.toFixed(4) + ' V/m × ' + rl_L + ' m = <span class="value">' + rl_dV.toFixed(2) + ' V</span></div>'
-                    + '<div class="result-line"><b>4) Queda %:</b> u% = ' + rl_dV.toFixed(2) + ' / ' + rl_Vn + ' × 100 = <span class="value">' + rl_dVpct.toFixed(4) + '%</span></div>';
-            }
-            html += '<hr class="result-divider">';
-            html += '<div class="result-section">';
-            html += '<div class="result-title">Ramal Subterrâneo de Ligação (Tabela 15)</div>';
-            html += '<div class="result-line">Tensão: ' + rl.tensao_kv + ' kV | Dg: ' + rl.dg + ' kVA</div>';
-            html += '<div class="result-line">Corrente: I = ' + rl.dg + ' × 1000 / (1,73 × ' + rl_Vn + ') = <span class="value">' + rl.I + ' A</span></div>';
-            html += '<div class="result-line">Cabo: <span class="value">' + rl.cabo_sel.tipo_cabo + '</span> (' + rl.cabo_sel.corrente_A + ' A, ' + rl.cabo_sel.potencia_MVA + ' MVA)</div>';
-            if (rl.cabo_sel.acima_limite) html += '<div class="result-line" style="font-weight:700;color:red;">Demanda acima do maior cabo disponível.</div>';
-            if (rl_queda) html += rl_queda;
-            html += '</div>';
+        if (!rl.cabo_sel) return html;
+        var rl_L = parseFloat(document.getElementById('ramal_lig_comprimento').value) || 0;
+        var rl_S_match = rl.cabo_sel.tipo_cabo.match(/(\d+)/);
+        var rl_S = rl_S_match ? parseFloat(rl_S_match[1]) : 0;
+        var rl_Vn = rl.tensao_kv * 1000;
+        var rl_queda = '';
+        if (rl_L > 0 && rl_S > 0) {
+            var rl_dV = 1.732 * rl_L * rl.I * 0.92 / (35.5 * rl_S);
+            var rl_dVpct = (rl_dV / rl_Vn) * 100;
+            var rl_dVpm = 1.732 * rl.I * 0.92 / (35.5 * rl_S);
+            rl_queda = '<div class="result-title" style="margin-top:8px;">Queda de Tensão (Alumínio, K=35,5 m/Ω·mm²)</div>'
+                + '<div class="result-line"><b>1) Corrente:</b> I = Dg × 1000 / (√3 × Vn)</div>'
+                + '<div class="result-line">I = ' + rl.dg + ' × 1000 / (1,73 × ' + rl_Vn + ') = <span class="value">' + rl.I + ' A</span></div>'
+                + '<div class="result-line"><b>2) Seção:</b> S = ' + rl_S + ' mm² (Cabo: ' + rl.cabo_sel.tipo_cabo + ')</div>'
+                + '<div class="result-line"><b>3) Queda trifásica:</b> ΔV = √3 × L × I × cosφ / (K × S)</div>'
+                + '<div class="result-line">ΔV = 1,73 × ' + rl_L + ' × ' + rl.I + ' × 0,92 / (35,5 × ' + rl_S + ')</div>'
+                + '<div class="result-line">ΔV = ' + rl_dVpm.toFixed(4) + ' V/m × ' + rl_L + ' m = <span class="value">' + rl_dV.toFixed(2) + ' V</span></div>'
+                + '<div class="result-line"><b>4) Queda %:</b> u% = ' + rl_dV.toFixed(2) + ' / ' + rl_Vn + ' × 100 = <span class="value">' + rl_dVpct.toFixed(4) + '%</span></div>';
         }
-    }
-    // --- RAMAL DE ENTRADA ---
-    if (document.getElementById('chk_ramal').checked && ultimoResultadoRamal) {
+        html += '<hr class="result-divider"><div class="result-section">';
+        html += '<div class="result-title">Ramal Subterrâneo de Ligação (Tabela 15)</div>';
+        html += '<div class="result-line">Tensão: ' + rl.tensao_kv + ' kV | Dg: ' + rl.dg + ' kVA</div>';
+        html += '<div class="result-line">Corrente: I = ' + rl.dg + ' × 1000 / (1,73 × ' + rl_Vn + ') = <span class="value">' + rl.I + ' A</span></div>';
+        html += '<div class="result-line">Cabo: <span class="value">' + rl.cabo_sel.tipo_cabo + '</span> (' + rl.cabo_sel.corrente_A + ' A, ' + rl.cabo_sel.potencia_MVA + ' MVA)</div>';
+        if (rl.cabo_sel.acima_limite) html += '<div class="result-line" style="font-weight:700;color:red;">Demanda acima do maior cabo disponível.</div>';
+        if (rl_queda) html += rl_queda;
+        html += '</div>';
+        return html;
+    },
+    chk_ramal: function(html, d) {
+        if (!ultimoResultadoRamal) return html;
         var rd = ultimoResultadoRamal;
-        if (rd.secao_mm2) {
-            var rd_L = parseFloat(document.getElementById('ramal_comprimento').value) || 0;
-            var rd_queda = '';
-            if (rd_L > 0) {
-                var rd_dV = 1.732 * rd_L * rd.corrente * 0.92 / (58 * rd.secao_mm2);
-                var rd_dVpct = (rd_dV / 380) * 100;
-                var rd_dVpm = 1.732 * rd.corrente * 0.92 / (58 * rd.secao_mm2);
-                rd_queda = '<div class="result-title" style="margin-top:8px;">Queda de Tensão (Cobre, K=58 m/Ω·mm², Vn=380V)</div>'
-                    + '<div class="result-line"><b>1) Dados:</b> I = ' + rd.corrente + ' A, L = ' + rd_L + ' m, S = ' + rd.secao_mm2 + ' mm², K = 58, cosφ = 0,92</div>'
-                    + '<div class="result-line"><b>2) Queda trifásica:</b> ΔV = √3 × L × I × cosφ / (K × S)</div>'
-                    + '<div class="result-line">ΔV = 1,73 × ' + rd_L + ' × ' + rd.corrente + ' × 0,92 / (58 × ' + rd.secao_mm2 + ')</div>'
-                    + '<div class="result-line">ΔV = ' + rd_dVpm.toFixed(4) + ' V/m × ' + rd_L + ' m = <span class="value">' + rd_dV.toFixed(2) + ' V</span></div>'
-                    + '<div class="result-line"><b>3) Queda %:</b> u% = ' + rd_dV.toFixed(2) + ' / 380 × 100 = <span class="value">' + rd_dVpct.toFixed(2) + '%</span></div>'
-                    + (rd_dVpct > 5 ? '<div class="result-line" style="color:red;">⚠ Acima de 5% - Aumentar seção do condutor.</div>' : '');
-            }
-            html += '<hr class="result-divider">';
-            html += '<div class="result-section">';
-            html += '<div class="result-title">Ramal de Entrada (NBR 5410)</div>';
-            html += '<div class="result-line">Corrente de Projeto: <span class="value">' + rd.corrente + ' A</span></div>';
-            html += '<div class="result-line">Isolação: ' + (rd.isolacao === 'PVC' ? 'PVC 70°C' : 'EPR/XLPE 90°C') + ' | Material: ' + (rd.material === 'cobre' ? 'Cobre' : 'Alumínio') + ' | Método: ' + rd.metodo + '</div>';
-            var rd_fator_label = 'Fator Cor.';
-            if (rd.fator_correcao && rd.fator_correcao < 1) {
-                if (rd.fator_temp && rd.fator_temp < 1) {
-                    rd_fator_label += ' (Tab.42 × Tab.40)';
-                } else {
-                    rd_fator_label += ' (Tabela 42)';
-                }
-                html += '<div class="result-line">' + rd_fator_label + ': ' + rd.fator_correcao + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
-            } else if (rd.fator_temp && rd.fator_temp < 1) {
-                html += '<div class="result-line">Fator Temp. (Tabela 40): ' + rd.fator_temp + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
-            }
-            html += '<div class="result-line">Seção (Fase): <span class="value">' + rd.secao_mm2 + ' mm²</span> (' + rd.capacidade_A + ' A)</div>';
-            if (rd.neutro_mm2) html += '<div class="result-line">Neutro (Tab. 48): ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²</div>';
-            if (rd.protecao_mm2) html += '<div class="result-line">Proteção (Tab. 58): ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²</div>';
-            if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
-                var rd_paralelo_idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || 0);
-                var rd_paralelo_sel = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
-                var rd_op_det = '';
-                if (rd_paralelo_sel.neutro_mm2) rd_op_det += ' | Neutro: ' + (rd_paralelo_sel.neutro_display || rd_paralelo_sel.neutro_mm2) + ' mm²';
-                if (rd_paralelo_sel.protecao_mm2) rd_op_det += ' | Proteção: ' + (rd_paralelo_sel.protecao_display || rd_paralelo_sel.protecao_mm2) + ' mm²';
-                html += '<div class="result-line" style="font-weight:700;">▸ <span class="value">' + rd_paralelo_sel.n_condutores + '×' + rd_paralelo_sel.secao_mm2 + ' mm² → ' + rd_paralelo_sel.capacidade_por_condutor + ' A/cabo = ' + rd_paralelo_sel.capacidade_total + ' A total' + rd_op_det + '</span></div>';
-            }
-            // Eletroduto no relatório
-            if (typeof window.ultimoEletrodutoRamal !== 'undefined' && window.ultimoEletrodutoRamal) {
-                var rd_eletroTipo = document.getElementById('ramal_tipo_eletroduto')?.value || '';
-                if (rd_eletroTipo) {
-                    html += '<div class="result-title" style="margin-top:8px;">Eletroduto Dimensionado</div>';
-                    html += '<div class="result-line">Tipo Condutor: ' + rd_eletroTipo + '</div>';
-                    html += '<div class="result-line">Eletroduto: <span class="value">' + window.ultimoEletrodutoRamal.eletroduto + '</span></div>';
-                    if (window.ultimoEletrodutoRamal.passos) {
-                        html += '<div style="margin-top:4px;padding:6px 10px;background:var(--bg-hover,#21262d);border-radius:4px;font-size:0.85em;line-height:1.7;color:var(--text-primary,#e6edf3);">';
-                        window.ultimoEletrodutoRamal.passos.forEach(function(p) { html += '<div>' + p + '</div>'; });
-                        html += '</div>';
-                    }
-                }
-            }
-            if (rd_queda) html += rd_queda;
-            if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
-                var rd_par_final = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
-                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + (rd_par_final.neutro_display || rd_par_final.neutro_mm2) + ' mm²)' : '') + (rd_par_final.protecao_mm2 ? ' (Proteção: ' + (rd_par_final.protecao_display || rd_par_final.protecao_mm2) + ' mm²)' : '') + '</div></div>';
-            } else {
-                html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.neutro_mm2 ? ' (Neutro: ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²)' : '') + (rd.protecao_mm2 ? ' (Proteção: ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²)' : '') + '</div></div>';
-            }
-            html += '</div>';
+        if (!rd.secao_mm2) return html;
+        var rd_L = parseFloat(document.getElementById('ramal_comprimento').value) || 0;
+        var rd_queda = '';
+        if (rd_L > 0) {
+            var rd_dV = 1.732 * rd_L * rd.corrente * 0.92 / (58 * rd.secao_mm2);
+            var rd_dVpct = (rd_dV / 380) * 100;
+            var rd_dVpm = 1.732 * rd.corrente * 0.92 / (58 * rd.secao_mm2);
+            rd_queda = '<div class="result-title" style="margin-top:8px;">Queda de Tensão (Cobre, K=58 m/Ω·mm², Vn=380V)</div>'
+                + '<div class="result-line"><b>1) Dados:</b> I = ' + rd.corrente + ' A, L = ' + rd_L + ' m, S = ' + rd.secao_mm2 + ' mm², K = 58, cosφ = 0,92</div>'
+                + '<div class="result-line"><b>2) Queda trifásica:</b> ΔV = √3 × L × I × cosφ / (K × S)</div>'
+                + '<div class="result-line">ΔV = 1,73 × ' + rd_L + ' × ' + rd.corrente + ' × 0,92 / (58 × ' + rd.secao_mm2 + ')</div>'
+                + '<div class="result-line">ΔV = ' + rd_dVpm.toFixed(4) + ' V/m × ' + rd_L + ' m = <span class="value">' + rd_dV.toFixed(2) + ' V</span></div>'
+                + '<div class="result-line"><b>3) Queda %:</b> u% = ' + rd_dV.toFixed(2) + ' / 380 × 100 = <span class="value">' + rd_dVpct.toFixed(2) + '%</span></div>'
+                + (rd_dVpct > 5 ? '<div class="result-line" style="color:red;">⚠ Acima de 5% - Aumentar seção do condutor.</div>' : '');
         }
-    }
-    // --- QM's ---
-    if (document.getElementById('chk_qm').checked) {
+        html += '<hr class="result-divider"><div class="result-section">';
+        html += '<div class="result-title">Ramal de Entrada (NBR 5410)</div>';
+        html += '<div class="result-line">Corrente de Projeto: <span class="value">' + rd.corrente + ' A</span></div>';
+        html += '<div class="result-line">Isolação: ' + (rd.isolacao === 'PVC' ? 'PVC 70°C' : 'EPR/XLPE 90°C') + ' | Material: ' + (rd.material === 'cobre' ? 'Cobre' : 'Alumínio') + ' | Método: ' + rd.metodo + '</div>';
+        var rd_fator_label = 'Fator Cor.';
+        if (rd.fator_correcao && rd.fator_correcao < 1) {
+            if (rd.fator_temp && rd.fator_temp < 1) rd_fator_label += ' (Tab.42 × Tab.40)';
+            else rd_fator_label += ' (Tabela 42)';
+            html += '<div class="result-line">' + rd_fator_label + ': ' + rd.fator_correcao + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
+        } else if (rd.fator_temp && rd.fator_temp < 1) {
+            html += '<div class="result-line">Fator Temp. (Tabela 40): ' + rd.fator_temp + ' | I\' = ' + rd.corrente_corrigida + ' A</div>';
+        }
+        html += '<div class="result-line">Seção (Fase): <span class="value">' + rd.secao_mm2 + ' mm²</span> (' + rd.capacidade_A + ' A)</div>';
+        if (rd.neutro_mm2) html += '<div class="result-line">Neutro (Tab. 48): ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²</div>';
+        if (rd.protecao_mm2) html += '<div class="result-line">Proteção (Tab. 58): ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²</div>';
+        if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
+            var rd_paralelo_idx = parseInt(document.getElementById('ramal_paralelo_idx')?.value || 0);
+            var rd_paralelo_sel = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
+            var rd_op_det = '';
+            if (rd_paralelo_sel.neutro_mm2) rd_op_det += ' | Neutro: ' + (rd_paralelo_sel.neutro_display || rd_paralelo_sel.neutro_mm2) + ' mm²';
+            if (rd_paralelo_sel.protecao_mm2) rd_op_det += ' | Proteção: ' + (rd_paralelo_sel.protecao_display || rd_paralelo_sel.protecao_mm2) + ' mm²';
+            html += '<div class="result-line" style="font-weight:700;">▸ <span class="value">' + rd_paralelo_sel.n_condutores + '×' + rd_paralelo_sel.secao_mm2 + ' mm² → ' + rd_paralelo_sel.capacidade_por_condutor + ' A/cabo = ' + rd_paralelo_sel.capacidade_total + ' A total' + rd_op_det + '</span></div>';
+        }
+        if (rd_queda) html += rd_queda;
+        if (rd.opcoes_paralelo && rd.opcoes_paralelo.length > 0) {
+            var rd_par_final = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
+            html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total' + (rd_par_final.neutro_mm2 ? ' (Neutro: ' + (rd_par_final.neutro_display || rd_par_final.neutro_mm2) + ' mm²)' : '') + (rd_par_final.protecao_mm2 ? ' (Proteção: ' + (rd_par_final.protecao_display || rd_par_final.protecao_mm2) + ' mm²)' : '') + '</div></div>';
+        } else {
+            html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.neutro_mm2 ? ' (Neutro: ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²)' : '') + (rd.protecao_mm2 ? ' (Proteção: ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²)' : '') + '</div></div>';
+        }
+        html += '</div>';
+        return html;
+    },
+    chk_qm: function(html, d) {
         var qmContainer = document.getElementById('qm-content');
         if (qmContainer && qmContainer.innerHTML.trim()) {
-            html += '<hr class="result-divider">';
-            html += '<div class="result-section">';
+            html += '<hr class="result-divider"><div class="result-section">';
             html += '<div class="result-title">Quadros de Medidores (QMs)</div>';
             html += qmContainer.innerHTML;
             html += '</div>';
+        }
+        return html;
+    },
+    chk_dg: function(html, d) {
+        html += '<hr class="result-divider"><div class="result-section">';
+        html += '<div class="result-title" style="color:var(--success);">Demanda Geral (Dg)</div>';
+        html += '<div class="result-line">f_sim = ' + d.f_sim + '</div>';
+        html += '<div class="result-line">Dapt = (D1a + D2_apt) × f_sim = (' + d.D1a.toFixed(2) + ' + ' + d.D2_apt.toFixed(2) + ') × ' + d.f_sim + ' = ' + d.Dapt.toFixed(2) + ' kVA</div>';
+        html += '<div class="result-line">Dadm = D1b + D2_adm + D3 + Outras adm = ' + d.D1b.toFixed(2) + ' + ' + d.D2_adm.toFixed(2) + ' + ' + d.D3.toFixed(2) + ' + ' + d.total_outras_adm.toFixed(2) + ' = ' + d.Dadm.toFixed(2) + ' kVA</div>';
+        html += '<div class="result-line">Dg = Dapt + Dadm + Outras apt = ' + d.Dapt.toFixed(2) + ' + ' + d.Dadm.toFixed(2) + ' + ' + d.total_outras_apt.toFixed(2) + '</div>';
+        html += '<div class="result-line" style="font-size:18px;font-weight:700;"><span class="highlight">Dg = ' + d.Dg.toFixed(2) + ' kVA</span></div>';
+        html += '<div class="result-final"><div class="label">Demanda Geral (Dg)</div><div class="value">' + d.Dg.toFixed(2) + ' kVA</div></div>';
+        html += '</div>';
+        return html;
+    },
+    chk_dps: function(html, d) {
+        var dpsContainer = document.getElementById('dps-content');
+        if (dpsContainer && dpsContainer.innerHTML.trim()) {
+            html += '<hr class="result-divider"><div class="result-section">';
+            html += '<div class="result-title">DPS — Dispositivo de Proteção contra Surtos (GED-119 itens 11.2.4 e 13.4)</div>';
+            html += dpsContainer.innerHTML;
+            html += '</div>';
+        }
+        return html;
+    },
+    chk_aterramento: function(html, d) {
+        var aterrContainer = document.getElementById('aterr-materiais');
+        if (aterrContainer && aterrContainer.innerHTML.trim() && aterrContainer.innerHTML.indexOf('Preencha') === -1) {
+            html += '<hr class="result-divider"><div class="result-section">';
+            html += '<div class="result-title">Sistema de Aterramento (GED-119 item 12)</div>';
+            html += '<div class="result-line"><span class="label">Tipo de Solo:</span> ' + (document.getElementById('aterr_solo').options[document.getElementById('aterr_solo').selectedIndex].text) + '</div>';
+            html += '<div class="result-line"><span class="label">Haste:</span> ' + (document.getElementById('aterr_haste').options[document.getElementById('aterr_haste').selectedIndex]?.text || '-') + '</div>';
+            html += '<div class="result-line"><span class="label">Conexão:</span> ' + (document.getElementById('aterr_conexao').options[document.getElementById('aterr_conexao').selectedIndex]?.text || '-') + '</div>';
+            html += '<div class="result-line"><span class="label">Nº de Hastes:</span> ' + (document.getElementById('aterr_num_hastes').value || '1') + '</div>';
+            html += aterrContainer.innerHTML;
+            html += '</div>';
+        }
+        return html;
+    },
+    chk_duto: function(html, d) {
+        var dutoContainer = document.getElementById('duto-content');
+        if (dutoContainer && dutoContainer.innerHTML.trim()) {
+            html += '<hr class="result-divider"><div class="result-section">';
+            html += '<div class="result-title">Duto — Eletroduto (Ramal de Entrada)</div>';
+            html += dutoContainer.innerHTML;
+            html += '</div>';
+        }
+        return html;
+    }
+};
+
+function montarRelatorio() {
+    const preview = document.getElementById('relatorio-preview');
+    if (!ultimoResultado) {
+        preview.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.</div>';
+        return;
+    }
+    const d = ultimoResultado;
+    var html = '<div class="print-report" id="print-report-content">';
+    html += '<h2 style="text-align:center;margin-bottom:8px;">Memorial de Cálculo - GED-119</h2>';
+    var items = document.getElementById('print-sections').children;
+    for (var i = 0; i < items.length; i++) {
+        var sectionId = items[i].getAttribute('data-section');
+        var chk = document.getElementById(sectionId);
+        if (chk && chk.checked && sectionRenderers[sectionId]) {
+            html = sectionRenderers[sectionId](html, d);
         }
     }
     html += '</div>';
@@ -3014,6 +3471,48 @@ function gerarPDF() {
     }, 500);
 }
 
+// --- Drag and drop for print sections ---
+(function() {
+    var container = document.getElementById('print-sections');
+    if (!container) return;
+    var dragEl = null;
+    container.addEventListener('dragstart', function(e) {
+        dragEl = e.target.closest('.print-checkbox');
+        if (!dragEl) return;
+        dragEl.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+    });
+    container.addEventListener('dragend', function(e) {
+        var el = e.target.closest('.print-checkbox');
+        if (el) el.classList.remove('dragging');
+        document.querySelectorAll('.print-checkbox.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+        dragEl = null;
+    });
+    container.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        var target = e.target.closest('.print-checkbox');
+        if (!target || target === dragEl) return;
+        target.classList.add('drag-over');
+    });
+    container.addEventListener('dragleave', function(e) {
+        var target = e.target.closest('.print-checkbox');
+        if (target) target.classList.remove('drag-over');
+    });
+    container.addEventListener('drop', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.print-checkbox.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+        var target = e.target.closest('.print-checkbox');
+        if (!target || !dragEl || target === dragEl) return;
+        if (target.compareDocumentPosition(dragEl) & Node.DOCUMENT_POSITION_FOLLOWING) {
+            target.parentNode.insertBefore(dragEl, target.nextSibling);
+        } else {
+            target.parentNode.insertBefore(dragEl, target);
+        }
+        montarRelatorio();
+    });
+})();
+
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -3036,6 +3535,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         }
         if (this.dataset.tab === 'tab-qm') {
             autoPreencherQM();
+        }
+        if (this.dataset.tab === 'tab-dps') {
+            autoPreencherDPS();
+        }
+        if (this.dataset.tab === 'tab-duto') {
+            autoPreencherDuto();
+        }
+        if (this.dataset.tab === 'tab-aterramento') {
+            autoPreencherAterramento();
         }
         if (this.dataset.tab === 'tab-impressao') {
             montarRelatorio();
@@ -3062,24 +3570,48 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     font-size: 14px;
     color: var(--text);
 }
+#print-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
 .print-checkbox {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     padding: 6px 8px;
     border-radius: 4px;
-    cursor: pointer;
+    cursor: grab;
     font-size: 13px;
     color: var(--text);
     transition: background 0.15s;
+    user-select: none;
 }
 .print-checkbox:hover {
     background: var(--bg-hover);
+}
+.print-checkbox.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+}
+.print-checkbox.drag-over {
+    border-top: 2px solid var(--accent);
 }
 .print-checkbox input[type="checkbox"] {
     width: 16px;
     height: 16px;
     cursor: pointer;
+    pointer-events: auto;
+}
+.drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.print-checkbox.dragging .drag-handle {
+    cursor: grabbing;
 }
 .print-report-preview {
     border: 1px solid var(--border);
