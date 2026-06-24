@@ -7,3 +7,9 @@ services:
     rootDir: Web_app_render
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120
+
+databases:
+  - name: demanda-cpfl-db
+    databaseName: projetos
+    plan: free
+    region: ohio
