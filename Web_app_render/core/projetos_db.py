@@ -24,10 +24,13 @@ def init_db():
                 chuveiros_adm DOUBLE PRECISION DEFAULT 0, torneiras_adm DOUBLE PRECISION DEFAULT 0,
                 secar_kw DOUBLE PRECISION DEFAULT 0, secar_apto DOUBLE PRECISION DEFAULT 0,
                 lavar_kw DOUBLE PRECISION DEFAULT 0, lavar_apto DOUBLE PRECISION DEFAULT 0,
-                tipo TEXT DEFAULT 'Residencial', campos_extras TEXT DEFAULT '{}',
-                resultados TEXT DEFAULT '{}', data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                tipo TEXT DEFAULT 'Residencial',                 campos_extras TEXT DEFAULT '{}',
+                resultados TEXT DEFAULT '{}', data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                usuario_id INTEGER
             )
         """)
+        try: cursor.execute("ALTER TABLE projetos ADD COLUMN usuario_id INTEGER")
+        except: pass
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS motores_projeto (
                 id SERIAL PRIMARY KEY, projeto_id INTEGER REFERENCES projetos(id) ON DELETE CASCADE,
@@ -50,6 +53,8 @@ def init_db():
         """)
     else:
         cursor.execute("""CREATE TABLE IF NOT EXISTS projetos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, aptos INTEGER, area_apto REAL, area_adm REAL, iluminacao REAL, tomadas REAL, chuveiro_kw REAL, torneira_kw REAL, chuveiros_apto INTEGER, torneiras_apto INTEGER, data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP)""")
+        try: cursor.execute("ALTER TABLE projetos ADD COLUMN usuario_id INTEGER")
+        except: pass
         cursor.execute("""CREATE TABLE IF NOT EXISTS motores_projeto (id INTEGER PRIMARY KEY AUTOINCREMENT, projeto_id INTEGER, descricao TEXT DEFAULT '', cv REAL, quantidade INTEGER, FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS outras_cargas_projeto (id INTEGER PRIMARY KEY AUTOINCREMENT, projeto_id INTEGER, tipo TEXT, descricao TEXT, potencia REAL, quantidade INTEGER, FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS ac_projeto (id INTEGER PRIMARY KEY AUTOINCREMENT, projeto_id INTEGER, tipo TEXT, descricao TEXT, potencia_w REAL DEFAULT 0, quantidade INTEGER DEFAULT 1, btu INTEGER DEFAULT 0, tipo_equipamento TEXT DEFAULT '', FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE)""")
@@ -69,9 +74,12 @@ def init_db():
         except: pass
     conn.commit(); conn.close()
 
-def listar_projetos():
+def listar_projetos(usuario_id=None):
     conn = get_conn(); cursor = conn.cursor()
-    cursor.execute(f"SELECT id, nome, aptos, data_criacao FROM projetos ORDER BY data_criacao DESC")
+    if usuario_id:
+        cursor.execute(f"SELECT id, nome, aptos, data_criacao FROM projetos WHERE usuario_id = {P} ORDER BY data_criacao DESC", (usuario_id,))
+    else:
+        cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos ORDER BY data_criacao DESC")
     if USING_PG:
         rows = [{'id': r[0], 'nome': r[1], 'aptos': r[2], 'data_criacao': r[3].isoformat() if hasattr(r[3], 'isoformat') else r[3]} for r in cursor.fetchall()]
     else:
@@ -117,7 +125,7 @@ def _i(v, default=0):
     try: return int(v)
     except: return default
 
-def salvar_projeto(projeto_id, dados):
+def salvar_projeto(projeto_id, dados, usuario_id=None):
     conn = get_conn(); cursor = conn.cursor()
     cols = ('nome', 'aptos', 'area_apto', 'area_adm', 'iluminacao', 'tomadas', 'chuveiro_kw', 'torneira_kw', 'chuveiros_apto', 'torneiras_apto', 'chuveiros_adm', 'torneiras_adm', 'secar_kw', 'secar_apto', 'lavar_kw', 'lavar_apto', 'tipo')
     extra_keys = ('ramal_corrente','ramal_isolacao','ramal_material','ramal_tensao','ramal_metodo','ramal_condutores','ramal_subtipo','ramal_forma_agrup','ramal_num_circuitos','ramal_tipo_temp','ramal_temperatura','ramal_comprimento','ramal_paralelo_idx','ramal_par_chk_neutro_0','ramal_par_chk_neutro_1','ramal_par_chk_neutro_2','ramal_par_chk_protecao_0','ramal_par_chk_protecao_1','ramal_par_chk_protecao_2','ramal_par_chk_tabela48_0','ramal_par_chk_tabela48_1','ramal_par_chk_tabela48_2','ramal_tipo_eletroduto','ramal_lig_dg','ramal_lig_tensao','ramal_lig_comprimento','qm_aptos','qm_adm','qm_material','qm_adm_tc','qm_dg','dps_spda','dps_ramal_aereo','dps_material','dps_qtd_qms','aterr_solo','aterr_multiblocos','aterr_qtd_qms','aterr_num_hastes','aterr_haste','aterr_comprimento','aterr_conexao')
@@ -129,7 +137,7 @@ def salvar_projeto(projeto_id, dados):
         cursor.execute(f"UPDATE projetos SET {set_clause}, campos_extras={P}, resultados={P} WHERE id={P}", vals + (json.dumps(campos_extras), json.dumps(resultados), projeto_id))
     else:
         placeholders = ','.join(P for _ in cols)
-        cursor.execute(f"INSERT INTO projetos ({','.join(cols)}, campos_extras, resultados) VALUES ({placeholders},{P},{P})", vals + (json.dumps(campos_extras), json.dumps(resultados)))
+        cursor.execute(f"INSERT INTO projetos ({','.join(cols)}, campos_extras, resultados, usuario_id) VALUES ({placeholders},{P},{P},{P})", vals + (json.dumps(campos_extras), json.dumps(resultados), usuario_id))
         if USING_PG:
             cursor.execute("SELECT LASTVAL()")
             projeto_id = cursor.fetchone()[0]

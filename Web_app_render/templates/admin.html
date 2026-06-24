@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-panel">
+    <h3>🔧 Gestão de Usuários</h3>
+    <div id="admin-content">
+        <p style="color:var(--text-secondary);">Carregando...</p>
+    </div>
+</div>
+
+<script>
+function formatarSegundos(seg) {
+    if (!seg || seg === 0) return '0 min';
+    const h = Math.floor(seg / 3600);
+    const m = Math.floor((seg % 3600) / 60);
+    if (h > 0) return h + 'h ' + m + 'min';
+    return m + ' min';
+}
+
+function formatarDataISO(data) {
+    if (!data) return '-';
+    const d = new Date(data);
+    return d.toLocaleString('pt-BR');
+}
+
+function carregarAdmin() {
+    const container = document.getElementById('admin-content');
+    fetch('/api/auth/me')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success || !resp.data.is_admin) {
+            container.innerHTML = '<p style="color:var(--danger);">Acesso negado. Apenas administradores podem acessar esta página.</p>';
+            return;
+        }
+        fetch('/api/admin/usuarios')
+        .then(r => r.json())
+        .then(resp2 => {
+            if (!resp2.success) {
+                container.innerHTML = '<p style="color:var(--danger);">Erro ao carregar dados: ' + resp2.error + '</p>';
+                return;
+            }
+            const usuarios = resp2.data;
+            let html = '<table class="admin-table"><thead><tr>' +
+                '<th>ID</th><th>Nome</th><th>Usuário</th><th>Cidade</th><th>Concessionária</th>' +
+                '<th>Projetos GED-119</th><th>Projetos GED-13</th><th>Total</th>' +
+                '<th>Último Login</th><th>Tempo de Uso</th><th>Cadastro</th><th>Tipo</th></tr></thead><tbody>';
+            usuarios.forEach(u => {
+                const total = (u.qtd_ged119 || 0) + (u.qtd_ged13 || 0);
+                html += '<tr>' +
+                    '<td>' + u.id + '</td>' +
+                    '<td><strong>' + (u.nome_completo || u.username) + '</strong></td>' +
+                    '<td>' + u.username + '</td>' +
+                    '<td>' + (u.cidade || '-') + '</td>' +
+                    '<td>' + (u.concessionaria || '-') + '</td>' +
+                    '<td>' + (u.qtd_ged119 || 0) + '</td>' +
+                    '<td>' + (u.qtd_ged13 || 0) + '</td>' +
+                    '<td><strong>' + total + '</strong></td>' +
+                    '<td>' + formatarDataISO(u.ultimo_login) + '</td>' +
+                    '<td>' + formatarSegundos(u.tempo_total_seg) + '</td>' +
+                    '<td>' + formatarDataISO(u.created_at) + '</td>' +
+                    '<td>' + (u.is_admin ? '<span class="badge-admin">Admin</span>' : '<span class="badge-user">Usuário</span>') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+            if (usuarios.length === 0) html = '<p style="color:var(--text-secondary);">Nenhum usuário cadastrado.</p>';
+            container.innerHTML = html;
+        })
+        .catch(() => container.innerHTML = '<p style="color:var(--danger);">Erro ao carregar dados.</p>');
+    })
+    .catch(() => container.innerHTML = '<p style="color:var(--danger);">Faça login como administrador para acessar.</p>');
+}
+
+document.addEventListener('DOMContentLoaded', carregarAdmin);
+</script>
+{% endblock %}
