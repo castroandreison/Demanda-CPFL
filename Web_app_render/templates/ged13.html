@@ -1,0 +1,1302 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="main-layout">
+
+<div class="tabs" id="main-tabs">
+    <button class="tab-btn active" data-tab="tab-projetos">Gerenciamento</button>
+    <button class="tab-btn" data-tab="tab-0">Geral</button>
+    <button class="tab-btn" data-tab="tab-1">Ilumina&ccedil;&atilde;o e Tomadas</button>
+    <button class="tab-btn" data-tab="tab-2">Chuveiros e Aquecimento</button>
+    <button class="tab-btn" data-tab="tab-3">Eletrodom&eacute;sticos</button>
+    <button class="tab-btn" data-tab="tab-4">Ar Condicionado</button>
+    <button class="tab-btn" data-tab="tab-5">Motores</button>
+    <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
+    <button class="tab-btn" data-tab="tab-impressao" style="background:var(--warning);color:#000;font-weight:700;">🖨️ Impressão</button>
+</div>
+
+<div id="tab-projetos" class="tab-content active">
+    <div class="card">
+        <div class="card-header">Gerenciamento de Projetos</div>
+        <div class="form-grid" style="grid-template-columns:2fr 1fr;">
+            <div class="form-group">
+                <label>Nome do Projeto</label>
+                <input type="text" id="projeto_nome" placeholder="Digite o nome do projeto" style="width:100%;">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="salvarProjetoG13()">&#128190; Salvar</button>
+                    <button class="btn btn-primary btn-sm" onclick="novoProjetoG13()">&#128196; Novo</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirProjetoG13()">&#128465; Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Projetos Salvos
+            <span class="badge" id="projeto-count">0</span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome do Projeto</th>
+                        <th>Unidade</th>
+                        <th>&Aacute;rea (m&sup2;)</th>
+                        <th>Data Cria&ccedil;&atilde;o</th>
+                    </tr>
+                </thead>
+                <tbody id="projeto-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="projeto-empty">Nenhum projeto salvo</div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="calcTabG13('tab-0')">
+            Novo Projeto &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-0" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dados Gerais</div>
+        <div class="form-grid col-2">
+            <div class="form-group">
+                <label>Unidade / Identifica&ccedil;&atilde;o</label>
+                <input type="text" id="in-unidade" placeholder="Ex: Casa, Apartamento, Loja" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <label>&Aacute;rea Constru&iacute;da (m&sup2;)</label>
+                <input type="number" id="in-m2" min="0" step="1" placeholder="Ex: 120" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Instala&ccedil;&atilde;o</label>
+                <select id="in-tipo" style="width:100%;">
+                    <option value="Residencial">Residencial</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Industrial">Industrial</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tens&atilde;o</label>
+                <select id="in-tensao" style="width:100%;">
+                    <option value="127/220V">127/220V (Trif&aacute;sico)</option>
+                    <option value="220/380V">220/380V (Trif&aacute;sico)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-1" class="tab-content">
+    <div class="card">
+        <div class="card-header">Ilumina&ccedil;&atilde;o e Tomadas</div>
+        <div id="sugestao-ilum" class="info-box" style="margin-bottom:12px;display:none;">
+            <span class="icon">&#128161;</span>
+            <span id="sugestao-texto"></span>
+        </div>
+        <div class="form-grid col-2" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Ilumina&ccedil;&atilde;o (VA)</label>
+                <input type="number" id="ilum-carga" min="0" step="1" placeholder="Sugest&atilde;o baseada na &aacute;rea" style="width:100%;">
+                <small style="color:var(--text-muted);">M&iacute;nimo sugerido: <span id="ilum-sugestao">0</span> VA</small>
+            </div>
+            <div class="form-group">
+                <label>Tomadas (VA)</label>
+                <input type="number" id="tom-carga" min="0" step="1" placeholder="Sugest&atilde;o baseada na &aacute;rea" style="width:100%;">
+                <small style="color:var(--text-muted);">M&iacute;nimo sugerido: <span id="tom-sugestao">0</span> VA</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-2" class="tab-content">
+    <div class="card">
+        <div class="card-header">Chuveiros e Aquecimento <span class="badge" id="count-2">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-2" placeholder="Ex: Chuveiro" list="suggest-2">
+                <datalist id="suggest-2">
+                    <option value="Chuveiro">
+                    <option value="Torneira Elétrica">
+                    <option value="Ferro de Passar">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-2" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-2" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-2" onclick="addCarga(2)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(2)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(2)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>Qtd</th><th>FD (Tab.4)</th></tr></thead>
+                <tbody id="tbody-2"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-2">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-3" class="tab-content">
+    <div class="card">
+        <div class="card-header">Eletrodom&eacute;sticos <span class="badge" id="count-3">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-3" placeholder="Ex: Geladeira" list="suggest-3">
+                <datalist id="suggest-3">
+                    <option value="Geladeira">
+                    <option value="Microondas">
+                    <option value="Máquina Lavar">
+                    <option value="TV">
+                    <option value="Freezer">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-3" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-3" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-3" onclick="addCarga(3)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(3)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(3)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>Qtd</th><th>FD (Tab.6)</th></tr></thead>
+                <tbody id="tbody-3"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-3">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-4" class="tab-content">
+    <div class="card">
+        <div class="card-header">Ar Condicionado <span class="badge" id="count-4">0</span></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 80px 1fr;margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-4" placeholder="Ex: Ar 14000 BTU" list="suggest-4">
+                <datalist id="suggest-4">
+                    <option value="Ar Condicionado">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-4" min="0" step="1" placeholder="Ex: 1900">
+            </div>
+            <div class="form-group">
+                <label>BTU</label>
+                <select id="btu-4" style="width:100%;">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Qtd</label>
+                <input type="number" id="qtd-4" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-4" onclick="addCarga(4)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(4)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(4)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>BTU</th><th>Qtd</th><th>FD (Tab.9)</th></tr></thead>
+                <tbody id="tbody-4"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-4">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-5" class="tab-content">
+    <div class="card">
+        <div class="card-header">Motores <span class="badge" id="count-5">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-5" placeholder="Ex: Motor 1 CV" list="suggest-5">
+                <datalist id="suggest-5">
+                    <option value="Motor">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-5" min="1" step="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (CV)</label>
+                <input type="number" id="cv-5" min="0" step="0.5" placeholder="Ex: 1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-5" onclick="addCarga(5)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(5)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(5)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Qtd</th><th>CV</th><th>FD</th></tr></thead>
+                <tbody id="tbody-5"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-5">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-resultado" class="tab-content">
+    <div id="loading-container" style="display:none;text-align:center;padding:40px;">
+        <div class="loading">
+            <div class="spinner"></div>
+            Calculando...
+        </div>
+    </div>
+
+    <div id="result-container" style="display:none;">
+        <div class="card">
+            <div class="card-header">
+                Memorial de C&aacute;lculo - GED-13
+                <button class="btn btn-primary btn-sm" onclick="calcTabG13('tab-impressao')" style="margin-left:auto;">&#128196; Gerar Relatório</button>
+            </div>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+</div>
+
+<div id="tab-impressao" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <span>🖨️ Relatório de Impressão</span>
+            <button class="btn btn-primary btn-sm" onclick="gerarPDFG13()" style="margin-left:auto;">📄 Gerar PDF</button>
+        </div>
+        <div class="print-report-layout">
+            <div class="print-report-sidebar">
+                <h4 style="margin:0 0 12px 0;font-size:14px;">Seções do Relatório</h4>
+                <label class="print-checkbox"><input type="checkbox" id="chk_dados_gerais" checked onchange="montarRelatorioG13()"> Dados Gerais</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_carga_instalada" checked onchange="montarRelatorioG13()"> Carga Instalada</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_iluminacao_a" checked onchange="montarRelatorioG13()"> Iluminação e Tomadas (a)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_chuveiros_b" checked onchange="montarRelatorioG13()"> Chuveiros e Aquecimento (b)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_eletro_d" checked onchange="montarRelatorioG13()"> Eletrodomésticos (d)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_ar_f" checked onchange="montarRelatorioG13()"> Ar Condicionado (f)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_motores_g" checked onchange="montarRelatorioG13()"> Motores (g)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_solda_h" checked onchange="montarRelatorioG13()"> Equipamentos Especiais (h)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_demanda_total" checked onchange="montarRelatorioG13()"> Demanda Total (D)</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_padrao" checked onchange="montarRelatorioG13()"> Padrão de Entrada</label>
+                <hr style="margin:12px 0;border-color:var(--border);">
+                <div style="font-size:11px;color:var(--text-muted);">Calcule o resultado primeiro na aba Resultado antes de gerar o relatório.</div>
+            </div>
+            <div class="print-report-preview" id="relatorio-preview">
+                <div style="text-align:center;padding:40px;color:var(--text-muted);">
+                    Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+let currentProjetoIdG13 = null;
+let ultimoResultadoG13 = null;
+const cargas = { 2: [], 3: [], 4: [], 5: [] };
+const editIndexG13 = { 2: null, 3: null, 4: null, 5: null };
+
+const nomesPorAba = {
+    2: ['nome-2', 'pot-2', 'qtd-2', '', 'tbody-2', 'empty-2', 'count-2'],
+    3: ['nome-3', 'pot-3', 'qtd-3', '', 'tbody-3', 'empty-3', 'count-3'],
+    4: ['nome-4', 'pot-4', 'qtd-4', 'btu-4', 'tbody-4', 'empty-4', 'count-4'],
+    5: ['nome-5', 'pot-5', 'qtd-5', 'cv-5', 'tbody-5', 'empty-5', 'count-5'],
+};
+
+let timeoutSugestao = null;
+
+function atualizarSugestoes() {
+    clearTimeout(timeoutSugestao);
+    timeoutSugestao = setTimeout(() => {
+        const m2 = parseFloat(document.getElementById('in-m2').value) || 0;
+        const tipo = document.getElementById('in-tipo').value;
+        const divSugestao = document.getElementById('sugestao-ilum');
+        const texto = document.getElementById('sugestao-texto');
+
+        if (m2 > 0) {
+            fetch('/api/ged13/sugestao?area=' + m2 + '&tipo=' + encodeURIComponent(tipo))
+            .then(r => r.json())
+            .then(resp => {
+                if (!resp.success) throw new Error(resp.error);
+                const s = resp.data;
+                document.getElementById('ilum-sugestao').textContent = s.ilum_sugestao;
+                document.getElementById('tom-sugestao').textContent = s.tom_sugestao;
+                texto.innerHTML = 'Com base na &aacute;rea de <strong>' + m2 + ' m&sup2;</strong> (Tabela 1 + Tabela 2), a sugest&atilde;o m&iacute;nima &eacute;: <strong>' + s.ilum_sugestao + ' VA</strong> para ilumina&ccedil;&atilde;o e <strong>' + s.tom_sugestao + ' VA</strong> para tomadas.';
+                divSugestao.style.display = 'block';
+            })
+            .catch(() => {
+                divSugestao.style.display = 'none';
+            });
+        } else {
+            divSugestao.style.display = 'none';
+        }
+    }, 300);
+}
+
+document.getElementById('in-m2').addEventListener('input', function() { atualizarSugestoes(); autoSalvarG13(); });
+document.getElementById('in-tipo').addEventListener('change', function() { atualizarSugestoes(); autoSalvarG13(); });
+document.getElementById('in-tensao').addEventListener('change', autoSalvarG13);
+document.getElementById('in-unidade').addEventListener('input', autoSalvarG13);
+document.getElementById('ilum-carga').addEventListener('input', autoSalvarG13);
+document.getElementById('tom-carga').addEventListener('input', autoSalvarG13);
+document.getElementById('projeto_nome').addEventListener('input', autoSalvarG13);
+
+function fdTabela4(qtd) {
+    return qtd === 1 ? 1.0 : qtd === 2 ? 0.72 : qtd === 3 ? 0.62 : 0.62;
+}
+
+function fdTabela6(qtd) {
+    if (qtd === 1) return 1.0;
+    if (qtd <= 4) return 0.7;
+    if (qtd <= 6) return 0.6;
+    return 0.5;
+}
+
+function renderAba(aba) {
+    if (!nomesPorAba[aba]) return;
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], tbodyId = arr[4], emptyId = arr[5], countId = arr[6];
+    const extraId = arr[3];
+    const isMotor = aba === 5;
+    const isAr = aba === 4;
+    const isChuveiro = aba === 2;
+    const isEletro = aba === 3;
+    const tbody = document.getElementById(tbodyId);
+    const empty = document.getElementById(emptyId);
+    const count = document.getElementById(countId);
+    tbody.innerHTML = '';
+    if ((cargas[aba] || []).length === 0) {
+        empty.style.display = 'block';
+        count.textContent = '0';
+        return;
+    }
+    empty.style.display = 'none';
+    count.textContent = cargas[aba].length;
+
+    let totalQtdAr = 0;
+    if (isAr) totalQtdAr = (cargas[4] || []).reduce((s, x) => s + (x.qtd || 1), 0);
+
+    // For motors, sort by CV descending to assign ranking FDs
+    let sortedMotorIdx = [];
+    if (isMotor) {
+        sortedMotorIdx = cargas[5].map((x, i) => i).sort((a, b) => (cargas[5][b].cv || 0) - (cargas[5][a].cv || 0));
+    }
+
+    cargas[aba].forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = function() {
+            document.querySelectorAll(`#${tbodyId} tr`).forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById(nomeId).value = c.nome;
+            const potEl = document.getElementById(potId);
+            if (potEl) potEl.value = c.potencia;
+            document.getElementById(qtdId).value = c.qtd || 1;
+            if (extraId) document.getElementById(extraId).value = c.cv || c.btu || '';
+        };
+        const qtd = c.qtd || 1;
+        const idx = i + 1;
+        if (isMotor) {
+            const rank = sortedMotorIdx.indexOf(i);
+            let fdMotor;
+            if (rank === 0) fdMotor = 1.0;
+            else if (rank === 1) fdMotor = 0.9;
+            else if (rank <= 4) fdMotor = 0.8;
+            else fdMotor = 0.7;
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + qtd + '</td><td>' + (c.cv || '-') + '</td><td>' + fdMotor.toFixed(2) + '</td>';
+        } else if (isAr) {
+            let fdAr = 1.0;
+            if (totalQtdAr >= 1 && totalQtdAr <= 10) fdAr = 1.0;
+            else if (totalQtdAr <= 20) fdAr = 0.9;
+            else if (totalQtdAr <= 30) fdAr = 0.82;
+            else if (totalQtdAr <= 40) fdAr = 0.8;
+            else if (totalQtdAr <= 50) fdAr = 0.77;
+            else fdAr = 0.75;
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + c.potencia + '</td><td>' + (c.btu || '-') + '</td><td>' + qtd + '</td><td>' + fdAr.toFixed(2) + '</td>';
+        } else if (isChuveiro) {
+            const fd = fdTabela4(qtd);
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + c.potencia + '</td><td>' + qtd + '</td><td>' + fd.toFixed(2) + '</td>';
+        } else if (isEletro) {
+            const fd = fdTabela6(qtd);
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + c.potencia + '</td><td>' + qtd + '</td><td>' + fd.toFixed(2) + '</td>';
+        } else {
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + c.potencia + '</td><td>' + qtd + '</td>';
+        }
+        tbody.appendChild(tr);
+    });
+}
+
+function readCargaFromForm(aba) {
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3];
+    const nome = document.getElementById(nomeId).value.trim();
+    if (!nome) { alert('Preencha todos os campos!'); return null; }
+    const qtdVal = parseInt(document.getElementById(qtdId).value) || 1;
+    const item = { nome, potencia: 0, qtd: qtdVal };
+    if (aba === 5) {
+        item.potencia = 0;
+        const cv = parseFloat(document.getElementById(extraId).value);
+        if (cv > 0) item.cv = cv;
+    } else if (aba === 4) {
+        const p = parseFloat(document.getElementById(potId).value.trim());
+        if (isNaN(p) || p <= 0) { alert('Pot\u00eancia deve ser um n\u00famero positivo!'); return null; }
+        item.potencia = p;
+        const btu = parseInt(document.getElementById(extraId).value);
+        if (btu > 0) item.btu = btu;
+    } else {
+        const p = parseFloat(document.getElementById(potId).value.trim());
+        if (isNaN(p) || p <= 0) { alert('Pot\u00eancia deve ser um n\u00famero positivo!'); return null; }
+        item.potencia = p;
+    }
+    return item;
+}
+
+function limparForm(aba) {
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3];
+    document.getElementById(nomeId).value = '';
+    document.getElementById(potId).value = '';
+    document.getElementById(qtdId).value = 1;
+    if (extraId) document.getElementById(extraId).value = '';
+    editIndexG13[aba] = null;
+    const btn = document.getElementById('btn-add-' + aba);
+    if (btn) btn.textContent = '+ Adicionar';
+    document.getElementById(nomeId).focus();
+}
+
+function addCarga(aba) {
+    const item = readCargaFromForm(aba);
+    if (!item) return;
+    if (editIndexG13[aba] !== null) {
+        cargas[aba][editIndexG13[aba]] = item;
+    } else {
+        cargas[aba].push(item);
+    }
+    renderAba(aba);
+    limparForm(aba);
+    autoSalvarG13();
+}
+
+function editCarga(aba) {
+    const arr = nomesPorAba[aba];
+    const tbodyId = arr[4];
+    const selected = document.querySelector(`#${tbodyId} tr.selected`);
+    if (!selected) { alert('Selecione uma carga para editar!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    const c = cargas[aba][idx];
+    if (!c) return;
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3];
+    document.getElementById(nomeId).value = c.nome;
+    document.getElementById(potId).value = c.potencia || '';
+    document.getElementById(qtdId).value = c.qtd || 1;
+    if (extraId) document.getElementById(extraId).value = c.cv || c.btu || '';
+    editIndexG13[aba] = idx;
+    const btn = document.getElementById('btn-add-' + aba);
+    if (btn) btn.textContent = 'Salvar';
+    document.getElementById(nomeId).focus();
+}
+
+function delCarga(aba) {
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3], tbodyId = arr[4];
+    const selected = document.querySelector(`#${tbodyId} tr.selected`);
+    if (!selected) { alert('Selecione uma carga para excluir!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    if (confirm('Excluir a carga \'' + cargas[aba][idx].nome + '\'?')) {
+        cargas[aba].splice(idx, 1);
+        renderAba(aba);
+        autoSalvarG13();
+    }
+}
+
+// Tab switching
+function calcTabG13(tabId) {
+    document.querySelectorAll('#main-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('#main-tabs [data-tab="' + tabId + '"]').classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tab = this.dataset.tab;
+        if (tab === 'tab-resultado') {
+            calcularGED13();
+        } else if (tab === 'tab-impressao') {
+            calcTabG13(tab);
+            montarRelatorioG13();
+        } else {
+            calcTabG13(tab);
+        }
+    });
+});
+
+// --- GED-13 PROJECT MANAGEMENT ---
+
+function getGeral() {
+    return {
+        unidade: document.getElementById('in-unidade').value.trim(),
+        m2: parseFloat(document.getElementById('in-m2').value) || 0,
+        tipo: document.getElementById('in-tipo').value,
+        tensao: document.getElementById('in-tensao').value
+    };
+}
+
+function setGeral(dados) {
+    document.getElementById('in-unidade').value = dados.unidade || '';
+    document.getElementById('in-m2').value = dados.m2 || '';
+    if (dados.tipo) document.getElementById('in-tipo').value = dados.tipo;
+    if (dados.tensao) document.getElementById('in-tensao').value = dados.tensao;
+    atualizarSugestoes();
+}
+
+function listarProjetosG13() {
+    fetch('/api/ged13/projetos/listar')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const tbody = document.getElementById('projeto-table-body');
+        const empty = document.getElementById('projeto-empty');
+        const count = document.getElementById('projeto-count');
+        tbody.innerHTML = '';
+        if (resp.data.length === 0) {
+            empty.style.display = 'block';
+            count.textContent = '0';
+            return;
+        }
+        empty.style.display = 'none';
+        count.textContent = resp.data.length;
+        resp.data.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.onclick = function() {
+                document.querySelectorAll('#projeto-table-body tr').forEach(r => r.classList.remove('selected'));
+                tr.classList.add('selected');
+                carregarProjetoG13(p.id);
+            };
+            tr.innerHTML = '<td>' + p.id + '</td><td>' + p.nome + '</td><td>' + (p.unidade || '-') + '</td><td>' + (p.m2 || '0') + '</td><td>' + p.data_criacao + '</td>';
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(err => alert('Erro ao listar projetos: ' + err.message));
+}
+
+function carregarProjetoG13(projetoId) {
+    fetch('/api/ged13/projetos/carregar/' + projetoId)
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const p = resp.data;
+        currentProjetoIdG13 = p.id;
+        document.getElementById('projeto_nome').value = p.nome;
+        setGeral({ unidade: p.unidade, m2: p.m2, tipo: p.tipo, tensao: p.tensao });
+
+        for (let aba = 2; aba <= 5; aba++) {
+            cargas[aba] = [];
+            editIndexG13[aba] = null;
+            const btn = document.getElementById('btn-add-' + aba);
+            if (btn) btn.textContent = '+ Adicionar';
+        }
+
+        for (const c of (p.cargas || [])) {
+            const aba = c.tipo;
+            if (aba >= 2 && aba <= 5) {
+                cargas[aba].push({ nome: c.nome, potencia: c.potencia, qtd: c.quantidade || 1, cv: c.cv || 0, btu: c.btu || 0 });
+            }
+        }
+
+        // Restore ilum/tom from tipo=0 and tipo=1
+        document.getElementById('ilum-carga').value = '';
+        document.getElementById('tom-carga').value = '';
+        for (const c of (p.cargas || [])) {
+            if (c.tipo === 0) document.getElementById('ilum-carga').value = c.potencia;
+            if (c.tipo === 1) document.getElementById('tom-carga').value = c.potencia;
+        }
+
+        for (let aba = 2; aba <= 5; aba++) {
+            renderAba(aba);
+        }
+
+        calcTabG13('tab-0');
+    })
+    .catch(err => alert('Erro ao carregar projeto: ' + err.message));
+}
+
+function montarDadosProjetoG13() {
+    const geral = getGeral();
+    const todasCargas = [];
+    const ilum = parseFloat(document.getElementById('ilum-carga').value);
+    const tom = parseFloat(document.getElementById('tom-carga').value);
+    if (ilum > 0) todasCargas.push({ nome: 'Iluminacao', potencia: ilum, tipo: 0, quantidade: 1, fp: 1.0 });
+    if (tom > 0) todasCargas.push({ nome: 'Tomadas', potencia: tom, tipo: 1, quantidade: 1, fp: 1.0 });
+    for (let aba = 2; aba <= 5; aba++) {
+        for (const c of cargas[aba]) {
+            const item = { nome: c.nome, potencia: c.potencia, tipo: aba, quantidade: c.qtd || 1 };
+            if (aba === 5 && c.cv) item.cv = c.cv;
+            if (aba === 4 && c.btu) item.btu = c.btu;
+            if (c.fp) item.fp = c.fp;
+            todasCargas.push(item);
+        }
+    }
+    return { geral, todasCargas };
+}
+
+let autoSaveTimerG13 = null;
+
+function autoSalvarG13() {
+    clearTimeout(autoSaveTimerG13);
+    autoSaveTimerG13 = setTimeout(function() {
+        const nome = document.getElementById('projeto_nome').value.trim();
+        if (!currentProjetoIdG13 || !nome) return;
+        const { geral, todasCargas } = montarDadosProjetoG13();
+        fetch('/api/ged13/projetos/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentProjetoIdG13, nome, unidade: geral.unidade, m2: geral.m2, tipo: geral.tipo, tensao: geral.tensao, cargas: todasCargas })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) { currentProjetoIdG13 = resp.data.id; listarProjetosG13(); }
+        })
+        .catch(function() {});
+    }, 600);
+}
+
+function salvarProjetoG13() {
+    const nome = document.getElementById('projeto_nome').value.trim();
+    if (!nome) { alert('Digite um nome para o projeto!'); return; }
+    const { geral, todasCargas } = montarDadosProjetoG13();
+    fetch('/api/ged13/projetos/salvar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentProjetoIdG13, nome, unidade: geral.unidade, m2: geral.m2, tipo: geral.tipo, tensao: geral.tensao, cargas: todasCargas })
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        currentProjetoIdG13 = resp.data.id;
+        alert('Projeto salvo com sucesso!');
+        listarProjetosG13();
+    })
+    .catch(err => alert('Erro ao salvar projeto: ' + err.message));
+}
+
+function novoProjetoG13() {
+    currentProjetoIdG13 = null;
+    document.getElementById('projeto_nome').value = '';
+    setGeral({ unidade: '', m2: 0 });
+    document.getElementById('ilum-carga').value = '';
+    document.getElementById('tom-carga').value = '';
+    for (let aba = 2; aba <= 5; aba++) {
+        cargas[aba] = [];
+        editIndexG13[aba] = null;
+        const btn = document.getElementById('btn-add-' + aba);
+        if (btn) btn.textContent = '+ Adicionar';
+        renderAba(aba);
+    }
+    document.getElementById('result-container').style.display = 'none';
+    calcTabG13('tab-0');
+}
+
+function excluirProjetoG13() {
+    if (!currentProjetoIdG13) { alert('Carregue um projeto primeiro!'); return; }
+    const nome = document.getElementById('projeto_nome').value;
+    if (!confirm('Excluir o projeto "' + nome + '"?')) return;
+    fetch('/api/ged13/projetos/excluir/' + currentProjetoIdG13, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        novoProjetoG13();
+        listarProjetosG13();
+    })
+    .catch(err => alert('Erro ao excluir projeto: ' + err.message));
+}
+
+// Populate BTU dropdown from tabela8
+function carregarBtus() {
+    fetch('/api/ged13/tabela8')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const sel = document.getElementById('btu-4');
+        const seen = {};
+        resp.data.forEach(function(item) {
+            if (!seen[item.btu]) {
+                seen[item.btu] = { va: item.va, w: item.w };
+                const opt = document.createElement('option');
+                opt.value = item.btu;
+                opt.textContent = item.btu + ' BTU (' + item.w + ' W / ' + item.va + ' VA)';
+                sel.appendChild(opt);
+            }
+        });
+    })
+    .catch(function() {});
+}
+
+document.getElementById('btu-4').addEventListener('change', function() {
+    const btu = parseInt(this.value);
+    if (btu) {
+        fetch('/api/ged13/tabela8')
+        .then(r => r.json())
+        .then(resp => {
+            if (!resp.success) return;
+            for (const item of resp.data) {
+                if (item.btu === btu) {
+                    document.getElementById('pot-4').value = item.w;
+                    break;
+                }
+            }
+        })
+        .catch(function() {});
+    } else {
+        document.getElementById('pot-4').value = '';
+    }
+});
+
+// Auto-list on page load
+document.addEventListener('DOMContentLoaded', function() {
+    listarProjetosG13();
+    carregarBtus();
+});
+
+function calcularGED13() {
+    const todasCargas = [];
+
+    const ilum = parseFloat(document.getElementById('ilum-carga').value);
+    const tom = parseFloat(document.getElementById('tom-carga').value);
+    if (ilum > 0) todasCargas.push({ nome: 'Iluminacao', potencia: ilum, qtd: 1, fp: 1.0, tipo: 0 });
+    if (tom > 0) todasCargas.push({ nome: 'Tomadas', potencia: tom, qtd: 1, fp: 1.0, tipo: 1 });
+
+    for (let aba = 2; aba <= 5; aba++) {
+        for (const c of cargas[aba]) {
+            let item = { nome: c.nome, potencia: c.potencia, qtd: c.qtd || 1, tipo: aba };
+            if (aba === 5 && c.cv) item.cv = c.cv;
+            if (aba === 4 && c.btu) item.btu = c.btu;
+            todasCargas.push(item);
+        }
+    }
+
+    const geral = getGeral();
+
+    document.getElementById('result-container').style.display = 'none';
+    document.getElementById('loading-container').style.display = 'block';
+
+    fetch('/api/ged13/calcular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cargas: todasCargas, tipo: geral.tipo, tensao: geral.tensao, unidade: geral.unidade, m2: geral.m2 })
+    })
+    .then(r => r.json())
+    .then(resp => {
+        document.getElementById('loading-container').style.display = 'none';
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultadoGed13(resp.data);
+        calcTabG13('tab-resultado');
+    })
+    .catch(err => {
+        document.getElementById('loading-container').style.display = 'none';
+        alert('Erro: ' + err.message);
+    });
+}
+
+function mostrarResultadoGed13(d) {
+    ultimoResultadoG13 = d;
+    const container = document.getElementById('result-container');
+    const content = document.getElementById('result-content');
+    container.style.display = 'block';
+
+    // Build iluminacao items table
+    const ilumRows = (d.itens_iluminacao || []).map(item =>
+        '<tr><td>' + item.nome + '</td><td>' + item.w + ' W</td><td>' + item.fp + '</td><td>' + (item.w / item.fp).toFixed(0) + ' VA</td></tr>'
+    ).join('');
+
+    const ilumTotalW = (d.itens_iluminacao || []).reduce((s, i) => s + i.w, 0);
+    const ilumTotalVA = (d.itens_iluminacao || []).reduce((s, i) => s + i.w / i.fp, 0);
+
+    // Motor ranking table
+    const motorRows = (d.motores || []).map((m, i) => {
+        let label = (i+1) + 'ª';
+        if (i === 0) label += ' Maior Potência';
+        else if (i === 1) label += ' Maior Potência';
+        else if (i <= 4) label += ' Maior Potência';
+        else label += ' - Demais Motores';
+        return '<tr><td>' + m.nome + '</td><td>' + m.cv + ' cv</td><td>' + m.va + ' VA</td><td>' + m.fd + '</td><td>' + m.parcela_kva + ' kVA</td></tr>';
+    }).join('');
+
+    const motorTotalVA = (d.motores || []).reduce((s, m) => s + m.va, 0);
+
+    // Solda table
+    const soldaRows = (d.solda || []).map((s, i) => {
+        return '<tr><td>' + (i+1) + 'ª máquina</td><td>' + s.va + ' VA</td><td>' + s.fd + '</td><td>' + s.parcela_kva + ' kVA</td></tr>';
+    }).join('');
+
+    // Carga Instalada card
+    const cargaInstHtml = '<div class="card" style="margin-bottom:16px;">' +
+        '<div class="card-header">📊 Carga Instalada</div>' +
+        '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência</th></tr></thead><tbody>' +
+        (d.itens_iluminacao || []).map(i => '<tr><td>' + i.nome + '</td><td>' + i.w + ' W</td></tr>').join('') +
+        (d.b_w > 0 ? '<tr><td>Chuveiros / Aquecimento</td><td>' + d.b_w + ' W</td></tr>' : '') +
+        (d.carga_eletro_kw > 0 ? '<tr><td>Eletrodomésticos</td><td>' + (d.carga_eletro_kw * 1000).toFixed(0) + ' W</td></tr>' : '') +
+        (d.carga_ar_kw > 0 ? '<tr><td>Ar Condicionado</td><td>' + (d.carga_ar_kw * 1000).toFixed(0) + ' W</td></tr>' : '') +
+        (motorTotalVA > 0 ? '<tr><td>Motores</td><td>' + motorTotalVA.toFixed(0) + ' W</td></tr>' : '') +
+        ((d.solda || []).length > 0 ? '<tr><td>Máquinas de Solda</td><td>' + (d.solda || []).reduce((s, x) => s + x.va, 0).toFixed(0) + ' W</td></tr>' : '') +
+        '<tr style="font-weight:700;background:var(--accent);color:#fff;"><td>TOTAL</td><td>' + (d.carga_instalada * 1000).toFixed(0) + ' W</td></tr>' +
+        '</tbody></table>' +
+        '<div style="margin-top:8px;color:var(--text-muted);font-size:12px;">Arredondando para unidade em kW imediatamente acima: <strong>' + d.carga_instalada_kw_arred + ' kW</strong></div>' +
+        (d.excede_25kw ? '<div class="result-line" style="background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:6px;margin-top:8px;font-weight:600;color:#000;">⚠️ Carga instalada de <strong>' + d.carga_instalada_kw_arred + ' kW</strong> superior a 25 kW, deve-se calcular a demanda pelo dimensionamento da entrada.</div>' : '') +
+        '</div>';
+
+    // Demand calculation sections
+    const formulaHtml = '<div class="card" style="margin-bottom:16px;">' +
+        '<div class="card-header">📐 Cálculo da Demanda</div>';
+
+    // Section a
+    let sectionA = '<div class="result-section"><div class="result-title">a) Demanda referente a iluminação e tomadas</div>';
+    if (d.tipo === 'Industrial') {
+        sectionA += '<div class="result-line">FD conforme Tabela 2 (Industrial): 1,0</div>';
+    } else {
+        sectionA += '<div class="result-line">Carga Instalada: ' + ilumTotalW + ' W = ' + d.carga_a_kw + ' kW</div>';
+        sectionA += '<div class="result-line">Pela Tabela 3, FD = ' + d.fd_a + '</div>';
+    }
+    sectionA += '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência (W)</th><th>FP</th><th>Potência (VA)</th></tr></thead><tbody>' + ilumRows + '</tbody></table>';
+    sectionA += '<div class="result-line" style="font-weight:600;">Total: ' + ilumTotalVA.toFixed(0) + ' VA = ' + d.carga_a_kw + ' kW</div>';
+    sectionA += '<div class="result-line">a = ' + d.carga_a_kw + ' × ' + d.fd_a + ' = <span class="highlight">' + d.a_kva + ' kVA</span></div>';
+    sectionA += '</div>';
+
+    // Section b
+    let sectionB = '<hr class="result-divider"><div class="result-section"><div class="result-title purple">b) Demanda referente a chuveiros, torneiras, aquecedores e ferros elétricos</div>';
+    if (d.b_w > 0) {
+        sectionB += '<div class="result-line">Carga Instalada: ' + d.b_w + ' W = ' + d.carga_b_kw + ' kW</div>';
+        sectionB += '<div class="result-line">Quantidade de aparelhos: ' + d.qtd_chuveiros + '</div>';
+        sectionB += '<div class="result-line">Pela Tabela 4, para ' + d.qtd_chuveiros + ' aparelho(s), FD = ' + d.fd_b + '</div>';
+        sectionB += '<div class="result-line">b = ' + d.carga_b_kw + ' × ' + d.fd_b + ' = <span class="highlight">' + d.b_kva + ' kVA</span></div>';
+    } else {
+        sectionB += '<div class="result-line">b = 0</div>';
+    }
+    sectionB += '</div>';
+
+    // Section c
+    let sectionC = '<hr class="result-divider"><div class="result-section"><div class="result-title">c) Demanda referente a aquecedor central de acumulação (boiler)</div>' +
+        '<div class="result-line">c = 0</div></div>';
+
+    // Section d
+    let sectionD = '<hr class="result-divider"><div class="result-section"><div class="result-title">d) Demanda referente a secadora, forno elétrico, máquina de lavar louça e forno micro-ondas</div>';
+    if (d.d_kva > 0) {
+        sectionD += '<div class="result-line">Carga Instalada: ' + (d.carga_eletro_kw * 1000).toFixed(0) + ' W = ' + d.carga_eletro_kw + ' kW</div>';
+        sectionD += '<div class="result-line">Quantidade de aparelhos: ' + d.qtd_eletro + '</div>';
+        sectionD += '<div class="result-line">Pela Tabela 6, para ' + d.qtd_eletro + ' aparelho(s), FD = ' + d.fd_d + '</div>';
+        sectionD += '<div class="result-line">d = ' + d.carga_eletro_kw + ' × ' + d.fd_d + ' = <span class="highlight">' + d.d_kva + ' kVA</span></div>';
+    } else {
+        sectionD += '<div class="result-line">d = 0</div>';
+    }
+    sectionD += '</div>';
+
+    // Section e
+    let sectionE = '<hr class="result-divider"><div class="result-section"><div class="result-title">e) Demanda referente a fogões elétricos</div>' +
+        '<div class="result-line">e = 0</div></div>';
+
+    // Section f
+    let sectionF = '<hr class="result-divider"><div class="result-section"><div class="result-title gold">f) Demanda referente a condicionadores de ar tipo janela (Tabela 8)</div>';
+    if (d.f_kva > 0) {
+        sectionF += '<div class="result-line">Carga Instalada: ' + d.ar_qtd + ' aparelho(s) de ' + d.ar_va + ' VA cada</div>';
+        sectionF += '<div class="result-line">Total VA: ' + (d.ar_va * d.ar_qtd).toFixed(0) + ' VA = ' + d.carga_ar_kw + ' kW</div>';
+        sectionF += '<div class="result-line">Pela Tabela 9, para ' + d.ar_qtd + ' aparelho(s), FD = ' + d.fd_f + '</div>';
+        sectionF += '<div class="result-line">f = ' + (d.ar_va * d.ar_qtd / 1000).toFixed(2) + ' × ' + d.fd_f + ' = <span class="highlight">' + d.f_kva + ' kVA</span></div>';
+    } else {
+        sectionF += '<div class="result-line">f = 0</div>';
+    }
+    sectionF += '</div>';
+
+    // Section g
+    let sectionG = '<hr class="result-divider"><div class="result-section"><div class="result-title purple">g) Demanda referente a motores elétricos (Tabela 10, 13 e 14)</div>';
+    if (d.g_kva > 0) {
+        sectionG += '<div class="result-line">Carga Instalada em kVA: ' + motorTotalVA.toFixed(0) + ' VA = ' + d.carga_motores_kw + ' kW</div>';
+        sectionG += '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência (CV)</th><th>Potência (VA)</th><th>FD</th><th>Demanda (kVA)</th></tr></thead><tbody>' + motorRows + '</tbody></table>';
+        sectionG += '<div class="result-line">g = <span class="highlight">' + d.g_kva + ' kVA</span></div>';
+    } else {
+        sectionG += '<div class="result-line">g = 0</div>';
+    }
+    sectionG += '</div>';
+
+    // Section h
+    let sectionH = '<hr class="result-divider"><div class="result-section"><div class="result-title">h) Demanda referente a equipamentos especiais (Tabela 11)</div>';
+    if (d.h_kva > 0) {
+        sectionH += '<div class="result-line">FD conforme Tabela 11:</div>';
+        sectionH += '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência (VA)</th><th>FD</th><th>Demanda (kVA)</th></tr></thead><tbody>' + soldaRows + '</tbody></table>';
+        sectionH += '<div class="result-line">h = <span class="highlight">' + d.h_kva + ' kVA</span></div>';
+    } else {
+        sectionH += '<div class="result-line">h = 0</div>';
+    }
+    sectionH += '</div>';
+
+    // Section i
+    let sectionI = '<hr class="result-divider"><div class="result-section"><div class="result-title">i) Demanda referente à hidromassagem</div>' +
+        '<div class="result-line">i = 0</div></div>';
+
+    // Sum formula
+    const categories = [];
+    categories.push({ label: 'a (Iluminação/Tomadas)', val: d.a_kva });
+    categories.push({ label: 'b (Chuveiros)', val: d.b_kva });
+    categories.push({ label: 'c (Boiler)', val: 0 });
+    categories.push({ label: 'd (Eletrodomésticos)', val: d.d_kva });
+    categories.push({ label: 'e (Fogões)', val: 0 });
+    categories.push({ label: 'f (Ar Condicionado)', val: d.f_kva });
+    categories.push({ label: 'g (Motores)', val: d.g_kva });
+    categories.push({ label: 'h (Solda/Especiais)', val: d.h_kva });
+    categories.push({ label: 'i (Hidromassagem)', val: 0 });
+
+    const sumRows = categories.map(c => '<div class="result-line">' + c.label + ' = ' + c.val + ' kVA</div>').join('');
+    const D = categories.reduce((s, c) => s + c.val, 0);
+
+    const totalHtml = '<hr class="result-divider"><div class="result-section"><div class="result-title gold">📈 Demanda Total</div>' + sumRows +
+        '<hr class="result-divider"><div class="result-final"><div class="label">D = a + b + c + d + e + f + g + h + i</div>' +
+        '<div class="value">' + D.toFixed(2) + ' kVA</div></div></div>';
+
+    const formulaClose = '</div>';
+
+    // Padrao
+    var padraoMotorRows = '';
+    if (d.g_kva > 0) {
+        padraoMotorRows = '<tr><td>Motor FN máx</td><td>' + (d.padrao.motor_fn || '-') + '</td></tr>' +
+            '<tr><td>Motor FF máx</td><td>' + (d.padrao.motor_ff || '-') + '</td></tr>' +
+            '<tr><td>Motor FFF máx</td><td>' + (d.padrao.motor_fff || '-') + '</td></tr>';
+    }
+    const padraoHtml = d.padrao ? '<div class="card" style="margin-bottom:16px;"><div class="card-header">🔌 Padrão de Entrada</div>' +
+        '<div class="result-section"><table class="result-table"><tbody>' +
+        '<tr><td>Tipo de Ligação</td><td><strong>TRIFÁSICO</strong></td></tr>' +
+        '<tr><td>Categoria</td><td><strong>' + (d.padrao.categoria || '-') + '</strong></td></tr>' +
+        '<tr><td>Tensão</td><td>' + d.tensao + '</td></tr>' +
+        '<tr><td>Cabo Cobre</td><td>' + (d.padrao.cobre_mm2 || '-') + '</td></tr>' +
+        '<tr><td>Cabo Alumínio</td><td>' + (d.padrao.aluminio_mm2 || '-') + '</td></tr>' +
+        '<tr><td>Eletroduto</td><td>' + (d.padrao.eletroduto || '-') + '</td></tr>' +
+        '<tr><td>Disjuntor</td><td>' + (d.padrao.disjuntor || '-') + '</td></tr>' +
+        '<tr><td>Aterramento</td><td>' + (d.padrao.aterramento_condutor || d.padrao.aterramento || '-') + '</td></tr>' +
+        padraoMotorRows +
+        '<tr><td>Poste</td><td>' + (d.padrao.poste || '-') + '</td></tr>' +
+        '<tr><td>Caixa</td><td>' + (d.padrao.caixa || '-') + '</td></tr>' +
+        '</tbody></table></div></div>' :
+        '<div class="card" style="margin-bottom:16px;"><div class="card-header">🔌 Padrão de Entrada</div><div class="result-line">Padrão de entrada não encontrado para esta demanda.</div></div>';
+
+    content.innerHTML = cargaInstHtml + formulaHtml + sectionA + sectionB + sectionC + sectionD + sectionE + sectionF + sectionG + sectionH + sectionI + totalHtml + formulaClose + padraoHtml;
+    content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function montarRelatorioG13() {
+    const d = ultimoResultadoG13;
+    const preview = document.getElementById('relatorio-preview');
+    if (!d) {
+        preview.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.</div>';
+        return;
+    }
+    const unidade = document.getElementById('in-unidade').value || d.unidade || '-';
+    const area = document.getElementById('in-m2').value || d.m2 || 0;
+    const tipo = document.getElementById('in-tipo').value || d.tipo || '-';
+    const tensao = document.getElementById('in-tensao').value || d.tensao || '-';
+    var html = '<div class="print-report" id="print-report-content">';
+    html += '<h2 style="text-align:center;margin-bottom:8px;">Memorial de Cálculo - GED-13</h2>';
+
+    // Dados Gerais
+    if (document.getElementById('chk_dados_gerais').checked) {
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Dados Gerais</div>';
+        html += '<div class="result-line">Unidade: ' + unidade + '</div>';
+        html += '<div class="result-line">Área: ' + area + ' m²</div>';
+        html += '<div class="result-line">Tipo: ' + tipo + '</div>';
+        html += '<div class="result-line">Tensão: ' + tensao + '</div>';
+        html += '</div>';
+    }
+
+    // Carga Instalada
+    if (document.getElementById('chk_carga_instalada').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Carga Instalada</div>';
+        html += '<div class="result-line">Iluminação: ' + (d.carga_ilum_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Chuveiros/Aquecimento: ' + (d.carga_chuveiros_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Eletrodomésticos: ' + (d.carga_eletro_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Ar Condicionado: ' + (d.carga_ar_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Motores: ' + (d.carga_motores_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line">Equip. Especiais: ' + (d.carga_solda_kw || 0).toFixed(2) + ' kW</div>';
+        html += '<div class="result-line" style="font-weight:700;">Total: ' + (d.carga_instalada_kw_arred || 0) + ' kW</div>';
+        if (d.excede_25kw) html += '<div class="result-line" style="color:red;">Acima de 25 kW - dimensionamento obrigatório.</div>';
+        html += '</div>';
+    }
+
+    // Section a
+    if (document.getElementById('chk_iluminacao_a').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">a) Iluminação e Tomadas</div>';
+        var ilumTotalW = (d.itens_iluminacao || []).reduce(function(s, i) { return s + i.w; }, 0);
+        html += '<div class="result-line">Carga Instalada: ' + ilumTotalW + ' W = ' + d.carga_a_kw + ' kW</div>';
+        html += '<div class="result-line">FD (Tabela 3): ' + d.fd_a + '</div>';
+        html += '<div class="result-line">a = ' + d.carga_a_kw + ' × ' + d.fd_a + ' = <span class="value">' + d.a_kva + ' kVA</span></div>';
+        html += '</div>';
+    }
+
+    // Section b - Chuveiros
+    if (document.getElementById('chk_chuveiros_b').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">b) Chuveiros e Aquecimento</div>';
+        if (d.b_kva > 0) {
+            html += '<div class="result-line">Carga: ' + (d.b_w || 0) + ' W = ' + d.carga_b_kw + ' kW</div>';
+            html += '<div class="result-line">Quantidade: ' + d.qtd_chuveiros + ' aparelho(s)</div>';
+            html += '<div class="result-line">FD (Tabela 4): ' + d.fd_b + '</div>';
+            html += '<div class="result-line">b = ' + d.carga_b_kw + ' × ' + d.fd_b + ' = <span class="value">' + d.b_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">b = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section d - Eletrodomésticos
+    if (document.getElementById('chk_eletro_d').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">d) Eletrodomésticos</div>';
+        if (d.d_kva > 0) {
+            html += '<div class="result-line">Carga: ' + (d.carga_eletro_kw || 0).toFixed(2) + ' kW</div>';
+            html += '<div class="result-line">Quantidade: ' + d.qtd_eletro + ' aparelho(s)</div>';
+            html += '<div class="result-line">FD (Tabela 6): ' + d.fd_d + '</div>';
+            html += '<div class="result-line">d = ' + d.carga_eletro_kw + ' × ' + d.fd_d + ' = <span class="value">' + d.d_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">d = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section f - Ar Condicionado
+    if (document.getElementById('chk_ar_f').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">f) Ar Condicionado (Tabela 8)</div>';
+        if (d.f_kva > 0) {
+            html += '<div class="result-line">Quantidade: ' + d.ar_qtd + ' aparelho(s) de ' + d.ar_va + ' VA</div>';
+            html += '<div class="result-line">Total: ' + (d.ar_va * d.ar_qtd).toFixed(0) + ' VA = ' + d.carga_ar_kw + ' kW</div>';
+            html += '<div class="result-line">FD (Tabela 9): ' + d.fd_f + '</div>';
+            html += '<div class="result-line">f = ' + (d.ar_va * d.ar_qtd / 1000).toFixed(2) + ' × ' + d.fd_f + ' = <span class="value">' + d.f_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">f = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section g - Motores
+    if (document.getElementById('chk_motores_g').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">g) Motores (Tabelas 10, 13 e 14)</div>';
+        if (d.g_kva > 0 && d.motores && d.motores.length > 0) {
+            d.motores.forEach(function(m) {
+                html += '<div class="result-line">' + m.nome + ': ' + m.cv + ' cv → ' + m.va + ' VA, FD ' + m.fd + ' = ' + m.parcela_kva + ' kVA</div>';
+            });
+            html += '<div class="result-line" style="font-weight:700;">g = <span class="value">' + d.g_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">g = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Section h - Equipamentos Especiais
+    if (document.getElementById('chk_solda_h').checked) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">h) Equipamentos Especiais (Tabela 11)</div>';
+        if (d.h_kva > 0 && d.solda && d.solda.length > 0) {
+            d.solda.forEach(function(s, i) {
+                html += '<div class="result-line">Máq. ' + (i+1) + ': ' + s.va + ' VA, FD ' + s.fd + ' = ' + s.parcela_kva + ' kVA</div>';
+            });
+            html += '<div class="result-line" style="font-weight:700;">h = <span class="value">' + d.h_kva + ' kVA</span></div>';
+        } else {
+            html += '<div class="result-line">h = 0</div>';
+        }
+        html += '</div>';
+    }
+
+    // Demanda Total
+    if (document.getElementById('chk_demanda_total').checked) {
+        var cats = [
+            { label: 'a (Iluminação/Tomadas)', val: d.a_kva },
+            { label: 'b (Chuveiros)', val: d.b_kva },
+            { label: 'c (Boiler)', val: 0 },
+            { label: 'd (Eletrodomésticos)', val: d.d_kva },
+            { label: 'e (Fogões)', val: 0 },
+            { label: 'f (Ar Condicionado)', val: d.f_kva },
+            { label: 'g (Motores)', val: d.g_kva },
+            { label: 'h (Solda)', val: d.h_kva },
+            { label: 'i (Hidromassagem)', val: 0 }
+        ];
+        var totalD = cats.reduce(function(s, c) { return s + c.val; }, 0);
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Demanda Total (D)</div>';
+        cats.forEach(function(c) {
+            html += '<div class="result-line">' + c.label + ' = ' + c.val.toFixed(2) + ' kVA</div>';
+        });
+        html += '<hr class="result-divider">';
+        html += '<div class="result-final"><div class="label">D = a + b + c + d + e + f + g + h + i</div>';
+        html += '<div class="value">' + totalD.toFixed(2) + ' kVA</div></div>';
+        html += '</div>';
+    }
+
+    // Padrão de Entrada
+    if (document.getElementById('chk_padrao').checked && d.padrao) {
+        html += '<hr class="result-divider">';
+        html += '<div class="result-section">';
+        html += '<div class="result-title">Padrão de Entrada</div>';
+        html += '<div class="result-line">Categoria: <span class="value">' + (d.padrao.categoria || '-') + '</span></div>';
+        html += '<div class="result-line">Tensão: ' + d.tensao + '</div>';
+        html += '<div class="result-line">Cabo Cobre: ' + (d.padrao.cobre_mm2 || '-') + '</div>';
+        html += '<div class="result-line">Cabo Alumínio: ' + (d.padrao.aluminio_mm2 || '-') + '</div>';
+        html += '<div class="result-line">Eletroduto: ' + (d.padrao.eletroduto || '-') + '</div>';
+        html += '<div class="result-line">Disjuntor: ' + (d.padrao.disjuntor || '-') + '</div>';
+        html += '<div class="result-line">Aterramento: ' + (d.padrao.aterramento_condutor || d.padrao.aterramento || '-') + '</div>';
+        if (d.g_kva > 0) {
+            html += '<div class="result-line">Motor FN: ' + (d.padrao.motor_fn || '-') + '</div>';
+            html += '<div class="result-line">Motor FF: ' + (d.padrao.motor_ff || '-') + '</div>';
+            html += '<div class="result-line">Motor FFF: ' + (d.padrao.motor_fff || '-') + '</div>';
+        }
+        html += '<div class="result-line">Poste: ' + (d.padrao.poste || '-') + '</div>';
+        html += '<div class="result-line">Caixa: ' + (d.padrao.caixa || '-') + '</div>';
+        html += '</div>';
+    }
+
+    html += '</div>';
+    preview.innerHTML = html;
+}
+
+function gerarPDFG13() {
+    if (!ultimoResultadoG13) {
+        alert('Calcule o resultado primeiro na aba "Resultado"!');
+        return;
+    }
+    montarRelatorioG13();
+    var content = document.getElementById('print-report-content').innerHTML;
+    var css = 'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#333;line-height:1.6;}' +
+        '.result-section{margin-bottom:12px;}' +
+        '.result-title{font-size:14px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#f0f0f0;border-radius:4px;}' +
+        '.result-line{margin:4px 0;font-size:12px;}' +
+        '.label{font-weight:600;}.value{font-weight:600;color:#2563eb;}' +
+        '.highlight{background:#fff3cd;padding:2px 6px;border-radius:3px;font-weight:700;}' +
+        '.result-final{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f0f0f0;border-radius:6px;}' +
+        'hr.result-divider{border:none;border-top:1px solid #ddd;margin:16px 0;}' +
+        'h2{font-size:18px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:16px;}';
+    var iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:0;';
+    document.body.appendChild(iframe);
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<html><head><title>Relatório GED-13</title><style>' + css + '@media print{body{padding:0;margin:0;}}</style></head><body>' +
+        '<div style="max-width:800px;margin:0 auto;">' + content + '</div></body></html>');
+    doc.close();
+    iframe.contentWindow.focus();
+    setTimeout(function() {
+        iframe.contentWindow.print();
+        setTimeout(function() { iframe.remove(); }, 200);
+    }, 500);
+}
+</script>
+
+<style>
+.print-report-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+.print-report-sidebar {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    position: sticky;
+    top: 12px;
+    align-self: start;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.print-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 0;
+    cursor: pointer;
+    color: var(--text);
+}
+.print-checkbox input { margin: 0; }
+.print-report-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+    color: var(--text);
+}
+#print-report-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+#print-report-content h2 {
+    font-size: 18px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    color: var(--text);
+}
+#print-report-content .result-section { margin-bottom: 12px; }
+#print-report-content .result-title {
+    font-size: 14px; font-weight: 700; margin-bottom: 8px;
+    padding: 6px 10px; background: var(--bg-hover); border-radius: 4px;
+}
+#print-report-content .result-line { margin: 4px 0; font-size: 12px; }
+#print-report-content .label { font-weight: 600; }
+#print-report-content .value { font-weight: 600; color: #2563eb; }
+#print-report-content .highlight {
+    background: #fff3cd; padding: 2px 6px; border-radius: 3px; font-weight: 700; color: #000;
+}
+#print-report-content .result-final {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; background: var(--bg-hover); border-radius: 6px;
+}
+#print-report-content hr.result-divider {
+    border: none; border-top: 1px solid var(--border); margin: 16px 0;
+}
+</style>
+{% endblock %}

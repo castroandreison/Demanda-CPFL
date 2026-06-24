@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPFL - Cálculo de Demanda</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <span class="brand-icon">⚡</span>
+            CPFL Demanda
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Início</a></li>
+            <li><a href="/ged119" class="{% if request.path == '/ged119' %}active{% endif %}">GED-119</a></li>
+            <li><a href="/ged13" class="{% if request.path == '/ged13' %}active{% endif %}">GED-13</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
