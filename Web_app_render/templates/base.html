@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999; }
-        .modal-box { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:32px; width:100%; max-width:420px; box-shadow:var(--shadow); }
+        .modal-box { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:32px; width:100%; max-width:420px; box-shadow:var(--shadow); max-height:90vh; overflow-y:auto; }
         .modal-box h2 { margin-bottom:20px; text-align:center; color:var(--accent); }
         .modal-box .form-group { margin-bottom:14px; }
         .modal-box .form-group label { display:block; margin-bottom:4px; color:var(--text-secondary); font-size:13px; }
-        .modal-box .form-group input, .modal-box .form-group select { width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-primary); font-size:14px; }
+        .modal-box .form-group input, .modal-box .form-group select { width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-primary); font-size:14px; box-sizing:border-box; }
         .modal-box .form-group input:focus { border-color:var(--border-focus); outline:none; }
         .modal-box .btn-primary { width:100%; padding:12px; border:none; border-radius:var(--radius-sm); background:var(--accent); color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
         .modal-box .btn-primary:hover { background:var(--accent-hover); }
@@ -51,8 +51,8 @@
         </a>
         <ul class="navbar-nav">
             <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Início</a></li>
-            <li><a href="/ged119" class="{% if request.path == '/ged119' %}active{% endif %}">GED-119</a></li>
-            <li><a href="/ged13" class="{% if request.path == '/ged13' %}active{% endif %}">GED-13</a></li>
+            <li id="nav-ged119" class="hidden"><a href="/ged119" class="{% if request.path == '/ged119' %}active{% endif %}">GED-119</a></li>
+            <li id="nav-ged13" class="hidden"><a href="/ged13" class="{% if request.path == '/ged13' %}active{% endif %}">GED-13</a></li>
             <li id="admin-link-li" class="hidden"><a href="/admin" class="nav-admin-link">🔧 Admin</a></li>
         </ul>
         <div id="user-info">
@@ -145,6 +145,9 @@
                 currentUser = resp.data;
                 atualizarInterface();
                 fecharModal();
+                if (window.location.pathname === '/') {
+                    window.location.reload();
+                }
             })
             .catch(() => showAuthError('Erro ao conectar no servidor'));
         }
@@ -182,7 +185,7 @@
             .then(() => {
                 currentUser = null;
                 atualizarInterface();
-                if (window.location.pathname === '/admin') window.location.href = '/';
+                window.location.href = '/';
             })
             .catch(() => {});
         }
@@ -192,11 +195,15 @@
             const logoutBtn = document.getElementById('logout-btn');
             const userNameSpan = document.getElementById('user-name-display');
             const adminLink = document.getElementById('admin-link-li');
+            const nav119 = document.getElementById('nav-ged119');
+            const nav13 = document.getElementById('nav-ged13');
             if (currentUser) {
                 loginBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
                 userNameSpan.textContent = currentUser.nome_completo || currentUser.username;
                 userNameSpan.classList.remove('hidden');
+                nav119.classList.remove('hidden');
+                nav13.classList.remove('hidden');
                 if (currentUser.is_admin) {
                     adminLink.classList.remove('hidden');
                 } else {
@@ -206,6 +213,8 @@
                 loginBtn.classList.remove('hidden');
                 logoutBtn.classList.add('hidden');
                 userNameSpan.classList.add('hidden');
+                nav119.classList.add('hidden');
+                nav13.classList.add('hidden');
                 adminLink.classList.add('hidden');
             }
         }
@@ -231,9 +240,35 @@
                 if (resp.success) {
                     currentUser = resp.data;
                     atualizarInterface();
+                    if (window.location.pathname === '/' || window.location.pathname === '') {
+                        document.getElementById('main-content')?.classList.remove('hidden');
+                    } else if (window.location.pathname === '/ged119' || window.location.pathname === '/ged13') {
+                        document.querySelector('.container')?.classList.remove('hidden');
+                    }
+                } else {
+                    const path = window.location.pathname;
+                    if (path === '/ged119' || path === '/ged13' || path === '/admin') {
+                        window.location.href = '/';
+                    } else {
+                        setTimeout(function() {
+                            const modal = document.getElementById('login-modal');
+                            if (modal && !currentUser) {
+                                modal.classList.remove('hidden');
+                                mostrarLogin();
+                            }
+                        }, 300);
+                    }
                 }
             })
-            .catch(() => {});
+            .catch(() => {
+                setTimeout(function() {
+                    const modal = document.getElementById('login-modal');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                        mostrarLogin();
+                    }
+                }, 300);
+            });
         });
     </script>
 </body>

@@ -5,50 +5,49 @@
     <p>Plataforma de dimensionamento elétrico conforme normas CPFL</p>
 </div>
 
-<div id="welcome-msg" class="hidden" style="text-align:center;margin-bottom:20px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);">
-    <p style="color:var(--text-secondary);">Bem-vindo(a), <strong id="welcome-name" style="color:var(--accent);"></strong>!</p>
-    <p style="font-size:13px;color:var(--text-muted);">Selecione a norma técnica abaixo para realizar seus dimensionamentos. Seus projetos ficarão salvos exclusivamente para sua conta.</p>
-</div>
+<div id="main-content" class="hidden">
+    <div id="welcome-msg" style="text-align:center;margin-bottom:20px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);">
+        <p style="color:var(--text-secondary);">Bem-vindo(a), <strong id="welcome-name" style="color:var(--accent);"></strong>!</p>
+        <p style="font-size:13px;color:var(--text-muted);">Selecione a norma técnica abaixo para realizar seus dimensionamentos.</p>
+    </div>
 
-<div id="login-msg" style="text-align:center;margin-bottom:20px;padding:20px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);">
-    <p style="color:var(--text-secondary);font-size:14px;">Faça <a onclick="document.getElementById('login-btn').click()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">login</a> ou <a onclick="document.getElementById('login-btn').click()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">cadastre-se</a> para salvar seus projetos e acessá-los de qualquer lugar.</p>
-</div>
-
-<div class="calc-cards">
-    <a href="/ged119" class="calc-card">
-        <div class="icon">🏢</div>
-        <h3>GED-119</h3>
-        <p>Fornecimento de Energia Elétrica a Edifícios de Uso Coletivo.<br>
-        Cálculo de demanda geral (Dg) para edifícios residenciais e comerciais.</p>
-        <span class="btn btn-primary">Acessar</span>
-    </a>
-    <a href="/ged13" class="calc-card">
-        <div class="icon">🏠</div>
-        <h3>GED-13</h3>
-        <p>Cálculo de Carga Instalada e Demanda.<br>
-        Dimensionamento do padrão de entrada para unidades consumidoras individuais.</p>
-        <span class="btn btn-primary">Acessar</span>
-    </a>
+    <div class="calc-cards">
+        <a href="/ged119" class="calc-card">
+            <div class="icon">🏢</div>
+            <h3>GED-119</h3>
+            <p>Fornecimento de Energia Elétrica a Edifícios de Uso Coletivo.<br>
+            Cálculo de demanda geral (Dg) para edifícios residenciais e comerciais.</p>
+            <span class="btn btn-primary">Acessar</span>
+        </a>
+        <a href="/ged13" class="calc-card">
+            <div class="icon">🏠</div>
+            <h3>GED-13</h3>
+            <p>Cálculo de Carga Instalada e Demanda.<br>
+            Dimensionamento do padrão de entrada para unidades consumidoras individuais.</p>
+            <span class="btn btn-primary">Acessar</span>
+        </a>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function atualizarHome() {
-        const loginMsg = document.getElementById('login-msg');
-        const welcomeMsg = document.getElementById('welcome-msg');
+        const mainContent = document.getElementById('main-content');
         const welcomeName = document.getElementById('welcome-name');
         if (currentUser) {
-            loginMsg.style.display = 'none';
-            welcomeMsg.classList.remove('hidden');
+            mainContent.classList.remove('hidden');
             welcomeName.textContent = currentUser.nome_completo || currentUser.username;
-        } else {
-            loginMsg.style.display = 'block';
-            welcomeMsg.classList.add('hidden');
         }
     }
-    atualizarHome();
-    const origAtualizar = atualizarInterface;
-    atualizarInterface = function() { if (origAtualizar) origAtualizar(); atualizarHome(); };
+    const checkInterval = setInterval(function() {
+        if (window.currentUser !== undefined) {
+            clearInterval(checkInterval);
+            if (currentUser) {
+                document.getElementById('main-content').classList.remove('hidden');
+                document.getElementById('welcome-name').textContent = currentUser.nome_completo || currentUser.username;
+            }
+        }
+    }, 100);
 });
 </script>
 {% endblock %}
