@@ -44,9 +44,19 @@ def carregar_projeto(projeto_id):
     itens = [{'nome': r[0], 'potencia': r[1], 'tipo': r[2], 'quantidade': r[3], 'cv': r[4], 'btu': r[5], 'fp': r[6]} for r in cursor.fetchall()]
     conn.close(); proj_dict['cargas'] = itens; return proj_dict
 
+def _n(v, default=0):
+    if v is None or v == '': return default
+    try: return float(v)
+    except: return default
+
+def _i(v, default=0):
+    if v is None or v == '': return default
+    try: return int(v)
+    except: return default
+
 def salvar_projeto(projeto_id, dados):
     conn = get_conn(); cursor = conn.cursor()
-    unidade = dados.get('unidade', ''); m2 = float(dados.get('m2', 0)); tipo = dados.get('tipo', 'Residencial'); tensao = dados.get('tensao', '127/220V')
+    unidade = dados.get('unidade', ''); m2 = _n(dados.get('m2')); tipo = dados.get('tipo', 'Residencial'); tensao = dados.get('tensao', '127/220V')
     if projeto_id:
         cursor.execute(f"UPDATE projetos_ged13 SET nome = {P}, unidade = {P}, m2 = {P}, tipo = {P}, tensao = {P} WHERE id = {P}", (dados['nome'], unidade, m2, tipo, tensao, projeto_id))
     else:
@@ -58,7 +68,7 @@ def salvar_projeto(projeto_id, dados):
             projeto_id = cursor.lastrowid
     cursor.execute(f"DELETE FROM itens_projeto_ged13 WHERE projeto_id = {P}", (projeto_id,))
     for item in dados.get('cargas', []):
-        cursor.execute(f"INSERT INTO itens_projeto_ged13 (projeto_id, nome, potencia, tipo, quantidade, cv, btu, fp) VALUES ({P}, {P}, {P}, {P}, {P}, {P}, {P}, {P})", (projeto_id, item.get('nome',''), float(item.get('potencia',0)), int(item.get('tipo',0)), int(item.get('quantidade',1)), float(item.get('cv',0)), int(item.get('btu',0)), float(item.get('fp',1.0))))
+        cursor.execute(f"INSERT INTO itens_projeto_ged13 (projeto_id, nome, potencia, tipo, quantidade, cv, btu, fp) VALUES ({P}, {P}, {P}, {P}, {P}, {P}, {P}, {P})", (projeto_id, item.get('nome',''), _n(item.get('potencia')), _i(item.get('tipo')), _i(item.get('quantidade'), 1), _n(item.get('cv')), _i(item.get('btu')), _n(item.get('fp'), 1.0)))
     conn.commit(); conn.close(); return projeto_id
 
 def excluir_projeto(projeto_id):

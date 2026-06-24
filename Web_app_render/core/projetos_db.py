@@ -107,13 +107,23 @@ def carregar_projeto(projeto_id):
     proj_dict['motores'] = motores; proj_dict['outras_cargas_apt'] = outras_apt; proj_dict['outras_cargas_adm'] = outras_adm; proj_dict['ac_apt'] = ac_apt; proj_dict['ac_adm'] = ac_adm
     return proj_dict
 
+def _n(v, default=0):
+    if v is None or v == '': return default
+    try: return float(v)
+    except: return default
+
+def _i(v, default=0):
+    if v is None or v == '': return default
+    try: return int(v)
+    except: return default
+
 def salvar_projeto(projeto_id, dados):
     conn = get_conn(); cursor = conn.cursor()
     cols = ('nome', 'aptos', 'area_apto', 'area_adm', 'iluminacao', 'tomadas', 'chuveiro_kw', 'torneira_kw', 'chuveiros_apto', 'torneiras_apto', 'chuveiros_adm', 'torneiras_adm', 'secar_kw', 'secar_apto', 'lavar_kw', 'lavar_apto', 'tipo')
     extra_keys = ('ramal_corrente','ramal_isolacao','ramal_material','ramal_tensao','ramal_metodo','ramal_condutores','ramal_subtipo','ramal_forma_agrup','ramal_num_circuitos','ramal_tipo_temp','ramal_temperatura','ramal_comprimento','ramal_paralelo_idx','ramal_par_chk_neutro_0','ramal_par_chk_neutro_1','ramal_par_chk_neutro_2','ramal_par_chk_protecao_0','ramal_par_chk_protecao_1','ramal_par_chk_protecao_2','ramal_par_chk_tabela48_0','ramal_par_chk_tabela48_1','ramal_par_chk_tabela48_2','ramal_tipo_eletroduto','ramal_lig_dg','ramal_lig_tensao','ramal_lig_comprimento','qm_aptos','qm_adm','qm_material','qm_adm_tc','qm_dg','dps_spda','dps_ramal_aereo','dps_material','dps_qtd_qms','aterr_solo','aterr_multiblocos','aterr_qtd_qms','aterr_num_hastes','aterr_haste','aterr_comprimento','aterr_conexao')
     campos_extras = {k: dados.get(k) for k in extra_keys if k in dados}
     resultados = dados.get('resultados', {})
-    vals = tuple(dados.get(c, 0) for c in cols)
+    vals = tuple(dados.get(c, '') if c in ('nome','tipo') else _n(dados.get(c)) for c in cols)
     if projeto_id:
         set_clause = ','.join(f"{c}={P}" for c in cols)
         cursor.execute(f"UPDATE projetos SET {set_clause}, campos_extras={P}, resultados={P} WHERE id={P}", vals + (json.dumps(campos_extras), json.dumps(resultados), projeto_id))
@@ -128,18 +138,20 @@ def salvar_projeto(projeto_id, dados):
     cursor.execute(f"DELETE FROM motores_projeto WHERE projeto_id = {P}", (projeto_id,))
     for m in dados.get('motores', []):
         desc = m.get('desc', m.get('descricao', ''))
-        cursor.execute(f"INSERT INTO motores_projeto (projeto_id, descricao, cv, quantidade) VALUES ({P}, {P}, {P}, {P})", (projeto_id, desc, float(m['cv']), int(m['qtd'])))
+        cursor.execute(f"INSERT INTO motores_projeto (projeto_id, descricao, cv, quantidade) VALUES ({P}, {P}, {P}, {P})", (projeto_id, desc, _n(m.get('cv')), _i(m.get('qtd'), 1)))
     cursor.execute(f"DELETE FROM outras_cargas_projeto WHERE projeto_id = {P}", (projeto_id,))
     for c in dados.get('outras_cargas_apt', []):
-        cursor.execute(f"INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES ({P}, 'apt', {P}, {P}, {P})", (projeto_id, c[0] if isinstance(c, list) else c['descricao'], float(c[1] if isinstance(c, list) else c['potencia']), int(c[2] if isinstance(c, list) else c['quantidade'])))
+        cdesc = c[0] if isinstance(c, list) else c.get('descricao',''); cpot = _n(c[1] if isinstance(c, list) else c.get('potencia')); cqtd = _i(c[2] if isinstance(c, list) else c.get('quantidade'), 1)
+        cursor.execute(f"INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES ({P}, 'apt', {P}, {P}, {P})", (projeto_id, cdesc, cpot, cqtd))
     for c in dados.get('outras_cargas_adm', []):
-        cursor.execute(f"INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES ({P}, 'adm', {P}, {P}, {P})", (projeto_id, c[0] if isinstance(c, list) else c['descricao'], float(c[1] if isinstance(c, list) else c['potencia']), int(c[2] if isinstance(c, list) else c['quantidade'])))
+        cdesc = c[0] if isinstance(c, list) else c.get('descricao',''); cpot = _n(c[1] if isinstance(c, list) else c.get('potencia')); cqtd = _i(c[2] if isinstance(c, list) else c.get('quantidade'), 1)
+        cursor.execute(f"INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES ({P}, 'adm', {P}, {P}, {P})", (projeto_id, cdesc, cpot, cqtd))
     cursor.execute(f"DELETE FROM ac_projeto WHERE projeto_id = {P}", (projeto_id,))
     for ac in dados.get('ac_apt', []):
-        desc = ac.get('descricao', ac.get('desc', '')); pot = float(ac.get('potencia', ac.get('pot', 0))); qtd = int(ac.get('quantidade', ac.get('qtd', 1))); btu = int(ac.get('btu', 0)); tipo_eq = ac.get('tipo_equipamento', ''); incluir = 1 if ac.get('incluir', 1) else 0
+        desc = ac.get('descricao', ac.get('desc', '')); pot = _n(ac.get('potencia', ac.get('pot'))); qtd = _i(ac.get('quantidade', ac.get('qtd')), 1); btu = _i(ac.get('btu')); tipo_eq = ac.get('tipo_equipamento', ''); incluir = 1 if ac.get('incluir', 1) else 0
         cursor.execute(f"INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir) VALUES ({P}, 'apt', {P}, {P}, {P}, {P}, {P}, {P})", (projeto_id, desc, pot, qtd, btu, tipo_eq, incluir))
     for ac in dados.get('ac_adm', []):
-        desc = ac.get('descricao', ac.get('desc', '')); pot = float(ac.get('potencia', ac.get('pot', 0))); qtd = int(ac.get('quantidade', ac.get('qtd', 1))); btu = int(ac.get('btu', 0)); tipo_eq = ac.get('tipo_equipamento', ''); incluir = 1 if ac.get('incluir', 1) else 0
+        desc = ac.get('descricao', ac.get('desc', '')); pot = _n(ac.get('potencia', ac.get('pot'))); qtd = _i(ac.get('quantidade', ac.get('qtd')), 1); btu = _i(ac.get('btu')); tipo_eq = ac.get('tipo_equipamento', ''); incluir = 1 if ac.get('incluir', 1) else 0
         cursor.execute(f"INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir) VALUES ({P}, 'adm', {P}, {P}, {P}, {P}, {P}, {P})", (projeto_id, desc, pot, qtd, btu, tipo_eq, incluir))
     conn.commit(); conn.close(); return projeto_id
 
