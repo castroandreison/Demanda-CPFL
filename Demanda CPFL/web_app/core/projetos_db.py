@@ -102,7 +102,7 @@ def listar_projetos(usuario_id=None):
     conn = get_conn()
     cursor = conn.cursor()
     if usuario_id:
-        cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos WHERE usuario_id = ? ORDER BY data_criacao DESC", (usuario_id,))
+        cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos WHERE usuario_id = ? OR nome LIKE '%Exemplo%' ORDER BY data_criacao DESC", (usuario_id,))
     else:
         cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos ORDER BY data_criacao DESC")
     rows = [{'id': r[0], 'nome': r[1], 'aptos': r[2], 'data_criacao': r[3]} for r in cursor.fetchall()]
