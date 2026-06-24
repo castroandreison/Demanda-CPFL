@@ -132,7 +132,7 @@ def calcular_transformador(dados):
     tensao_opcao = dados.get('tensao', '380/220V (trifásico)')
     metodo_inst = dados.get('metodo_inst', 'C')
     forma_agrup = dados.get('forma_agrup', 'Em feixe: ao ar livre ou sobre superfície; embutidos; em duto fechado')
-    num_circuitos = int(dados.get('num_circuitos', 1))
+    num_circuitos = int(dados.get('num_circuitos') or 1)
     if num_circuitos < 1:
         num_circuitos = 1
 
@@ -295,7 +295,7 @@ def calcular_poste(dados):
 
 def calcular_ramal_ligacao(dados):
     dg = float(dados.get('dg') or 0)
-    tensao_kv = int(dados.get('tensao_kv', 15))
+    tensao_kv = int(dados.get('tensao_kv') or 15)
     V = tensao_kv * 1000
     I = dg * 1000 / (V * 3**0.5)
     conn = get_conn()
@@ -337,14 +337,14 @@ def calcular(dados):
     tomadas = float(dados.get('tomadas') or 0)
     chuveiro_kw = float(dados.get('chuveiro_kw') or 0)
     torneira_kw = float(dados.get('torneira_kw') or 0)
-    qtd_chuveiros = int(dados.get('chuveiros_apto', dados.get('qtd_chuveiros', 1)))
-    qtd_torneiras = int(dados.get('torneiras_apto', dados.get('qtd_torneiras', 0)))
-    qtd_chuveiros_adm = int(dados.get('chuveiros_adm', dados.get('qtd_chuveiros_adm', 0)))
-    qtd_torneiras_adm = int(dados.get('torneiras_adm', dados.get('qtd_torneiras_adm', 0)))
-    secar_kw = float(dados.get('secar_kw', 0))
-    secar_apto = int(dados.get('secar_apto', 0))
-    lavar_kw = float(dados.get('lavar_kw', 0))
-    lavar_apto = int(dados.get('lavar_apto', 0))
+    qtd_chuveiros = int(dados.get('chuveiros_apto') or dados.get('qtd_chuveiros') or 1)
+    qtd_torneiras = int(dados.get('torneiras_apto') or dados.get('qtd_torneiras') or 0)
+    qtd_chuveiros_adm = int(dados.get('chuveiros_adm') or dados.get('qtd_chuveiros_adm') or 0)
+    qtd_torneiras_adm = int(dados.get('torneiras_adm') or dados.get('qtd_torneiras_adm') or 0)
+    secar_kw = float(dados.get('secar_kw') or 0)
+    secar_apto = int(dados.get('secar_apto') or 0)
+    lavar_kw = float(dados.get('lavar_kw') or 0)
+    lavar_apto = int(dados.get('lavar_apto') or 0)
     motores = dados.get('motores', [])
     outras_cargas_apt = dados.get('outras_cargas_apt', [])
     outras_cargas_adm = dados.get('outras_cargas_adm', [])
@@ -390,8 +390,8 @@ def calcular(dados):
     maior = 0
     motores_detalhes = []
     for m in motores:
-        cv = float(m['cv'])
-        qtd = int(m['qtd'])
+        cv = float(m.get('cv') or 0)
+        qtd = int(m.get('qtd') or 1)
         kva, kw = cv_para_kva(cv)
         total_kva = kva * qtd
         total += total_kva
