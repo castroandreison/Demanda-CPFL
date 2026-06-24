@@ -152,3 +152,8 @@ def excluir_projeto(projeto_id):
     conn.commit(); conn.close()
 
 init_db()
+if USING_PG:
+    import sqlite3
+    conn = get_conn()
+    db_helper.migrate_ged119(conn)
+    conn.close()
