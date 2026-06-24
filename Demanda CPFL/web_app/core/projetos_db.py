@@ -141,6 +141,16 @@ def carregar_projeto(projeto_id):
     proj_dict['ac_adm'] = ac_adm
     return proj_dict
 
+def _n(v, default=0):
+    if v is None or v == '': return default
+    try: return float(v)
+    except: return default
+
+def _i(v, default=0):
+    if v is None or v == '': return default
+    try: return int(v)
+    except: return default
+
 def salvar_projeto(projeto_id, dados):
     conn = get_conn()
     cursor = conn.cursor()
@@ -161,7 +171,7 @@ def salvar_projeto(projeto_id, dados):
                   'aterr_haste','aterr_comprimento','aterr_conexao')
     campos_extras = {k: dados.get(k) for k in extra_keys if k in dados}
     resultados = dados.get('resultados', {})
-    vals = tuple(dados.get(c, 0) for c in cols)
+    vals = tuple(dados.get(c, '') if c in ('nome','tipo') else _n(dados.get(c)) for c in cols)
     if projeto_id:
         sql = f"UPDATE projetos SET {'=?,'.join(cols)}=?, campos_extras=?, resultados=? WHERE id=?"
         cursor.execute(sql, vals + (json.dumps(campos_extras), json.dumps(resultados), projeto_id))
@@ -173,33 +183,35 @@ def salvar_projeto(projeto_id, dados):
     for m in dados.get('motores', []):
         desc = m.get('desc', m.get('descricao', ''))
         cursor.execute("INSERT INTO motores_projeto (projeto_id, descricao, cv, quantidade) VALUES (?, ?, ?, ?)",
-                       (projeto_id, desc, float(m['cv']), int(m['qtd'])))
+                       (projeto_id, desc, _n(m.get('cv')), _i(m.get('qtd'), 1)))
     cursor.execute("DELETE FROM outras_cargas_projeto WHERE projeto_id = ?", (projeto_id,))
     for c in dados.get('outras_cargas_apt', []):
+        cdesc = c[0] if isinstance(c, list) else c.get('descricao','')
+        cpot = _n(c[1] if isinstance(c, list) else c.get('potencia'))
+        cqtd = _i(c[2] if isinstance(c, list) else c.get('quantidade'), 1)
         cursor.execute("INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES (?, 'apt', ?, ?, ?)",
-                       (projeto_id, c[0] if isinstance(c, list) else c['descricao'],
-                        float(c[1] if isinstance(c, list) else c['potencia']),
-                        int(c[2] if isinstance(c, list) else c['quantidade'])))
+                       (projeto_id, cdesc, cpot, cqtd))
     for c in dados.get('outras_cargas_adm', []):
+        cdesc = c[0] if isinstance(c, list) else c.get('descricao','')
+        cpot = _n(c[1] if isinstance(c, list) else c.get('potencia'))
+        cqtd = _i(c[2] if isinstance(c, list) else c.get('quantidade'), 1)
         cursor.execute("INSERT INTO outras_cargas_projeto (projeto_id, tipo, descricao, potencia, quantidade) VALUES (?, 'adm', ?, ?, ?)",
-                       (projeto_id, c[0] if isinstance(c, list) else c['descricao'],
-                        float(c[1] if isinstance(c, list) else c['potencia']),
-                        int(c[2] if isinstance(c, list) else c['quantidade'])))
+                       (projeto_id, cdesc, cpot, cqtd))
     cursor.execute("DELETE FROM ac_projeto WHERE projeto_id = ?", (projeto_id,))
     for ac in dados.get('ac_apt', []):
         desc = ac.get('descricao', ac.get('desc', ''))
-        pot = float(ac.get('potencia', ac.get('pot', 0)))
-        qtd = int(ac.get('quantidade', ac.get('qtd', 1)))
-        btu = int(ac.get('btu', 0))
+        pot = _n(ac.get('potencia', ac.get('pot')))
+        qtd = _i(ac.get('quantidade', ac.get('qtd')), 1)
+        btu = _i(ac.get('btu'))
         tipo_eq = ac.get('tipo_equipamento', '')
         incluir = 1 if ac.get('incluir', 1) else 0
         cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir) VALUES (?, 'apt', ?, ?, ?, ?, ?, ?)",
                        (projeto_id, desc, pot, qtd, btu, tipo_eq, incluir))
     for ac in dados.get('ac_adm', []):
         desc = ac.get('descricao', ac.get('desc', ''))
-        pot = float(ac.get('potencia', ac.get('pot', 0)))
-        qtd = int(ac.get('quantidade', ac.get('qtd', 1)))
-        btu = int(ac.get('btu', 0))
+        pot = _n(ac.get('potencia', ac.get('pot')))
+        qtd = _i(ac.get('quantidade', ac.get('qtd')), 1)
+        btu = _i(ac.get('btu'))
         tipo_eq = ac.get('tipo_equipamento', '')
         incluir = 1 if ac.get('incluir', 1) else 0
         cursor.execute("INSERT INTO ac_projeto (projeto_id, tipo, descricao, potencia_w, quantidade, btu, tipo_equipamento, incluir) VALUES (?, 'adm', ?, ?, ?, ?, ?, ?)",

@@ -1140,7 +1140,7 @@ function autoSalvarG119() {
     clearTimeout(autoSaveTimerG119);
     autoSaveTimerG119 = setTimeout(function() {
         const nome = document.getElementById('projeto_nome').value.trim();
-        if (!currentProjetoId || !nome) return;
+        if (!nome) return;
         const dados = getDados();
         dados.id = currentProjetoId;
         dados.nome = nome;

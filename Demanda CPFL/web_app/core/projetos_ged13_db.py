@@ -95,11 +95,21 @@ def carregar_projeto(projeto_id):
     proj_dict['cargas'] = itens
     return proj_dict
 
+def _n(v, default=0):
+    if v is None or v == '': return default
+    try: return float(v)
+    except: return default
+
+def _i(v, default=0):
+    if v is None or v == '': return default
+    try: return int(v)
+    except: return default
+
 def salvar_projeto(projeto_id, dados):
     conn = get_conn()
     cursor = conn.cursor()
     unidade = dados.get('unidade', '')
-    m2 = float(dados.get('m2', 0))
+    m2 = _n(dados.get('m2'))
     tipo = dados.get('tipo', 'Residencial')
     tensao = dados.get('tensao', '127/220V')
     if projeto_id:
@@ -110,14 +120,14 @@ def salvar_projeto(projeto_id, dados):
     cursor.execute("DELETE FROM itens_projeto_ged13 WHERE projeto_id = ?", (projeto_id,))
     for item in dados.get('cargas', []):
         nome = item.get('nome', '')
-        potencia = float(item.get('potencia', 0))
-        tipo = int(item.get('tipo', 0))
-        quantidade = int(item.get('quantidade', 1))
-        cv = float(item.get('cv', 0))
-        btu = int(item.get('btu', 0))
-        fp = float(item.get('fp', 1.0))
+        potencia = _n(item.get('potencia'))
+        tipoi = _i(item.get('tipo'))
+        quantidade = _i(item.get('quantidade'), 1)
+        cv = _n(item.get('cv'))
+        btu = _i(item.get('btu'))
+        fp = _n(item.get('fp'), 1.0)
         cursor.execute("INSERT INTO itens_projeto_ged13 (projeto_id, nome, potencia, tipo, quantidade, cv, btu, fp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                       (projeto_id, nome, potencia, tipo, quantidade, cv, btu, fp))
+                       (projeto_id, nome, potencia, tipoi, quantidade, cv, btu, fp))
     conn.commit()
     conn.close()
     return projeto_id
