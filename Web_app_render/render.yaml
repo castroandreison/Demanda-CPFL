@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: demanda-cpfl
+    runtime: python
+    region: ohio
+    plan: free
+    rootDir: Web_app_render
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120
