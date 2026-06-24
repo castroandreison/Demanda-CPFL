@@ -682,7 +682,7 @@ function autoSalvarG13() {
     clearTimeout(autoSaveTimerG13);
     autoSaveTimerG13 = setTimeout(function() {
         const nome = document.getElementById('projeto_nome').value.trim();
-        if (!currentProjetoIdG13 || !nome) return;
+        if (!nome) return;
         const { geral, todasCargas } = montarDadosProjetoG13();
         fetch('/api/ged13/projetos/salvar', {
             method: 'POST',
@@ -716,7 +716,7 @@ function salvarProjetoG13() {
     .catch(err => alert('Erro ao salvar projeto: ' + err.message));
 }
 
-function novoProjetoG13() {
+function _limparFormG13() {
     currentProjetoIdG13 = null;
     document.getElementById('projeto_nome').value = '';
     setGeral({ unidade: '', m2: 0 });
@@ -730,7 +730,27 @@ function novoProjetoG13() {
         renderAba(aba);
     }
     document.getElementById('result-container').style.display = 'none';
-    calcTabG13('tab-0');
+}
+
+function novoProjetoG13() {
+    const nome = document.getElementById('projeto_nome').value.trim();
+    if (nome) {
+        const { geral, todasCargas } = montarDadosProjetoG13();
+        fetch('/api/ged13/projetos/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentProjetoIdG13, nome, unidade: geral.unidade, m2: geral.m2, tipo: geral.tipo, tensao: geral.tensao, cargas: todasCargas })
+        })
+        .then(r => r.json())
+        .then(function(resp) {
+            if (resp.success) currentProjetoIdG13 = resp.data.id;
+            _limparFormG13();
+            listarProjetosG13();
+        })
+        .catch(function() {});
+    } else {
+        _limparFormG13();
+    }
 }
 
 function excluirProjetoG13() {
@@ -741,7 +761,7 @@ function excluirProjetoG13() {
     .then(r => r.json())
     .then(resp => {
         if (!resp.success) throw new Error(resp.error);
-        novoProjetoG13();
+        currentProjetoIdG13 = null;
         listarProjetosG13();
     })
     .catch(err => alert('Erro ao excluir projeto: ' + err.message));
