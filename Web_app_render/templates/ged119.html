@@ -1176,7 +1176,7 @@ function salvarProjeto() {
     .catch(err => alert('Erro ao salvar projeto: ' + err.message));
 }
 
-function novoProjeto() {
+function _limparForm() {
     currentProjetoId = null;
     document.getElementById('projeto_nome').value = '';
     ['aptos','area_apto','area_adm','iluminacao','tomadas',
@@ -1212,7 +1212,6 @@ function novoProjeto() {
     acEditIndex = { apt: null, adm: null };
     renderAc('apt');
     renderAc('adm');
-    // Clear saved results
     ultimoResultado = null;
     ultimoDg = null;
     ultimoResultadoTransformador = null;
@@ -1224,7 +1223,26 @@ function novoProjeto() {
     document.getElementById('poste-result').style.display = 'none';
     document.getElementById('ramal-lig-result').style.display = 'none';
     document.getElementById('ramal-result').style.display = 'none';
-    calcTab('tab-dados');
+}
+
+function novoProjeto() {
+    const nome = document.getElementById('projeto_nome').value.trim();
+    if (nome) {
+        const dados = getDados();
+        dados.id = currentProjetoId;
+        dados.nome = nome;
+        fetch('/api/projetos/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados)
+        }).then(r => r.json()).then(function(resp) {
+            if (resp.success) currentProjetoId = resp.data.id;
+            _limparForm();
+            listarProjetos();
+        }).catch(function() {});
+    } else {
+        _limparForm();
+    }
 }
 
 function excluirProjeto() {
@@ -1235,7 +1253,7 @@ function excluirProjeto() {
     .then(r => r.json())
     .then(resp => {
         if (!resp.success) throw new Error(resp.error);
-        novoProjeto();
+        currentProjetoId = null;
         listarProjetos();
     })
     .catch(err => alert('Erro ao excluir projeto: ' + err.message));
