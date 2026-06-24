@@ -91,13 +91,20 @@ def init_db():
         cursor.execute("ALTER TABLE ac_projeto ADD COLUMN incluir INTEGER DEFAULT 1")
     except sqlite3.OperationalError:
         pass
+    try:
+        cursor.execute("ALTER TABLE projetos ADD COLUMN usuario_id INTEGER")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
-def listar_projetos():
+def listar_projetos(usuario_id=None):
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos ORDER BY data_criacao DESC")
+    if usuario_id:
+        cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos WHERE usuario_id = ? ORDER BY data_criacao DESC", (usuario_id,))
+    else:
+        cursor.execute("SELECT id, nome, aptos, data_criacao FROM projetos ORDER BY data_criacao DESC")
     rows = [{'id': r[0], 'nome': r[1], 'aptos': r[2], 'data_criacao': r[3]} for r in cursor.fetchall()]
     conn.close()
     return rows
@@ -151,7 +158,7 @@ def _i(v, default=0):
     try: return int(v)
     except: return default
 
-def salvar_projeto(projeto_id, dados):
+def salvar_projeto(projeto_id, dados, usuario_id=None):
     conn = get_conn()
     cursor = conn.cursor()
     cols = ('nome', 'aptos', 'area_apto', 'area_adm', 'iluminacao', 'tomadas',
@@ -177,7 +184,7 @@ def salvar_projeto(projeto_id, dados):
         cursor.execute(sql, vals + (json.dumps(campos_extras), json.dumps(resultados), projeto_id))
     else:
         placeholders = ','.join('?' * len(cols))
-        cursor.execute(f"INSERT INTO projetos ({','.join(cols)}, campos_extras, resultados) VALUES ({placeholders},?,?)", vals + (json.dumps(campos_extras), json.dumps(resultados)))
+        cursor.execute(f"INSERT INTO projetos ({','.join(cols)}, campos_extras, resultados, usuario_id) VALUES ({placeholders},?,?,?)", vals + (json.dumps(campos_extras), json.dumps(resultados), usuario_id))
         projeto_id = cursor.lastrowid
     cursor.execute("DELETE FROM motores_projeto WHERE projeto_id = ?", (projeto_id,))
     for m in dados.get('motores', []):

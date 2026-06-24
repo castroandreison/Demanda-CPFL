@@ -69,13 +69,20 @@ def init_db():
         cursor.execute("ALTER TABLE itens_projeto_ged13 ADD COLUMN fp REAL DEFAULT 1.0")
     except:
         pass
+    try:
+        cursor.execute("ALTER TABLE projetos_ged13 ADD COLUMN usuario_id INTEGER")
+    except:
+        pass
     conn.commit()
     conn.close()
 
-def listar_projetos():
+def listar_projetos(usuario_id=None):
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nome, unidade, m2, tipo, tensao, data_criacao FROM projetos_ged13 ORDER BY data_criacao DESC")
+    if usuario_id:
+        cursor.execute("SELECT id, nome, unidade, m2, tipo, tensao, data_criacao FROM projetos_ged13 WHERE usuario_id = ? ORDER BY data_criacao DESC", (usuario_id,))
+    else:
+        cursor.execute("SELECT id, nome, unidade, m2, tipo, tensao, data_criacao FROM projetos_ged13 ORDER BY data_criacao DESC")
     rows = [{'id': r[0], 'nome': r[1], 'unidade': r[2], 'm2': r[3], 'tipo': r[4], 'tensao': r[5], 'data_criacao': r[6]} for r in cursor.fetchall()]
     conn.close()
     return rows
@@ -105,7 +112,7 @@ def _i(v, default=0):
     try: return int(v)
     except: return default
 
-def salvar_projeto(projeto_id, dados):
+def salvar_projeto(projeto_id, dados, usuario_id=None):
     conn = get_conn()
     cursor = conn.cursor()
     unidade = dados.get('unidade', '')
@@ -115,7 +122,7 @@ def salvar_projeto(projeto_id, dados):
     if projeto_id:
         cursor.execute("UPDATE projetos_ged13 SET nome = ?, unidade = ?, m2 = ?, tipo = ?, tensao = ? WHERE id = ?", (dados['nome'], unidade, m2, tipo, tensao, projeto_id))
     else:
-        cursor.execute("INSERT INTO projetos_ged13 (nome, unidade, m2, tipo, tensao) VALUES (?, ?, ?, ?, ?)", (dados['nome'], unidade, m2, tipo, tensao))
+        cursor.execute("INSERT INTO projetos_ged13 (nome, unidade, m2, tipo, tensao, usuario_id) VALUES (?, ?, ?, ?, ?, ?)", (dados['nome'], unidade, m2, tipo, tensao, usuario_id))
         projeto_id = cursor.lastrowid
     cursor.execute("DELETE FROM itens_projeto_ged13 WHERE projeto_id = ?", (projeto_id,))
     for item in dados.get('cargas', []):

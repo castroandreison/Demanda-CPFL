@@ -2,7 +2,16 @@
 {% block content %}
 <div class="hero">
     <h1>Cálculo de Demanda</h1>
-    <p>Selecione a norma técnica para realizar o cálculo de demanda</p>
+    <p>Plataforma de dimensionamento elétrico conforme normas CPFL</p>
+</div>
+
+<div id="welcome-msg" class="hidden" style="text-align:center;margin-bottom:20px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);">
+    <p style="color:var(--text-secondary);">Bem-vindo(a), <strong id="welcome-name" style="color:var(--accent);"></strong>!</p>
+    <p style="font-size:13px;color:var(--text-muted);">Selecione a norma técnica abaixo para realizar seus dimensionamentos. Seus projetos ficarão salvos exclusivamente para sua conta.</p>
+</div>
+
+<div id="login-msg" style="text-align:center;margin-bottom:20px;padding:20px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius);">
+    <p style="color:var(--text-secondary);font-size:14px;">Faça <a onclick="document.getElementById('login-btn').click()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">login</a> ou <a onclick="document.getElementById('login-btn').click()" style="color:var(--accent);cursor:pointer;text-decoration:underline;">cadastre-se</a> para salvar seus projetos e acessá-los de qualquer lugar.</p>
 </div>
 
 <div class="calc-cards">
@@ -21,4 +30,25 @@
         <span class="btn btn-primary">Acessar</span>
     </a>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function atualizarHome() {
+        const loginMsg = document.getElementById('login-msg');
+        const welcomeMsg = document.getElementById('welcome-msg');
+        const welcomeName = document.getElementById('welcome-name');
+        if (currentUser) {
+            loginMsg.style.display = 'none';
+            welcomeMsg.classList.remove('hidden');
+            welcomeName.textContent = currentUser.nome_completo || currentUser.username;
+        } else {
+            loginMsg.style.display = 'block';
+            welcomeMsg.classList.add('hidden');
+        }
+    }
+    atualizarHome();
+    const origAtualizar = atualizarInterface;
+    atualizarInterface = function() { if (origAtualizar) origAtualizar(); atualizarHome(); };
+});
+</script>
 {% endblock %}

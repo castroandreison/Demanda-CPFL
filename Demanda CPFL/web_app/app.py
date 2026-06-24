@@ -1,6 +1,7 @@
 import os
 import sys
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
+from datetime import timedelta
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 if _dir not in sys.path:
@@ -12,12 +13,19 @@ from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_con
 import core.ged119 as ged119_mod
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
 from core.projetos_ged13_db import listar_projetos as listar_projetos_g13, carregar_projeto as carregar_projeto_g13, salvar_projeto as salvar_projeto_g13, excluir_projeto as excluir_projeto_g13
+from core.auth_db import autenticar, registrar_usuario, registrar_login, registrar_logout, listar_usuarios_com_estatisticas
 
 app = Flask(__name__)
+app.secret_key = 'cpfl-demanda-secret-key-change-in-production'
+app.permanent_session_lifetime = timedelta(days=7)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
 
 @app.route('/ged119')
 def ged119():
@@ -181,81 +189,135 @@ def api_ged13():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
-# --- PROJECT MANAGEMENT API ---
+# --- AUTH API ---
+@app.route('/api/auth/login', methods=['POST'])
+def api_auth_login():
+    try:
+        dados = request.get_json()
+        user, err = autenticar(dados.get('username', ''), dados.get('password', ''))
+        if err: return jsonify({'success': False, 'error': err}), 401
+        ip = request.remote_addr or ''
+        ua = request.headers.get('User-Agent', '')
+        log_id = registrar_login(user['id'], ip, ua)
+        session.permanent = True
+        session['user'] = user
+        session['log_id'] = log_id
+        return jsonify({'success': True, 'data': user})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
+@app.route('/api/auth/register', methods=['POST'])
+def api_auth_register():
+    try:
+        dados = request.get_json()
+        user, err = registrar_usuario(
+            dados.get('username', ''), dados.get('password', ''),
+            dados.get('nome_completo', ''), dados.get('cidade', ''),
+            dados.get('concessionaria', ''), dados.get('contato', '')
+        )
+        if err: return jsonify({'success': False, 'error': err}), 400
+        return jsonify({'success': True, 'data': user})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/auth/logout', methods=['POST'])
+def api_auth_logout():
+    log_id = session.pop('log_id', None)
+    session.pop('user', None)
+    if log_id: registrar_logout(log_id)
+    return jsonify({'success': True})
+
+@app.route('/api/auth/me', methods=['GET'])
+def api_auth_me():
+    user = session.get('user')
+    if not user: return jsonify({'success': False, 'error': 'Nao autenticado'}), 401
+    return jsonify({'success': True, 'data': user})
+
+# --- ADMIN API ---
+@app.route('/api/admin/usuarios', methods=['GET'])
+def api_admin_usuarios():
+    user = session.get('user')
+    if not user or not user.get('is_admin'): return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+    data = listar_usuarios_com_estatisticas()
+    return jsonify({'success': True, 'data': data})
+
+@app.route('/api/admin/projetos/<int:usuario_id>', methods=['GET'])
+def api_admin_projetos_usuario(usuario_id):
+    user = session.get('user')
+    if not user or not user.get('is_admin'): return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+    proj119 = listar_projetos(usuario_id=usuario_id)
+    proj13 = listar_projetos_g13(usuario_id=usuario_id)
+    return jsonify({'success': True, 'data': {'ged119': proj119, 'ged13': proj13}})
+
+# --- PROJECT MANAGEMENT API (GED-119) ---
 @app.route('/api/projetos/listar', methods=['GET'])
 def api_projetos_listar():
     try:
-        projetos = listar_projetos()
+        user = session.get('user')
+        if not user: return jsonify({'success': True, 'data': []})
+        uid = None if user.get('is_admin') else user.get('id')
+        projetos = listar_projetos(usuario_id=uid)
         return jsonify({'success': True, 'data': projetos})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/projetos/carregar/<int:projeto_id>', methods=['GET'])
 def api_projetos_carregar(projeto_id):
-    try:
-        proj = carregar_projeto(projeto_id)
-        if proj is None:
-            return jsonify({'success': False, 'error': 'Projeto nao encontrado'}), 404
-        return jsonify({'success': True, 'data': proj})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    try: proj = carregar_projeto(projeto_id); return jsonify({'success': True, 'data': proj}) if proj else jsonify({'success': False, 'error': 'Projeto nao encontrado'}), 404
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/projetos/salvar', methods=['POST'])
 def api_projetos_salvar():
     try:
-        dados = request.get_json()
-        projeto_id = dados.get('id')
-        novo_id = salvar_projeto(projeto_id, dados)
+        user = session.get('user')
+        if not user: return jsonify({'success': False, 'error': 'Faça login para salvar projetos'}), 401
+        dados = request.get_json(); projeto_id = dados.get('id')
+        uid = user.get('id')
+        novo_id = salvar_projeto(projeto_id, dados, usuario_id=uid)
         return jsonify({'success': True, 'data': {'id': novo_id}})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/projetos/excluir/<int:projeto_id>', methods=['DELETE'])
 def api_projetos_excluir(projeto_id):
     try:
-        excluir_projeto(projeto_id)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+        user = session.get('user')
+        if not user: return jsonify({'success': False, 'error': 'Faça login para excluir projetos'}), 401
+        excluir_projeto(projeto_id); return jsonify({'success': True})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 # --- GED-13 PROJECT MANAGEMENT API ---
-
 @app.route('/api/ged13/projetos/listar', methods=['GET'])
 def api_ged13_projetos_listar():
     try:
-        projetos = listar_projetos_g13()
+        user = session.get('user')
+        if not user: return jsonify({'success': True, 'data': []})
+        uid = None if user.get('is_admin') else user.get('id')
+        projetos = listar_projetos_g13(usuario_id=uid)
         return jsonify({'success': True, 'data': projetos})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/ged13/projetos/carregar/<int:projeto_id>', methods=['GET'])
 def api_ged13_projetos_carregar(projeto_id):
-    try:
-        proj = carregar_projeto_g13(projeto_id)
-        if proj is None:
-            return jsonify({'success': False, 'error': 'Projeto nao encontrado'}), 404
-        return jsonify({'success': True, 'data': proj})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    try: proj = carregar_projeto_g13(projeto_id); return jsonify({'success': True, 'data': proj}) if proj else jsonify({'success': False, 'error': 'Projeto nao encontrado'}), 404
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/ged13/projetos/salvar', methods=['POST'])
 def api_ged13_projetos_salvar():
     try:
-        dados = request.get_json()
-        projeto_id = dados.get('id')
-        novo_id = salvar_projeto_g13(projeto_id, dados)
+        user = session.get('user')
+        if not user: return jsonify({'success': False, 'error': 'Faça login para salvar projetos'}), 401
+        dados = request.get_json(); projeto_id = dados.get('id')
+        uid = user.get('id')
+        novo_id = salvar_projeto_g13(projeto_id, dados, usuario_id=uid)
         return jsonify({'success': True, 'data': {'id': novo_id}})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/ged13/projetos/excluir/<int:projeto_id>', methods=['DELETE'])
 def api_ged13_projetos_excluir(projeto_id):
     try:
-        excluir_projeto_g13(projeto_id)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+        user = session.get('user')
+        if not user: return jsonify({'success': False, 'error': 'Faça login para excluir projetos'}), 401
+        excluir_projeto_g13(projeto_id); return jsonify({'success': True})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
