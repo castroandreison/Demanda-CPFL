@@ -118,7 +118,7 @@ def _format_condutor_display(secao_mm2, n_paralelo=None):
     return v, str(int(v)) if v == int(v) else str(v)
 
 def calcular_ramal(dados):
-    corrente = float(dados['corrente'])
+    corrente = float(dados.get('corrente') or 0)
     isolacao = dados.get('isolacao', 'PVC')
     material = dados.get('material', 'cobre')
     metodo = dados.get('metodo', 'C')

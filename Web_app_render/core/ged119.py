@@ -127,7 +127,7 @@ def buscar_faixa_tabela(cursor, tabela, col_min, col_max, valor):
     return None
 
 def calcular_transformador(dados):
-    dg = float(dados['dg'])
+    dg = float(dados.get('dg') or 0)
     tipo = dados.get('tipo', 'Residencial')
     tensao_opcao = dados.get('tensao', '380/220V (trifásico)')
     metodo_inst = dados.get('metodo_inst', 'C')
@@ -264,7 +264,7 @@ def get_formas_agrupamento():
     return formas
 
 def calcular_poste(dados):
-    dg = float(dados['dg'])
+    dg = float(dados.get('dg') or 0)
     tensao = dados.get('tensao', '220/380')
     conn = get_conn()
     cursor = conn.cursor()
@@ -294,7 +294,7 @@ def calcular_poste(dados):
     }
 
 def calcular_ramal_ligacao(dados):
-    dg = float(dados['dg'])
+    dg = float(dados.get('dg') or 0)
     tensao_kv = int(dados.get('tensao_kv', 15))
     V = tensao_kv * 1000
     I = dg * 1000 / (V * 3**0.5)
@@ -330,13 +330,13 @@ def calcular_ramal_ligacao(dados):
     return resultado
 
 def calcular(dados):
-    aptos = int(dados['aptos'])
-    area_apto = float(dados['area_apto'])
-    area_adm = float(dados['area_adm'])
-    iluminacao = float(dados['iluminacao'])
-    tomadas = float(dados['tomadas'])
-    chuveiro_kw = float(dados['chuveiro_kw'])
-    torneira_kw = float(dados['torneira_kw'])
+    aptos = int(dados.get('aptos') or 0)
+    area_apto = float(dados.get('area_apto') or 0)
+    area_adm = float(dados.get('area_adm') or 0)
+    iluminacao = float(dados.get('iluminacao') or 0)
+    tomadas = float(dados.get('tomadas') or 0)
+    chuveiro_kw = float(dados.get('chuveiro_kw') or 0)
+    torneira_kw = float(dados.get('torneira_kw') or 0)
     qtd_chuveiros = int(dados.get('chuveiros_apto', dados.get('qtd_chuveiros', 1)))
     qtd_torneiras = int(dados.get('torneiras_apto', dados.get('qtd_torneiras', 0)))
     qtd_chuveiros_adm = int(dados.get('chuveiros_adm', dados.get('qtd_chuveiros_adm', 0)))
