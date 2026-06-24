@@ -607,6 +607,8 @@ function listarProjetosG13() {
             tr.onclick = function() {
                 document.querySelectorAll('#projeto-table-body tr').forEach(r => r.classList.remove('selected'));
                 tr.classList.add('selected');
+            };
+            tr.ondblclick = function() {
                 carregarProjetoG13(p.id);
             };
             tr.innerHTML = '<td>' + p.id + '</td><td>' + p.nome + '</td><td>' + (p.unidade || '-') + '</td><td>' + (p.m2 || '0') + '</td><td>' + p.data_criacao + '</td>';

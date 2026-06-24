@@ -1001,6 +1001,8 @@ function listarProjetos() {
             tr.onclick = function() {
                 document.querySelectorAll('#projeto-table-body tr').forEach(r => r.classList.remove('selected'));
                 tr.classList.add('selected');
+            };
+            tr.ondblclick = function() {
                 carregarProjeto(p.id);
             };
             tr.innerHTML = `<td>${p.id}</td><td>${p.nome}</td><td>${p.aptos}</td><td>${p.data_criacao}</td>`;
