@@ -2958,9 +2958,11 @@ function atualizarRamalParSelecao() {
 
     var el = document.getElementById('ramal-par-selecionado');
     if (!el) return;
+    var neutroLabel = cfg.tabela48 ? 'Neutro (Tabela 48)' : 'Neutro';
+    var protLabel = cfg.tabela48 ? 'Proteção (Tabela 58)' : 'Proteção';
     el.innerHTML = '<span class="value">' + op.n_condutores + '×' + op.secao_mm2 + ' mm² — ' + op.capacidade_por_condutor + ' A/cabo = ' + op.capacidade_total + ' A total' +
-        ' &nbsp;|&nbsp; <span style="color:var(--cyan);">Neutro: ' + neutroDisplay + '</span>' +
-        ' &nbsp;|&nbsp; <span style="color:var(--purple);">Proteção: ' + protDisplay + '</span></span>';
+        ' &nbsp;|&nbsp; <span style="color:var(--cyan);">' + neutroLabel + ': ' + neutroDisplay + '</span>' +
+        ' &nbsp;|&nbsp; <span style="color:var(--purple);">' + protLabel + ': ' + protDisplay + '</span></span>';
 }
 
 function atualizarRamalParCheckbox(i) {
@@ -3025,8 +3027,10 @@ function mostrarResultadoRamal(d) {
             paraleloHtml += '<div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;align-items:center;">';
             paraleloHtml += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;" onclick="event.stopPropagation();"><input type="checkbox" id="ramal_par_chk_neutro_' + i + '" ' + (nChecked ? 'checked' : '') + ' onchange="atualizarRamalParCheckbox(' + i + ')" style="cursor:pointer;"> Red. Neutro</label>';
             paraleloHtml += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;" onclick="event.stopPropagation();"><input type="checkbox" id="ramal_par_chk_protecao_' + i + '" ' + (pChecked ? 'checked' : '') + ' onchange="atualizarRamalParCheckbox(' + i + ')" style="cursor:pointer;"> Red. Proteção</label>';
-            paraleloHtml += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;" onclick="event.stopPropagation();"><input type="checkbox" id="ramal_par_chk_tabela48_' + i + '" ' + (tChecked ? 'checked' : '') + ' onchange="atualizarRamalParCheckbox(' + i + ')" style="cursor:pointer;"> Tab. 48 / Div. Fase</label>';
-            paraleloHtml += '<span style="font-size:11px;color:var(--text-muted);margin-left:auto;">Neutro: <span style="color:var(--cyan);font-weight:600;">' + neutroDisp + '</span> | Proteção: <span style="color:var(--purple);font-weight:600;">' + protDisp + '</span></span>';
+            paraleloHtml += '<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;" onclick="event.stopPropagation();"><input type="checkbox" id="ramal_par_chk_tabela48_' + i + '" ' + (tChecked ? 'checked' : '') + ' onchange="atualizarRamalParCheckbox(' + i + ')" style="cursor:pointer;"> Neutro (Tab. 48) / Proteção (Tab. 58)</label>';
+            var nLabel = tChecked ? 'Neutro (Tab. 48)' : 'Neutro';
+            var pLabel = tChecked ? 'Proteção (Tab. 58)' : 'Proteção';
+            paraleloHtml += '<span style="font-size:11px;color:var(--text-muted);margin-left:auto;">' + nLabel + ': <span style="color:var(--cyan);font-weight:600;">' + neutroDisp + '</span> | ' + pLabel + ': <span style="color:var(--purple);font-weight:600;">' + protDisp + '</span></span>';
             paraleloHtml += '</div></div>';
         });
     }
@@ -3496,7 +3500,9 @@ var sectionRenderers = {
             var rd_prot_val = (typeof getRamalParProtecao === 'function') ? parseFloat(getRamalParProtecao(rd_paralelo_sel, rd_cfg)) : parseFloat(rd_paralelo_sel.protecao_mm2 || rd_paralelo_sel.protecao_cheio_mm2);
             var rd_neutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_neutro_val, rd_paralelo_sel.n_condutores) : (rd_paralelo_sel.neutro_display || rd_paralelo_sel.neutro_mm2);
             var rd_prot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_prot_val, rd_paralelo_sel.n_condutores) : (rd_paralelo_sel.protecao_display || rd_paralelo_sel.protecao_mm2);
-            var rd_op_det = ' | Neutro: ' + rd_neutro_disp + ' mm² | Proteção: ' + rd_prot_disp + ' mm²';
+            var rd_nLabel = rd_cfg.tabela48 ? 'Neutro (Tab. 48)' : 'Neutro';
+            var rd_pLabel = rd_cfg.tabela48 ? 'Proteção (Tab. 58)' : 'Proteção';
+            var rd_op_det = ' | ' + rd_nLabel + ': ' + rd_neutro_disp + ' mm² | ' + rd_pLabel + ': ' + rd_prot_disp + ' mm²';
             html += '<div class="result-line" style="font-weight:700;">▸ <span class="value">' + rd_paralelo_sel.n_condutores + '×' + rd_paralelo_sel.secao_mm2 + ' mm² → ' + rd_paralelo_sel.capacidade_por_condutor + ' A/cabo = ' + rd_paralelo_sel.capacidade_total + ' A total' + rd_op_det + '</span></div>';
         }
         if (rd_queda) html += rd_queda;
@@ -3508,9 +3514,11 @@ var sectionRenderers = {
             var rd_fprot = (typeof getRamalParProtecao === 'function') ? parseFloat(getRamalParProtecao(rd_par_final, rd_fcfg)) : parseFloat(rd_par_final.protecao_mm2 || rd_par_final.protecao_cheio_mm2);
             var rd_fneutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fneutro, rd_par_final.n_condutores) : (rd_par_final.neutro_display || rd_par_final.neutro_mm2);
             var rd_fprot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fprot, rd_par_final.n_condutores) : (rd_par_final.protecao_display || rd_par_final.protecao_mm2);
-            html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total (Neutro: ' + rd_fneutro_disp + ' mm², Proteção: ' + rd_fprot_disp + ' mm²)</div></div>';
+            var rd_fnLabel = rd_fcfg.tabela48 ? 'Neutro (Tab. 48)' : 'Neutro';
+            var rd_fpLabel = rd_fcfg.tabela48 ? 'Proteção (Tab. 58)' : 'Proteção';
+            html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total (' + rd_fnLabel + ': ' + rd_fneutro_disp + ' mm², ' + rd_fpLabel + ': ' + rd_fprot_disp + ' mm²)</div></div>';
         } else {
-            html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.neutro_mm2 ? ' (Neutro: ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²)' : '') + (rd.protecao_mm2 ? ' (Proteção: ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²)' : '') + '</div></div>';
+            html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd.secao_mm2 + ' mm² - ' + rd.capacidade_A + ' A' + (rd.neutro_mm2 ? ' (Neutro (Tab. 48): ' + (rd.neutro_display || rd.neutro_mm2) + ' mm²)' : '') + (rd.protecao_mm2 ? ' (Proteção (Tab. 58): ' + (rd.protecao_display || rd.protecao_mm2) + ' mm²)' : '') + '</div></div>';
         }
         html += '</div>';
         return html;
