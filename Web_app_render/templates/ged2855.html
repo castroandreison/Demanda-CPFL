@@ -89,8 +89,25 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Fator de Pot&ecirc;ncia Atual</label>
-                <input type="number" id="in-fp-atual" min="0.5" max="0.99" step="0.01" value="0.85" style="width:100%;">
+                <label>Ramo de Atividade</label>
+                <select id="in-ramo" style="width:100%;" onchange="toggleRamo()">
+                    <option value="Transformacao">Transformação (Industrial)</option>
+                    <option value="Servico">Prestação de Serviço</option>
+                </select>
+            </div>
+        </div>
+        <div id="ramo-fd-group" class="form-grid col-2" style="margin-top:12px;">
+            <div class="form-group">
+                <label>Fator de Demanda (FD)</label>
+                <input type="number" id="in-fd" min="0.1" max="1.0" step="0.01" value="0.35" style="width:100%;">
+                <small style="color:var(--text-muted);">D = CI × FD. Exemplo: 0,35 para indústria mecânica</small>
+            </div>
+            <div class="form-group">
+                <label>FP Desejado (correção)</label>
+                <select id="in-fp-desejado" style="width:100%;">
+                    <option value="0.92">0.92</option>
+                    <option value="0.95">0.95</option>
+                </select>
             </div>
         </div>
     </div>
@@ -332,21 +349,21 @@
 <div id="tab-fp" class="tab-content">
     <div class="card">
         <div class="card-header">Correção do Fator de Potência</div>
+        <div style="padding:12px;background:var(--bg-hover);border-radius:6px;margin-bottom:12px;">
+            <p style="margin:0;font-size:13px;color:var(--text-secondary);">
+                O FP médio da instalação é calculado automaticamente a partir dos equipamentos cadastrados:
+                <br><strong>FP<sub>médio</sub> = ΣkW / Σ(kW/FP)</strong>
+                <br>Se o FP médio for inferior a 0,92, será calculado o banco de capacitores necessário.
+            </p>
+        </div>
         <div class="form-grid col-2">
             <div class="form-group">
-                <label>Fator de Pot&ecirc;ncia Atual</label>
-                <input type="number" id="in-fp-atual-2" min="0.5" max="0.99" step="0.01" value="0.85" style="width:100%;">
-            </div>
-            <div class="form-group">
-                <label>Fator de Pot&ecirc;ncia Desejado</label>
-                <select id="in-fp-desejado" style="width:100%;">
+                <label>FP Desejado</label>
+                <select id="in-fp-desejado-2" style="width:100%;">
                     <option value="0.92">0.92</option>
                     <option value="0.95">0.95</option>
                 </select>
             </div>
-        </div>
-        <div style="margin-top:12px;font-size:13px;color:var(--text-muted);">
-            O banco de capacitores será calculado automaticamente no resultado com base na demanda total e no fator de potência.
         </div>
     </div>
 </div>
@@ -563,12 +580,22 @@ function delCarga(aba) {
     }
 }
 
-// Sync FP fields
-document.getElementById('in-fp-atual').addEventListener('input', function() {
-    document.getElementById('in-fp-atual-2').value = this.value;
+function toggleRamo() {
+    const ramo = document.getElementById('in-ramo').value;
+    const fdGroup = document.getElementById('ramo-fd-group');
+    if (ramo === 'Transformacao') {
+        fdGroup.style.display = 'grid';
+    } else {
+        fdGroup.style.display = 'none';
+    }
+}
+
+// Sync FP desejado fields
+document.getElementById('in-fp-desejado').addEventListener('change', function() {
+    document.getElementById('in-fp-desejado-2').value = this.value;
 });
-document.getElementById('in-fp-atual-2').addEventListener('input', function() {
-    document.getElementById('in-fp-atual').value = this.value;
+document.getElementById('in-fp-desejado-2').addEventListener('change', function() {
+    document.getElementById('in-fp-desejado').value = this.value;
 });
 
 function getDadosGerais() {
@@ -576,7 +603,8 @@ function getDadosGerais() {
         unidade: document.getElementById('in-unidade').value.trim(),
         tipo: document.getElementById('in-tipo').value,
         tensao: document.getElementById('in-tensao').value,
-        fp_atual: parseFloat(document.getElementById('in-fp-atual').value) || 0.85,
+        ramo: document.getElementById('in-ramo').value,
+        fator_demanda: parseFloat(document.getElementById('in-fd').value) || 0.35,
         fp_desejado: parseFloat(document.getElementById('in-fp-desejado').value) || 0.92,
     };
 }
@@ -585,11 +613,15 @@ function setDadosGerais(dados) {
     document.getElementById('in-unidade').value = dados.unidade || '';
     if (dados.tipo) document.getElementById('in-tipo').value = dados.tipo;
     if (dados.tensao) document.getElementById('in-tensao').value = dados.tensao;
-    if (dados.fp_atual) {
-        document.getElementById('in-fp-atual').value = dados.fp_atual;
-        document.getElementById('in-fp-atual-2').value = dados.fp_atual;
+    if (dados.ramo) {
+        document.getElementById('in-ramo').value = dados.ramo;
+        toggleRamo();
     }
-    if (dados.fp_desejado) document.getElementById('in-fp-desejado').value = dados.fp_desejado;
+    if (dados.fator_demanda) document.getElementById('in-fd').value = dados.fator_demanda;
+    if (dados.fp_desejado) {
+        document.getElementById('in-fp-desejado').value = dados.fp_desejado;
+        document.getElementById('in-fp-desejado-2').value = dados.fp_desejado;
+    }
 }
 
 function montarCargas() {
@@ -689,7 +721,7 @@ function autoSalvar() {
         fetch('/api/ged2855/projetos/salvar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, cargas: todasCargas })
+            body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, ramo: geral.ramo, fator_demanda: geral.fator_demanda, fp_desejado: geral.fp_desejado, cargas: todasCargas })
         })
         .then(r => r.json())
         .then(resp => {
@@ -703,9 +735,7 @@ document.getElementById('projeto_nome').addEventListener('input', autoSalvar);
 document.getElementById('in-unidade').addEventListener('input', autoSalvar);
 document.getElementById('in-tipo').addEventListener('change', autoSalvar);
 document.getElementById('in-tensao').addEventListener('change', autoSalvar);
-document.getElementById('in-fp-atual').addEventListener('input', autoSalvar);
-document.getElementById('in-fp-atual-2').addEventListener('input', autoSalvar);
-document.getElementById('in-fp-desejado').addEventListener('change', autoSalvar);
+document.getElementById('in-tipo').addEventListener('change', autoSalvar);
 
 function salvarProjeto() {
     const nome = document.getElementById('projeto_nome').value.trim();
@@ -714,7 +744,7 @@ function salvarProjeto() {
     fetch('/api/ged2855/projetos/salvar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, cargas: todasCargas })
+        body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, ramo: geral.ramo, fator_demanda: geral.fator_demanda, fp_desejado: geral.fp_desejado, cargas: todasCargas })
     })
     .then(r => r.json())
     .then(resp => {
@@ -729,7 +759,7 @@ function salvarProjeto() {
 function _limparForm() {
     currentProjetoId = null;
     document.getElementById('projeto_nome').value = '';
-    setDadosGerais({ unidade: '', tipo: 'Comercial', tensao: '220/380V', fp_atual: 0.85, fp_desejado: 0.92 });
+    setDadosGerais({ unidade: '', tipo: 'Comercial', tensao: '220/380V', ramo: 'Transformacao', fator_demanda: 0.35, fp_desejado: 0.92 });
     for (let aba = 1; aba <= 6; aba++) {
         cargas[aba] = [];
         editIndex[aba] = null;
@@ -747,7 +777,7 @@ function novoProjeto() {
         fetch('/api/ged2855/projetos/salvar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, cargas: todasCargas })
+            body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, ramo: geral.ramo, fator_demanda: geral.fator_demanda, fp_desejado: geral.fp_desejado, cargas: todasCargas })
         })
         .then(r => r.json())
         .then(function(resp) {
@@ -786,7 +816,7 @@ function calcular() {
     fetch('/api/ged2855/calcular', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cargas: todasCargas, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, unidade: geral.unidade })
+        body: JSON.stringify({ cargas: todasCargas, tipo: geral.tipo, tensao: geral.tensao, ramo: geral.ramo, fator_demanda: geral.fator_demanda, fp_desejado: geral.fp_desejado, unidade: geral.unidade })
     })
     .then(r => r.json())
     .then(resp => {
@@ -812,92 +842,119 @@ function mostrarResultado(d) {
     // Carga Instalada
     html += '<div class="card" style="margin-bottom:16px;">';
     html += '<div class="card-header">📊 Carga Instalada</div>';
-    html += '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência</th></tr></thead><tbody>';
-    html += '<tr><td>Iluminação e Tomadas</td><td>' + d.carga_ilum_kw + ' kW</td></tr>';
-    if (d.carga_chuveiros_kw > 0) html += '<tr><td>Chuveiros / Aquecimento</td><td>' + d.carga_chuveiros_kw + ' kW</td></tr>';
-    if (d.carga_eletro_kw > 0) html += '<tr><td>Eletrodomésticos</td><td>' + d.carga_eletro_kw + ' kW</td></tr>';
-    if (d.carga_ar_kw > 0) html += '<tr><td>Ar Condicionado</td><td>' + d.carga_ar_kw + ' kW</td></tr>';
-    if (d.d_motores > 0) html += '<tr><td>Motores</td><td>' + (d.carga_instalada_kw - d.carga_ilum_kw - d.carga_chuveiros_kw - d.carga_eletro_kw - d.carga_ar_kw).toFixed(2) + ' kW</td></tr>';
-    if (d.d_especiais > 0) html += '<tr><td>Equip. Especiais</td><td>' + d.d_especiais + ' kW</td></tr>';
-    html += '<tr style="font-weight:700;background:var(--accent);color:#fff;"><td>TOTAL</td><td>' + d.carga_instalada_kw + ' kW</td></tr>';
+    html += '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência (kW)</th></tr></thead><tbody>';
+    html += '<tr><td>Iluminação e Tomadas</td><td>' + d.carga_ilum_kw + '</td></tr>';
+    if (d.carga_chuveiros_kw > 0) html += '<tr><td>Chuveiros / Aquecimento</td><td>' + d.carga_chuveiros_kw + '</td></tr>';
+    if (d.carga_eletro_kw > 0) html += '<tr><td>Eletrodomésticos</td><td>' + d.carga_eletro_kw + '</td></tr>';
+    if (d.carga_ar_kw > 0) html += '<tr><td>Ar Condicionado</td><td>' + d.carga_ar_kw + '</td></tr>';
+    if (d.carga_motores_kw > 0) html += '<tr><td>Motores</td><td>' + d.carga_motores_kw + '</td></tr>';
+    if (d.carga_especiais_kw > 0) html += '<tr><td>Equip. Especiais</td><td>' + d.carga_especiais_kw + '</td></tr>';
+    html += '<tr style="font-weight:700;background:var(--accent);color:#fff;"><td>TOTAL (CI)</td><td>' + d.carga_instalada_kw + '</td></tr>';
     html += '</tbody></table></div>';
 
-    // Demand calculation
+    // FP Medio
     html += '<div class="card" style="margin-bottom:16px;">';
-    html += '<div class="card-header">📐 Demanda Calculada (GED-2855)</div>';
+    html += '<div class="card-header">🔋 Fator de Potência Médio</div>';
+    html += '<div class="result-section">';
+    html += '<div class="result-line">FP<sub>médio</sub> = ΣkW / Σ(kW/FP) = <span class="highlight">' + d.fp_medio + '</span></div>';
+    html += '<table class="result-table"><thead><tr><th>Equipamento</th><th>kW</th><th>FP</th><th>kW/FP</th></tr></thead><tbody>';
+    (d.itens || []).forEach(function(item) {
+        html += '<tr><td>' + item.nome + '</td><td>' + item.kw.toFixed(2) + '</td><td>' + item.fp.toFixed(2) + '</td><td>' + (item.kw / item.fp).toFixed(2) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '</div></div>';
 
-    if (d.d_ilum > 0) {
-        html += '<div class="result-section"><div class="result-title">Iluminação e Tomadas</div>';
-        html += '<div class="result-line">Carga: ' + d.carga_ilum_kw + ' kW</div>';
-        html += '<div class="result-line">FD (Tabela 10): ' + d.fd_ilum + '</div>';
-        html += '<div class="result-line">D_ilum = ' + d.carga_ilum_kw + ' × ' + d.fd_ilum + ' = <span class="highlight">' + d.d_ilum + ' kVA</span></div></div>';
+    if (d.ramo === 'Transformacao') {
+        // Transformação: D = CI × FD
+        html += '<div class="card" style="margin-bottom:16px;">';
+        html += '<div class="card-header">📐 Demanda (Ramo: Transformação)</div>';
+        html += '<div class="result-section">';
+        html += '<div class="result-line">CI = ' + d.carga_instalada_kw + ' kW</div>';
+        html += '<div class="result-line">FD adotado = ' + d.fator_demanda + '</div>';
+        html += '<div class="result-line">P = CI × FD = ' + d.carga_instalada_kw + ' × ' + d.fator_demanda + ' = <span class="highlight">' + d.demanda_kw + ' kW</span></div>';
+        html += '</div></div>';
+    } else {
+        // Serviço: D = a + b + c + d + e
+        html += '<div class="card" style="margin-bottom:16px;">';
+        html += '<div class="card-header">📐 Demanda (Ramo: Prestação de Serviço) — D = a + b + c + d + e</div>';
+        html += '<div class="result-section">';
+        if (d.d_ilum > 0) {
+            html += '<div class="result-title">a) Iluminação e Tomadas</div>';
+            html += '<div class="result-line">Carga: ' + d.carga_ilum_kw + ' kW</div>';
+            html += '<div class="result-line">FD (Tabela 10): ' + d.fd_ilum + '</div>';
+            html += '<div class="result-line">a = <span class="highlight">' + d.d_ilum + ' kVA</span></div>';
+        }
+        if (d.d_chuv > 0) {
+            html += '<hr class="result-divider"><div class="result-title">b) Equipamentos Específicos</div>';
+            html += '<div class="result-line">Carga: ' + d.carga_chuveiros_kw + ' kW (' + d.chuveiros_qtd + ' aparelhos)</div>';
+            html += '<div class="result-line">FD (Tabela 13/14): ' + d.fd_chuv + '</div>';
+            html += '<div class="result-line">b = <span class="highlight">' + d.d_chuv + ' kVA</span></div>';
+        }
+        if (d.d_ar > 0) {
+            html += '<hr class="result-divider"><div class="result-title">c) Ar Condicionado</div>';
+            html += '<div class="result-line">Carga: ' + d.carga_ar_kw + ' kW (' + d.ar_qtd + ' aparelhos)</div>';
+            html += '<div class="result-line">FD (Tabela 12): ' + d.fd_ar + '</div>';
+            html += '<div class="result-line">c = <span class="highlight">' + d.d_ar + ' kVA</span></div>';
+        }
+        if (d.d_motores > 0) {
+            html += '<hr class="result-divider"><div class="result-title">d) Motores</div>';
+            html += '<div class="result-line">Carga total: ' + d.carga_motores_kw + ' kW</div>';
+            if (d.motores && d.motores.length > 0) {
+                html += '<table class="result-table"><thead><tr><th>Motor</th><th>CV</th><th>kW</th><th>FD (Tab.17)</th><th>Demanda (kVA)</th></tr></thead><tbody>';
+                d.motores.forEach(function(m) {
+                    html += '<tr><td>' + m.nome + '</td><td>' + (m.cv || '-') + '</td><td>' + m.kw + '</td><td>' + m.fd + '</td><td>' + m.parcela_kva + '</td></tr>';
+                });
+                html += '</tbody></table>';
+            }
+            html += '<div class="result-line">d = <span class="highlight">' + d.d_motores + ' kVA</span></div>';
+        }
+        if (d.d_especiais > 0) {
+            html += '<hr class="result-divider"><div class="result-title">e) Equipamentos Especiais</div>';
+            html += '<div class="result-line">Carga: ' + d.carga_especiais_kw + ' kW</div>';
+            html += '<div class="result-line">FD (Tabela 18): 0,5 | FP: 0,5</div>';
+            html += '<div class="result-line">e = <span class="highlight">' + d.d_especiais + ' kVA</span></div>';
+        }
+        if (d.d_eletro > 0) {
+            html += '<hr class="result-divider"><div class="result-title">Eletrodomésticos (outros)</div>';
+            html += '<div class="result-line">Carga: ' + d.carga_eletro_kw + ' kW</div>';
+            html += '<div class="result-line">Demanda: <span class="highlight">' + d.d_eletro + ' kVA</span></div>';
+        }
+        html += '</div></div>';
     }
 
-    if (d.d_chuv > 0) {
-        html += '<hr class="result-divider"><div class="result-section"><div class="result-title purple">Chuveiros e Aquecimento</div>';
-        html += '<div class="result-line">Carga: ' + d.carga_chuveiros_kw + ' kW</div>';
-        html += '<div class="result-line">Quantidade: ' + d.qtd_chuveiros + ' aparelho(s)</div>';
-        html += '<div class="result-line">FD (Tabela 11): ' + d.fd_chuv + '</div>';
-        html += '<div class="result-line">D_chuv = ' + d.carga_chuveiros_kw + ' × ' + d.fd_chuv + ' = <span class="highlight">' + d.d_chuv + ' kVA</span></div></div>';
-    }
-
-    if (d.d_eletro > 0) {
-        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Eletrodomésticos</div>';
-        html += '<div class="result-line">Carga: ' + d.carga_eletro_kw + ' kW</div>';
-        html += '<div class="result-line">FD (Tabela 12): ' + d.fd_eletro + '</div>';
-        html += '<div class="result-line">D_eletro = ' + d.carga_eletro_kw + ' × ' + d.fd_eletro + ' = <span class="highlight">' + d.d_eletro + ' kVA</span></div></div>';
-    }
-
-    if (d.d_ar > 0) {
-        html += '<hr class="result-divider"><div class="result-section"><div class="result-title gold">Ar Condicionado</div>';
-        html += '<div class="result-line">Carga: ' + d.carga_ar_kw + ' kW (' + d.ar_qtd + ' aparelho(s))</div>';
-        html += '<div class="result-line">FD (Tabela 13): ' + d.fd_ar + '</div>';
-        html += '<div class="result-line">D_ar = ' + d.carga_ar_kw + ' × ' + d.fd_ar + ' = <span class="highlight">' + d.d_ar + ' kVA</span></div></div>';
-    }
-
-    if (d.d_motores > 0 && d.motores && d.motores.length > 0) {
-        html += '<hr class="result-divider"><div class="result-section"><div class="result-title purple">Motores</div>';
-        html += '<table class="result-table"><thead><tr><th>Motor</th><th>CV</th><th>VA</th><th>FD (Tab.14)</th><th>Demanda (kVA)</th></tr></thead><tbody>';
-        d.motores.forEach(function(m) {
-            html += '<tr><td>' + m.nome + '</td><td>' + m.cv + '</td><td>' + m.va + '</td><td>' + m.fd + '</td><td>' + m.parcela_kva + '</td></tr>';
-        });
-        html += '</tbody></table>';
-        html += '<div class="result-line">D_motores = <span class="highlight">' + d.d_motores + ' kVA</span></div></div>';
-    }
-
-    if (d.d_especiais > 0) {
-        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Equipamentos Especiais</div>';
-        html += '<div class="result-line">D_especiais = <span class="highlight">' + d.d_especiais + ' kVA</span></div></div>';
-    }
-
-    // Total
-    html += '<hr class="result-divider"><div class="result-section"><div class="result-title gold">📈 Demanda Total</div>';
-    html += '<div class="result-line">D_ilum = ' + d.d_ilum + ' kVA</div>';
-    if (d.d_chuv > 0) html += '<div class="result-line">D_chuveiros = ' + d.d_chuv + ' kVA</div>';
-    if (d.d_eletro > 0) html += '<div class="result-line">D_eletro = ' + d.d_eletro + ' kVA</div>';
-    if (d.d_ar > 0) html += '<div class="result-line">D_ar = ' + d.d_ar + ' kVA</div>';
-    if (d.d_motores > 0) html += '<div class="result-line">D_motores = ' + d.d_motores + ' kVA</div>';
-    if (d.d_especiais > 0) html += '<div class="result-line">D_especiais = ' + d.d_especiais + ' kVA</div>';
-    html += '<hr class="result-divider"><div class="result-final"><div class="label">D_total</div><div class="value">' + d.D_total + ' kVA</div></div></div>';
-
-    html += '</div>'; // close card
+    // Total Demand
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="card-header">📈 Demanda Total</div>';
+    html += '<div class="result-section">';
+    html += '<div class="result-line">Demanda (kW): <strong>' + d.demanda_kw + ' kW</strong></div>';
+    html += '<div class="result-line">FP para dimensionamento: <strong>' + d.fp_desejado + '</strong></div>';
+    html += '<div class="result-final"><div class="label">D (kVA) = P / FP</div><div class="value">' + d.demanda_kva + ' kVA</div></div>';
+    html += '</div></div>';
 
     // Transformer
     html += '<div class="card" style="margin-bottom:16px;">';
     html += '<div class="card-header">⚡ Transformador</div>';
-    html += '<div class="result-section"><div class="result-line">Demanda calculada: <strong>' + d.D_total + ' kVA</strong></div>';
+    html += '<div class="result-section"><div class="result-line">Demanda calculada: <strong>' + d.demanda_kva + ' kVA</strong></div>';
     html += '<div class="result-line">Transformador selecionado (Tabela 15): <span class="highlight" style="font-size:18px;">' + d.trafo_kva + ' kVA</span></div></div></div>';
 
-    // Power Factor
-    html += '<div class="card" style="margin-bottom:16px;">';
-    html += '<div class="card-header">🔋 Correção de Fator de Potência</div>';
-    html += '<div class="result-section">';
-    html += '<div class="result-line">FP atual: ' + d.fp_atual.toFixed(2) + '</div>';
-    html += '<div class="result-line">FP desejado: ' + d.fp_desejado.toFixed(2) + '</div>';
-    html += '<div class="result-line">Potência ativa: ' + (d.D_total * d.fp_atual).toFixed(1) + ' kW</div>';
-    html += '<div class="result-line">Fator kVar/kW (Tabela 17): ' + d.kvar_por_kw + '</div>';
-    html += '<div class="result-line">Banco de capacitores necessário: <span class="highlight" style="font-size:18px;">' + d.kvar_correcao + ' kVAr</span></div>';
-    html += '</div></div>';
+    // Power Factor Correction
+    if (d.fp_medio < d.fp_desejado) {
+        html += '<div class="card" style="margin-bottom:16px;">';
+        html += '<div class="card-header">🔋 Correção de Fator de Potência</div>';
+        html += '<div class="result-section">';
+        html += '<div class="result-line">FP médio: ' + d.fp_medio.toFixed(2) + ' (inferior a ' + d.fp_desejado + ') → necessário corrigir</div>';
+        html += '<div class="result-line">Potência ativa (P): ' + d.demanda_kw + ' kW</div>';
+        html += '<div class="result-line">Fator k (Tabela 20): ' + d.k_factor + '</div>';
+        html += '<div class="result-line">kVAr = P × k = ' + d.demanda_kw + ' × ' + d.k_factor + ' = <span class="highlight" style="font-size:18px;">' + d.kvar_correcao + ' kVAr</span></div>';
+        html += '<div class="result-line" style="color:var(--text-muted);font-size:12px;">k = tan(acos(FP_atual)) − tan(acos(FP_desejado))</div>';
+        html += '</div></div>';
+    } else {
+        html += '<div class="card" style="margin-bottom:16px;">';
+        html += '<div class="card-header">🔋 Correção de Fator de Potência</div>';
+        html += '<div class="result-section">';
+        html += '<div class="result-line">FP médio: ' + d.fp_medio.toFixed(2) + ' ≥ ' + d.fp_desejado + ' → correção não necessária</div>';
+        html += '</div></div>';
+    }
 
     // Padrão
     if (d.padrao) {
@@ -929,6 +986,7 @@ function montarRelatorio() {
     const unidade = document.getElementById('in-unidade').value || d.unidade || '-';
     const tipo = document.getElementById('in-tipo').value || d.tipo || '-';
     const tensao = document.getElementById('in-tensao').value || d.tensao || '-';
+    const ramo = document.getElementById('in-ramo').value || d.ramo || 'Transformacao';
     var html = '<div class="print-report" id="print-report-content">';
     html += '<h2 style="text-align:center;margin-bottom:8px;">Memorial de Cálculo - GED-2855</h2>';
 
@@ -937,49 +995,56 @@ function montarRelatorio() {
         html += '<div class="result-line">Unidade: ' + unidade + '</div>';
         html += '<div class="result-line">Tipo: ' + tipo + '</div>';
         html += '<div class="result-line">Tensão: ' + tensao + '</div>';
-        html += '<div class="result-line">FP Atual: ' + d.fp_atual.toFixed(2) + '</div>';
+        html += '<div class="result-line">Ramo: ' + (ramo === 'Transformacao' ? 'Transformação' : 'Prestação de Serviço') + '</div>';
+        if (d.fator_demanda) html += '<div class="result-line">FD: ' + d.fator_demanda + '</div>';
         html += '<div class="result-line">FP Desejado: ' + d.fp_desejado.toFixed(2) + '</div>';
         html += '</div>';
     }
 
     if (document.getElementById('chk_cargas').checked) {
         html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Cargas</div>';
-        html += '<div class="result-line">Iluminação e Tomadas: ' + d.carga_ilum_kw + ' kW (FD: ' + d.fd_ilum + ') → ' + d.d_ilum + ' kVA</div>';
-        if (d.carga_chuveiros_kw > 0) html += '<div class="result-line">Chuveiros/Aquecimento: ' + d.carga_chuveiros_kw + ' kW (FD: ' + d.fd_chuv + ') → ' + d.d_chuv + ' kVA</div>';
-        if (d.carga_eletro_kw > 0) html += '<div class="result-line">Eletrodomésticos: ' + d.carga_eletro_kw + ' kW (FD: ' + d.fd_eletro + ') → ' + d.d_eletro + ' kVA</div>';
-        if (d.carga_ar_kw > 0) html += '<div class="result-line">Ar Condicionado: ' + d.carga_ar_kw + ' kW (FD: ' + d.fd_ar + ') → ' + d.d_ar + ' kVA</div>';
-        if (d.d_motores > 0) html += '<div class="result-line">Motores: ' + d.d_motores + ' kVA</div>';
-        if (d.d_especiais > 0) html += '<div class="result-line">Equip. Especiais: ' + d.d_especiais + ' kVA</div>';
-        html += '<div class="result-line" style="font-weight:700;">Carga Instalada Total: ' + d.carga_instalada_kw + ' kW</div>';
+        html += '<div class="result-line">CI Total: ' + d.carga_instalada_kw + ' kW</div>';
+        html += '<div class="result-line">Iluminação e Tomadas: ' + d.carga_ilum_kw + ' kW</div>';
+        if (d.carga_chuveiros_kw > 0) html += '<div class="result-line">Chuveiros/Aquecimento: ' + d.carga_chuveiros_kw + ' kW</div>';
+        if (d.carga_eletro_kw > 0) html += '<div class="result-line">Eletrodomésticos: ' + d.carga_eletro_kw + ' kW</div>';
+        if (d.carga_ar_kw > 0) html += '<div class="result-line">Ar Condicionado: ' + d.carga_ar_kw + ' kW</div>';
+        if (d.carga_motores_kw > 0) html += '<div class="result-line">Motores: ' + d.carga_motores_kw + ' kW</div>';
+        if (d.carga_especiais_kw > 0) html += '<div class="result-line">Equip. Especiais: ' + d.carga_especiais_kw + ' kW</div>';
+        html += '<div class="result-line">FP médio: ' + d.fp_medio.toFixed(2) + '</div>';
         html += '</div>';
     }
 
     if (document.getElementById('chk_demanda').checked) {
         html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Demanda Calculada</div>';
-        html += '<div class="result-line">D_ilum = ' + d.d_ilum + ' kVA</div>';
-        if (d.d_chuv > 0) html += '<div class="result-line">D_chuveiros = ' + d.d_chuv + ' kVA</div>';
-        if (d.d_eletro > 0) html += '<div class="result-line">D_eletro = ' + d.d_eletro + ' kVA</div>';
-        if (d.d_ar > 0) html += '<div class="result-line">D_ar = ' + d.d_ar + ' kVA</div>';
-        if (d.d_motores > 0) html += '<div class="result-line">D_motores = ' + d.d_motores + ' kVA</div>';
-        if (d.d_especiais > 0) html += '<div class="result-line">D_especiais = ' + d.d_especiais + ' kVA</div>';
-        html += '<div class="result-final" style="margin-top:8px;"><div class="label">D_total</div><div class="value">' + d.D_total + ' kVA</div></div>';
+        if (ramo === 'Transformacao') {
+            html += '<div class="result-line">P = CI × FD = ' + d.carga_instalada_kw + ' × ' + d.fator_demanda + ' = ' + d.demanda_kw + ' kW</div>';
+        } else {
+            if (d.d_ilum) html += '<div class="result-line">a (Ilum/Tom): ' + d.d_ilum + ' kVA</div>';
+            if (d.d_chuv) html += '<div class="result-line">b (Específicos): ' + d.d_chuv + ' kVA</div>';
+            if (d.d_ar) html += '<div class="result-line">c (Ar Cond): ' + d.d_ar + ' kVA</div>';
+            if (d.d_motores) html += '<div class="result-line">d (Motores): ' + d.d_motores + ' kVA</div>';
+            if (d.d_especiais) html += '<div class="result-line">e (Especiais): ' + d.d_especiais + ' kVA</div>';
+            if (d.d_eletro) html += '<div class="result-line">Eletrodomésticos: ' + d.d_eletro + ' kVA</div>';
+        }
+        html += '<div class="result-final" style="margin-top:8px;"><div class="label">Demanda (kW)</div><div class="value">' + d.demanda_kw + ' kW</div></div>';
+        html += '<div class="result-final" style="margin-top:8px;"><div class="label">D (kVA) = P / FP</div><div class="value">' + d.demanda_kva + ' kVA</div></div>';
         html += '</div>';
     }
 
     if (document.getElementById('chk_transformador').checked) {
         html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Transformador</div>';
-        html += '<div class="result-line">Demanda: ' + d.D_total + ' kVA</div>';
+        html += '<div class="result-line">Demanda: ' + d.demanda_kva + ' kVA</div>';
         html += '<div class="result-line">Trafo (Tabela 15): <span class="value">' + d.trafo_kva + ' kVA</span></div>';
         html += '</div>';
     }
 
     if (document.getElementById('chk_fp').checked) {
         html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Correção de Fator de Potência</div>';
-        html += '<div class="result-line">FP atual: ' + d.fp_atual.toFixed(2) + '</div>';
+        html += '<div class="result-line">FP médio: ' + d.fp_medio.toFixed(2) + '</div>';
         html += '<div class="result-line">FP desejado: ' + d.fp_desejado.toFixed(2) + '</div>';
-        html += '<div class="result-line">Potência ativa: ' + (d.D_total * d.fp_atual).toFixed(1) + ' kW</div>';
-        html += '<div class="result-line">Fator kVar/kW: ' + d.kvar_por_kw + '</div>';
-        html += '<div class="result-line">Banco de capacitores: <span class="value">' + d.kvar_correcao + ' kVAr</span></div>';
+        html += '<div class="result-line">Potência ativa (P): ' + d.demanda_kw + ' kW</div>';
+        html += '<div class="result-line">Fator k: ' + d.k_factor + '</div>';
+        html += '<div class="result-line">kVAr = P × k = ' + d.demanda_kw + ' × ' + d.k_factor + ' = <span class="value">' + d.kvar_correcao + ' kVAr</span></div>';
         html += '</div>';
     }
 
@@ -1030,6 +1095,7 @@ function gerarPDF() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    toggleRamo();
     listarProjetos();
 });
 </script>

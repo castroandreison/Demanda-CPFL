@@ -117,20 +117,20 @@ INSERT OR IGNORE INTO tabela14 (tipo_carga, fator_demanda) VALUES
 ('3° ao 5° motor', 0.80),
 ('Demais motores', 0.70);
 
--- Tabela 15 - Transformadores Padrão
+-- Tabela 15 - Transformadores Padrão (trafo_kva = tamanho nominal, demanda_kva = capacidade máxima)
 INSERT OR IGNORE INTO tabela15 (demanda_kva, trafo_kva) VALUES
-(0, 15),
-(15, 30),
-(25, 45),
-(38, 75),
-(55, 112.5),
-(75, 150),
-(110, 225),
-(150, 300),
-(225, 500),
-(300, 750),
-(500, 1000),
-(750, 1500);
+(15, 15),
+(30, 30),
+(45, 45),
+(75, 75),
+(112.5, 112.5),
+(150, 150),
+(225, 225),
+(300, 300),
+(500, 500),
+(750, 750),
+(1000, 1000),
+(1500, 1500);
 
 -- Tabela 16 - Padrão de Entrada
 INSERT OR IGNORE INTO tabela16 (tipo_ligacao, demanda_min_kva, demanda_max_kva, categoria, disjuntor, condutor_cobre, condutor_aluminio, eletroduto, aterramento) VALUES
