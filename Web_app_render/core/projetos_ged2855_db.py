@@ -18,14 +18,22 @@ def get_conn():
 def init_db():
     conn = get_conn(); cursor = conn.cursor()
     if USING_PG:
-        cursor.execute("""CREATE TABLE IF NOT EXISTS projetos_ged2855 (id SERIAL PRIMARY KEY, nome TEXT UNIQUE, unidade TEXT DEFAULT '', tipo TEXT DEFAULT 'Comercial', tensao TEXT DEFAULT '220/380V', fp_atual DOUBLE PRECISION DEFAULT 0.85, fp_desejado DOUBLE PRECISION DEFAULT 0.92, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP, usuario_id INTEGER)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS projetos_ged2855 (id SERIAL PRIMARY KEY, nome TEXT UNIQUE, unidade TEXT DEFAULT '', tipo TEXT DEFAULT 'Comercial', tensao TEXT DEFAULT '220/380V', ramo TEXT DEFAULT 'Transformacao', fator_demanda DOUBLE PRECISION DEFAULT 0.35, fp_desejado DOUBLE PRECISION DEFAULT 0.92, data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP, usuario_id INTEGER)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS itens_projeto_ged2855 (id SERIAL PRIMARY KEY, projeto_id INTEGER REFERENCES projetos_ged2855(id) ON DELETE CASCADE, nome TEXT, potencia DOUBLE PRECISION DEFAULT 0, tipo INTEGER DEFAULT 0, quantidade INTEGER DEFAULT 1, cv DOUBLE PRECISION DEFAULT 0, fp DOUBLE PRECISION DEFAULT 1.0)""")
         try: cursor.execute("ALTER TABLE projetos_ged2855 ADD COLUMN usuario_id INTEGER")
         except: pass
+        try: cursor.execute("ALTER TABLE projetos_ged2855 ADD COLUMN ramo TEXT DEFAULT 'Transformacao'")
+        except: pass
+        try: cursor.execute("ALTER TABLE projetos_ged2855 ADD COLUMN fator_demanda DOUBLE PRECISION DEFAULT 0.35")
+        except: pass
     else:
-        cursor.execute("""CREATE TABLE IF NOT EXISTS projetos_ged2855 (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, unidade TEXT DEFAULT '', tipo TEXT DEFAULT 'Comercial', tensao TEXT DEFAULT '220/380V', fp_atual REAL DEFAULT 0.85, fp_desejado REAL DEFAULT 0.92, data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP, usuario_id INTEGER)""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS projetos_ged2855 (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, unidade TEXT DEFAULT '', tipo TEXT DEFAULT 'Comercial', tensao TEXT DEFAULT '220/380V', ramo TEXT DEFAULT 'Transformacao', fator_demanda REAL DEFAULT 0.35, fp_desejado REAL DEFAULT 0.92, data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP, usuario_id INTEGER)""")
         cursor.execute("""CREATE TABLE IF NOT EXISTS itens_projeto_ged2855 (id INTEGER PRIMARY KEY AUTOINCREMENT, projeto_id INTEGER, nome TEXT, potencia REAL DEFAULT 0, tipo INTEGER DEFAULT 0, quantidade INTEGER DEFAULT 1, cv REAL DEFAULT 0, fp REAL DEFAULT 1.0, FOREIGN KEY (projeto_id) REFERENCES projetos_ged2855(id) ON DELETE CASCADE)""")
         try: cursor.execute("ALTER TABLE projetos_ged2855 ADD COLUMN usuario_id INTEGER")
+        except: pass
+        try: cursor.execute("ALTER TABLE projetos_ged2855 ADD COLUMN ramo TEXT DEFAULT 'Transformacao'")
+        except: pass
+        try: cursor.execute("ALTER TABLE projetos_ged2855 ADD COLUMN fator_demanda REAL DEFAULT 0.35")
         except: pass
     conn.commit(); conn.close()
 
@@ -66,12 +74,13 @@ def salvar_projeto(projeto_id, dados, usuario_id=None):
     unidade = dados.get('unidade', '')
     tipo = dados.get('tipo', 'Comercial')
     tensao = dados.get('tensao', '220/380V')
-    fp_atual = _n(dados.get('fp_atual', 0.85))
+    ramo = dados.get('ramo', 'Transformacao')
+    fator_demanda = _n(dados.get('fator_demanda', 0.35))
     fp_desejado = _n(dados.get('fp_desejado', 0.92))
     if projeto_id:
-        cursor.execute(f"UPDATE projetos_ged2855 SET nome = {P}, unidade = {P}, tipo = {P}, tensao = {P}, fp_atual = {P}, fp_desejado = {P} WHERE id = {P}", (dados['nome'], unidade, tipo, tensao, fp_atual, fp_desejado, projeto_id))
+        cursor.execute(f"UPDATE projetos_ged2855 SET nome = {P}, unidade = {P}, tipo = {P}, tensao = {P}, ramo = {P}, fator_demanda = {P}, fp_desejado = {P} WHERE id = {P}", (dados['nome'], unidade, tipo, tensao, ramo, fator_demanda, fp_desejado, projeto_id))
     else:
-        cursor.execute(f"INSERT INTO projetos_ged2855 (nome, unidade, tipo, tensao, fp_atual, fp_desejado, usuario_id) VALUES ({P}, {P}, {P}, {P}, {P}, {P}, {P})", (dados['nome'], unidade, tipo, tensao, fp_atual, fp_desejado, usuario_id))
+        cursor.execute(f"INSERT INTO projetos_ged2855 (nome, unidade, tipo, tensao, ramo, fator_demanda, fp_desejado, usuario_id) VALUES ({P}, {P}, {P}, {P}, {P}, {P}, {P}, {P})", (dados['nome'], unidade, tipo, tensao, ramo, fator_demanda, fp_desejado, usuario_id))
         if USING_PG:
             cursor.execute("SELECT LASTVAL()")
             projeto_id = cursor.fetchone()[0]
