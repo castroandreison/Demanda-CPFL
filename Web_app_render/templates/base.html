@@ -41,8 +41,11 @@
             .admin-table { font-size:12px; }
             .admin-table th, .admin-table td { padding:6px 8px; }
         }
-        .whatsapp-btn { background:none; border:1px solid var(--border-color); color:#25D366; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:16px; line-height:1; }
-        .whatsapp-btn:hover { border-color:#25D366; background:rgba(37,211,102,0.1); }
+        .plus-btn { background:none; border:1px solid var(--border-color); color:var(--accent); padding:2px 8px; border-radius:4px; cursor:pointer; font-size:16px; font-weight:bold; line-height:1; position:relative; }
+        .plus-btn:hover { border-color:var(--accent); background:rgba(88,166,255,0.1); }
+        .plus-dropdown { position:absolute; top:100%; right:0; margin-top:4px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); min-width:200px; box-shadow:var(--shadow); z-index:100; }
+        .plus-dropdown a { display:flex; align-items:center; gap:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; cursor:pointer; text-decoration:none; }
+        .plus-dropdown a:hover { background:var(--bg-hover); }
         .qrcode-img { display:block; margin:0 auto; max-width:220px; border-radius:8px; }
     </style>
 </head>
@@ -60,7 +63,13 @@
         </ul>
         <div id="user-info">
             <span id="user-name-display" class="user-name hidden"></span>
-            <button id="whatsapp-btn" class="whatsapp-btn hidden" onclick="mostrarQRCode()" title="Comunidade WhatsApp">💬</button>
+            <div id="plus-container" class="hidden" style="position:relative;display:inline-block;">
+                <button id="plus-btn" class="plus-btn" onclick="toggleDropdown(event)">+</button>
+                <div id="plus-dropdown" class="plus-dropdown hidden">
+                    <a onclick="mostrarQRCode('whatsapp'); fecharDropdown()">💬 Comunidade WhatsApp</a>
+                    <a onclick="mostrarQRCode('discord'); fecharDropdown()">🎮 Fale Conosco (Discord)</a>
+                </div>
+            </div>
             <button id="login-btn" class="btn btn-sm" style="padding:4px 12px;font-size:12px;">Entrar</button>
             <button id="logout-btn" class="logout-btn hidden">Sair</button>
         </div>
@@ -99,10 +108,10 @@
     <!-- QRCode Modal -->
     <div id="qrcode-modal" class="modal-overlay hidden">
         <div class="modal-box" style="text-align:center;">
-            <h2 style="color:#25D366;">Comunidade WhatsApp</h2>
-            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Junte-se à comunidade de usuários da plataforma!</p>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://chat.whatsapp.com/FWYTyz6AoUf1g0AcsKb8Cx" alt="QR Code WhatsApp" class="qrcode-img">
-            <p style="margin-top:16px;"><a href="https://chat.whatsapp.com/FWYTyz6AoUf1g0AcsKb8Cx" target="_blank" style="color:#25D366;font-weight:600;">Entrar no Grupo</a></p>
+            <h2 id="qrcode-title" style="">Comunidade</h2>
+            <p id="qrcode-desc" style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;"></p>
+            <img id="qrcode-img" src="" alt="QR Code" class="qrcode-img">
+            <p id="qrcode-link-container" style="margin-top:16px;"><a id="qrcode-link" href="#" target="_blank" style="font-weight:600;">Entrar</a></p>
             <div class="toggle-link"><a onclick="fecharQRCode()">Fechar</a></div>
         </div>
     </div>
@@ -111,7 +120,38 @@
         let currentUser = null;
         let loginLogId = null;
 
-        function mostrarQRCode() {
+        function toggleDropdown(e) {
+            e.stopPropagation();
+            const dd = document.getElementById('plus-dropdown');
+            dd.classList.toggle('hidden');
+        }
+
+        function fecharDropdown() {
+            document.getElementById('plus-dropdown').classList.add('hidden');
+        }
+
+        function mostrarQRCode(tipo) {
+            const title = document.getElementById('qrcode-title');
+            const desc = document.getElementById('qrcode-desc');
+            const img = document.getElementById('qrcode-img');
+            const link = document.getElementById('qrcode-link');
+            if (tipo === 'discord') {
+                title.textContent = '🎮 Fale Conosco';
+                title.style.color = '#5865F2';
+                desc.textContent = 'Envie sugestões de melhorias, reporte erros de cálculo ou proponha novas implementações!';
+                img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://discord.gg/zpjBh4f8W';
+                link.href = 'https://discord.gg/zpjBh4f8W';
+                link.textContent = 'Entrar no Discord';
+                link.style.color = '#5865F2';
+            } else {
+                title.textContent = '💬 Comunidade WhatsApp';
+                title.style.color = '#25D366';
+                desc.textContent = 'Junte-se à comunidade de usuários da plataforma!';
+                img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://chat.whatsapp.com/FWYTyz6AoUf1g0AcsKb8Cx';
+                link.href = 'https://chat.whatsapp.com/FWYTyz6AoUf1g0AcsKb8Cx';
+                link.textContent = 'Entrar no Grupo';
+                link.style.color = '#25D366';
+            }
             document.getElementById('qrcode-modal').classList.remove('hidden');
         }
 
@@ -216,7 +256,7 @@
         function atualizarInterface() {
             const loginBtn = document.getElementById('login-btn');
             const logoutBtn = document.getElementById('logout-btn');
-            const whatsappBtn = document.getElementById('whatsapp-btn');
+            const plusContainer = document.getElementById('plus-container');
             const userNameSpan = document.getElementById('user-name-display');
             const adminLink = document.getElementById('admin-link-li');
             const nav119 = document.getElementById('nav-ged119');
@@ -224,7 +264,7 @@
             if (currentUser) {
                 loginBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
-                whatsappBtn.classList.remove('hidden');
+                plusContainer.classList.remove('hidden');
                 userNameSpan.textContent = currentUser.nome_completo || currentUser.username;
                 userNameSpan.classList.remove('hidden');
                 nav119.classList.remove('hidden');
@@ -237,7 +277,7 @@
             } else {
                 loginBtn.classList.remove('hidden');
                 logoutBtn.classList.add('hidden');
-                whatsappBtn.classList.add('hidden');
+                plusContainer.classList.add('hidden');
                 userNameSpan.classList.add('hidden');
                 nav119.classList.add('hidden');
                 nav13.classList.add('hidden');
@@ -251,6 +291,13 @@
                 mostrarLogin();
             };
             document.getElementById('logout-btn').onclick = fazerLogout;
+            document.addEventListener('click', function(e) {
+                const dd = document.getElementById('plus-dropdown');
+                if (dd && !dd.classList.contains('hidden')) {
+                    const btn = document.getElementById('plus-btn');
+                    if (!btn.contains(e.target) && !dd.contains(e.target)) fecharDropdown();
+                }
+            });
             document.getElementById('login-modal').addEventListener('click', function(e) {
                 if (e.target === this) fecharModal();
             });
