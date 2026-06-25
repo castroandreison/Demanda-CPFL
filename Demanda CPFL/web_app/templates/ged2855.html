@@ -15,7 +15,7 @@
     <button class="tab-btn" data-tab="tab-fp">Corre&ccedil;&atilde;o FP</button>
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
     <button class="tab-btn" data-tab="tab-impressao" style="background:var(--warning);color:#000;font-weight:700;">🖨️ Impressão</button>
-    <button class="tab-btn" data-tab="tab-coordselet" style="background:var(--danger);color:#fff;font-weight:700;">⚡ CoordSelet</button>
+    <button class="tab-btn" data-tab="tab-coordselet" style="background:var(--danger);color:#fff;font-weight:700;">estudo de coordenação</button>
 </div>
 
 <div id="tab-projetos" class="tab-content active">
@@ -395,228 +395,227 @@
 
 <div id="tab-coordselet" class="tab-content">
     <div class="card">
-        <div class="card-header">⚡ Coordenação e Seletividade - ANEXO V (GED-2855)</div>
-        <div style="padding:8px 0;">
-            <div class="tabs" id="coord-tabs">
-                <button class="tab-btn active" data-tab="coord-ident">1. Identificação</button>
-                <button class="tab-btn" data-tab="coord-suprimento">2. Suprimento</button>
-                <button class="tab-btn" data-tab="coord-cc">3. Curto-Circuito</button>
-                <button class="tab-btn" data-tab="coord-ajustes-cpfl">4. Ajustes CPFL</button>
-                <button class="tab-btn" data-tab="coord-trafo">5. Transformador</button>
-                <button class="tab-btn" data-tab="coord-tc">6. TCs</button>
-                <button class="tab-btn" data-tab="coord-ajustes-cliente">7. Ajustes Cliente</button>
-                <button class="tab-btn" data-tab="coord-resultado">📊 Resultado</button>
-            </div>
+        <div class="card-header">
+            <span>Estudo de coordenação - ANEXO V (GED-2855)</span>
+            <button class="btn btn-primary btn-sm" onclick="gerarPDFCoord()" style="margin-left:auto;">📄 Gerar PDF</button>
         </div>
-    </div>
+        <div class="print-report-layout">
+            <div class="print-report-sidebar" id="coord-sidebar">
+                <h4 style="margin:0 0 8px 0;font-size:13px;">Dados de Entrada</h4>
 
-    <div id="coord-ident" class="coord-tab-content active">
-        <div class="card">
-            <div class="card-header">1. Identificação</div>
-            <div class="form-grid col-2">
-                <div class="form-group"><label>Interessado (Razão Social)</label><input type="text" id="coord-interessado" placeholder="Ex: Indústria Mecânica Ltda" style="width:100%;"></div>
-                <div class="form-group"><label>Responsável Técnico</label><input type="text" id="coord-responsavel" placeholder="Nome do Engenheiro" style="width:100%;"></div>
-                <div class="form-group"><label>CREA</label><input type="text" id="coord-crea" placeholder="Ex: 123456-7" style="width:100%;"></div>
-                <div class="form-group"><label>Telefone</label><input type="text" id="coord-telefone" placeholder="(XX) XXXXX-XXXX" style="width:100%;"></div>
-                <div class="form-group"><label>E-mail</label><input type="text" id="coord-email" placeholder="email@exemplo.com" style="width:100%;"></div>
-                <div class="form-group"><label>Município</label><input type="text" id="coord-municipio" placeholder="Cidade" style="width:100%;"></div>
-            </div>
-            <div class="form-grid col-2">
-                <div class="form-group"><label>Carga Total (kVA)</label><input type="number" id="coord-potencia-trafo" value="1000" min="1" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>Demanda Contratada (kVA)</label><input type="number" id="coord-demanda-contratada" value="900" min="1" step="1" style="width:100%;"></div>
-            </div>
-        </div>
-    </div>
+                <details open style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">1. Identificação</summary>
+                    <div style="padding:4px 0;">
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Interessado</label><input type="text" id="coord-interessado" placeholder="Razão Social" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Resp. Técnico</label><input type="text" id="coord-responsavel" placeholder="Engenheiro" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">CREA</label><input type="text" id="coord-crea" placeholder="123456-7" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Telefone</label><input type="text" id="coord-telefone" placeholder="(XX) XXXXX-XXXX" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">E-mail</label><input type="text" id="coord-email" placeholder="email@exemplo.com" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Município</label><input type="text" id="coord-municipio" placeholder="Cidade" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="display:flex;gap:4px;">
+                            <div style="flex:1;"><label style="font-size:11px;">Carga (kVA)</label><input type="number" id="coord-potencia-trafo" value="1000" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">Demanda (kVA)</label><input type="number" id="coord-demanda-contratada" value="900" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        </div>
+                    </div>
+                </details>
 
-    <div id="coord-suprimento" class="coord-tab-content">
-        <div class="card">
-            <div class="card-header">2. Informações do Ponto de Suprimento</div>
-            <div class="form-grid col-2">
-                <div class="form-group"><label>Tensão de Suprimento (kV)</label><input type="number" id="coord-tensao" value="13.8" min="0.1" step="0.1" style="width:100%;"></div>
-                <div class="form-group"><label>Alimentador</label><input type="text" id="coord-alimentador" placeholder="Sigla do alimentador" style="width:100%;"></div>
-                <div class="form-group"><label>Subestação</label><input type="text" id="coord-subestacao" placeholder="Subestação" style="width:100%;"></div>
-                <div class="form-group"><label>Classe de Tensão</label>
-                    <select id="coord-classe-tensao" style="width:100%;">
-                        <option value="15kV">15kV (Icc máx 10,6kA)</option>
-                        <option value="25kV">25kV (Icc máx 8,0kA)</option>
-                    </select>
+                <details style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">2. Suprimento</summary>
+                    <div style="padding:4px 0;">
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Tensão (kV)</label><input type="number" id="coord-tensao" value="13.8" min="0.1" step="0.1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Alimentador</label><input type="text" id="coord-alimentador" placeholder="Sigla" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Subestação</label><input type="text" id="coord-subestacao" placeholder="Subestação" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div><label style="font-size:11px;">Classe de Tensão</label>
+                            <select id="coord-classe-tensao" style="width:100%;font-size:11px;padding:3px 6px;">
+                                <option value="15kV">15kV (Icc 10,6kA)</option>
+                                <option value="25kV">25kV (Icc 8,0kA)</option>
+                            </select>
+                        </div>
+                    </div>
+                </details>
+
+                <details style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">3. Curto-Circuito</summary>
+                    <div style="padding:4px 0;">
+                        <div style="display:flex;gap:4px;font-size:10px;font-weight:700;margin-bottom:2px;">
+                            <span style="width:90px;">Tipo</span>
+                            <span style="flex:1;text-align:right;">Sim (A)</span>
+                            <span style="flex:1;text-align:right;">Assim (A)</span>
+                        </div>
+                        <div style="margin-bottom:2px;display:flex;gap:4px;align-items:center;">
+                            <span style="width:90px;font-size:11px;">Trifásico</span>
+                            <input type="number" id="coord-icc3f-sim" value="4735" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                            <input type="number" id="coord-icc3f-assim" value="7617" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                        </div>
+                        <div style="margin-bottom:2px;display:flex;gap:4px;align-items:center;">
+                            <span style="width:90px;font-size:11px;">Bifásico</span>
+                            <input type="number" id="coord-icc2f-sim" value="4101" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                            <input type="number" id="coord-icc2f-assim" value="6596" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                        </div>
+                        <div style="margin-bottom:2px;display:flex;gap:4px;align-items:center;">
+                            <span style="width:90px;font-size:11px;">FT (Zn=0)</span>
+                            <input type="number" id="coord-iccft-zn0" value="3551" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                            <input type="number" id="coord-iccft-zn0-assim" value="5385" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                        </div>
+                        <div style="display:flex;gap:4px;align-items:center;">
+                            <span style="width:90px;font-size:11px;">FT (Zn=40)</span>
+                            <input type="number" id="coord-iccft-zn40" value="170" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                            <input type="number" id="coord-iccft-zn40-assim" value="173" style="flex:1;font-size:11px;padding:2px 4px;width:60px;">
+                        </div>
+                    </div>
+                </details>
+
+                <details style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">4. Ajustes CPFL</summary>
+                    <div style="padding:4px 0;">
+                        <div style="margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                            <label style="font-size:11px;">RTC:</label>
+                            <input type="number" id="coord-rtc-fase-cpfl" value="120" min="1" step="1" style="width:70px;font-size:11px;padding:2px 4px;">
+                            <span style="font-size:11px;">/ 5 A</span>
+                        </div>
+                        <div style="font-size:10px;display:flex;gap:2px;font-weight:700;margin-bottom:2px;">
+                            <span style="width:50px;">Relé</span>
+                            <span style="width:36px;">Tap</span>
+                            <span style="width:42px;">I prim</span>
+                            <span style="width:36px;">Curva</span>
+                            <span style="width:32px;">TD</span>
+                            <span style="width:36px;">Inst</span>
+                        </div>
+                        <div style="display:flex;gap:2px;align-items:center;margin-bottom:2px;font-size:11px;">
+                            <span style="width:50px;">Fase</span>
+                            <input type="number" id="coord-tap-fase-cpfl" value="5" min="0.1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                            <span id="coord-tap-fase-cpfl-prim" style="width:42px;text-align:right;">600</span>
+                            <select id="coord-curva-fase-cpfl" style="width:36px;font-size:10px;padding:1px;">
+                                <option value="VI">VI</option><option value="MI">MI</option><option value="NI">NI</option><option value="EI">EI</option>
+                            </select>
+                            <input type="number" id="coord-td-fase-cpfl" value="0.2" min="0.01" step="0.01" style="width:32px;font-size:10px;padding:1px 2px;">
+                            <input type="number" id="coord-inst-fase-cpfl" value="32" min="1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                        </div>
+                        <div style="display:flex;gap:2px;align-items:center;margin-bottom:2px;font-size:11px;">
+                            <span style="width:50px;">Neutro</span>
+                            <input type="number" id="coord-tap-neutro-cpfl" value="0.5" min="0.05" step="0.05" style="width:36px;font-size:10px;padding:1px 2px;">
+                            <span id="coord-tap-neutro-cpfl-prim" style="width:42px;text-align:right;">60</span>
+                            <select id="coord-curva-neutro-cpfl" style="width:36px;font-size:10px;padding:1px;">
+                                <option value="NI">NI</option><option value="VI">VI</option><option value="MI">MI</option><option value="EI">EI</option>
+                            </select>
+                            <input type="number" id="coord-td-neutro-cpfl" value="0.2" min="0.01" step="0.01" style="width:32px;font-size:10px;padding:1px 2px;">
+                            <input type="number" id="coord-inst-neutro-cpfl" value="21" min="1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                        </div>
+                        <div style="display:flex;gap:2px;align-items:center;font-size:11px;">
+                            <span style="width:50px;">51GS</span>
+                            <input type="number" id="coord-tap-51gs-cpfl" value="0.1" min="0.01" step="0.01" style="width:36px;font-size:10px;padding:1px 2px;">
+                            <span id="coord-tap-51gs-cpfl-prim" style="width:42px;text-align:right;">12</span>
+                            <span style="width:36px;font-size:9px;color:#888;">Def.</span>
+                            <span style="width:32px;font-size:10px;">TD:</span>
+                            <input type="number" id="coord-td-51gs-cpfl" value="5" min="0.1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                        </div>
+                    </div>
+                </details>
+
+                <details style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">5. Transformador</summary>
+                    <div style="padding:4px 0;">
+                        <div style="display:flex;gap:4px;">
+                            <div style="flex:1;"><label style="font-size:11px;">Potência (kVA)</label><input type="number" id="coord-potencia-trafo-2" value="1000" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">Z%</label><input type="number" id="coord-z-trafo" value="5" min="0.1" step="0.1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        </div>
+                        <div style="margin-bottom:4px;"><label style="font-size:11px;">Tolerância (%)</label><input type="number" id="coord-tolerancia-trafo" value="0" min="0" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        <div><label style="font-size:11px;">I inrush (catálogo)</label><input type="text" id="coord-inrush-catalogo" value="582" style="width:100%;font-size:11px;padding:3px 6px;" placeholder="0=10×In"></div>
+                    </div>
+                </details>
+
+                <details style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">6. TCs</summary>
+                    <div style="padding:4px 0;">
+                        <div style="display:flex;gap:4px;">
+                            <div style="flex:1;"><label style="font-size:11px;">RTC Primário</label><input type="number" id="coord-rtc-primario" value="400" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">RTC Secundário</label><input type="number" id="coord-rtc-secundario" value="5" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        </div>
+                        <div style="display:flex;gap:4px;">
+                            <div style="flex:1;"><label style="font-size:11px;">Fiação (m)</label><input type="number" id="coord-comprimento-fiacao" value="20" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">Seção (mm²)</label><input type="number" id="coord-secao-fiacao" value="2.5" min="0.5" step="0.5" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        </div>
+                        <div style="display:flex;gap:4px;">
+                            <div style="flex:1;"><label style="font-size:11px;">Z relé (mΩ)</label><input type="number" id="coord-z-rele" value="13.2" min="0" step="0.1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">Z TC (mΩ)</label><input type="number" id="coord-z-tc" value="100" min="0" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        </div>
+                        <div style="display:flex;gap:4px;">
+                            <div style="flex:1;"><label style="font-size:11px;">Carga TC (VA)</label><input type="number" id="coord-carga-tc" value="12.5" min="1" step="0.5" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">Icc máx (A)</label><input type="number" id="coord-icc-max-sistema" value="10600" min="1" step="1" style="width:100%;font-size:11px;padding:3px 6px;"></div>
+                        </div>
+                    </div>
+                </details>
+
+                <details style="margin-bottom:6px;">
+                    <summary style="cursor:pointer;font-weight:700;font-size:12px;">7. Ajustes Cliente</summary>
+                    <div style="padding:4px 0;">
+                        <div style="margin-bottom:2px;font-size:11px;">RTC: <span id="coord-rtc-cliente-display">400/5</span></div>
+                        <div style="font-size:10px;display:flex;gap:2px;font-weight:700;margin-bottom:2px;">
+                            <span style="width:50px;">Relé</span>
+                            <span style="width:36px;">Tap</span>
+                            <span style="width:42px;">I prim</span>
+                            <span style="width:36px;">Curva</span>
+                            <span style="width:32px;">TD</span>
+                            <span style="width:36px;">Inst</span>
+                        </div>
+                        <div style="display:flex;gap:2px;align-items:center;margin-bottom:2px;font-size:11px;">
+                            <span style="width:50px;">Fase</span>
+                            <input type="number" id="coord-tap-fase-cliente" value="3" min="0.1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                            <span id="coord-tap-fase-cliente-prim" style="width:42px;text-align:right;">240</span>
+                            <select id="coord-curva-fase-cliente" style="width:36px;font-size:10px;padding:1px;">
+                                <option>MI</option><option>VI</option><option>NI</option><option>EI</option>
+                            </select>
+                            <input type="number" id="coord-td-fase-cliente" value="0.2" min="0.01" step="0.01" style="width:32px;font-size:10px;padding:1px 2px;">
+                            <input type="number" id="coord-inst-fase-cliente" value="23" min="0.1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                        </div>
+                        <div style="display:flex;gap:2px;align-items:center;margin-bottom:2px;font-size:11px;">
+                            <span style="width:50px;">Neutro</span>
+                            <input type="number" id="coord-tap-neutro-cliente" value="0.25" min="0.05" step="0.05" style="width:36px;font-size:10px;padding:1px 2px;">
+                            <span id="coord-tap-neutro-cliente-prim" style="width:42px;text-align:right;">20</span>
+                            <select id="coord-curva-neutro-cliente" style="width:36px;font-size:10px;padding:1px;">
+                                <option>NI</option><option>VI</option><option>MI</option><option>EI</option>
+                            </select>
+                            <input type="number" id="coord-td-neutro-cliente" value="0.1" min="0.01" step="0.01" style="width:32px;font-size:10px;padding:1px 2px;">
+                            <input type="number" id="coord-inst-neutro-cliente" value="7.5" min="0.1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                        </div>
+                        <div style="display:flex;gap:2px;align-items:center;font-size:11px;">
+                            <span style="width:50px;">51GS</span>
+                            <input type="number" id="coord-tap-51gs-cliente" value="0.1" min="0.01" step="0.01" style="width:36px;font-size:10px;padding:1px 2px;">
+                            <span id="coord-tap-51gs-cliente-prim" style="width:42px;text-align:right;">8</span>
+                            <span style="width:36px;font-size:9px;color:#888;">Def.</span>
+                            <span style="width:32px;font-size:10px;">TD:</span>
+                            <input type="number" id="coord-td-51gs-cliente" value="3" min="0.1" step="0.1" style="width:36px;font-size:10px;padding:1px 2px;">
+                        </div>
+                    </div>
+                </details>
+
+                <hr style="margin:8px 0;border-color:var(--border);">
+                <button class="btn btn-primary" onclick="calcularCoordSelet()" style="width:100%;padding:10px;font-size:14px;">📊 Calcular</button>
+            </div>
+            <div class="print-report-preview" id="coord-preview">
+                <div id="coord-loading" style="display:none;text-align:center;padding:40px;">
+                    <div class="loading"><div class="spinner"></div>Calculando...</div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="coord-cc" class="coord-tab-content">
-        <div class="card">
-            <div class="card-header">3. Valores de Curto-Circuito (fornecidos pela CPFL)</div>
-            <table class="result-table">
-                <thead><tr><th>Tipo</th><th>Simétrica (A)</th><th>Assimétrica (A)</th></tr></thead>
-                <tbody>
-                    <tr><td>Trifásico</td>
-                        <td><input type="number" id="coord-icc3f-sim" value="4735" style="width:120px;"></td>
-                        <td><input type="number" id="coord-icc3f-assim" value="7617" style="width:120px;"></td></tr>
-                    <tr><td>Bifásico</td>
-                        <td><input type="number" id="coord-icc2f-sim" value="4101" style="width:120px;"></td>
-                        <td><input type="number" id="coord-icc2f-assim" value="6596" style="width:120px;"></td></tr>
-                    <tr><td>Fase-Terra (Zn=0Ω)</td>
-                        <td><input type="number" id="coord-iccft-zn0" value="3551" style="width:120px;"></td>
-                        <td><input type="number" id="coord-iccft-zn0-assim" value="5385" style="width:120px;"></td></tr>
-                    <tr><td>Fase-Terra (Zn=40Ω)</td>
-                        <td><input type="number" id="coord-iccft-zn40" value="170" style="width:120px;"></td>
-                        <td><input type="number" id="coord-iccft-zn40-assim" value="173" style="width:120px;"></td></tr>
-                </tbody>
-            </table>
-            <div style="margin-top:8px;font-size:12px;color:var(--text-muted);">
-                Icc máx nas barras MT: 10,6kA (15kV) / 8,0kA (25kV)
-            </div>
-        </div>
-    </div>
-
-    <div id="coord-ajustes-cpfl" class="coord-tab-content">
-        <div class="card">
-            <div class="card-header">4. Ajustes da Proteção do Alimentador (CPFL)</div>
-            <div class="form-grid col-2">
-                <div class="form-group"><label>RTC do Alimentador</label>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <input type="number" id="coord-rtc-fase-cpfl" value="120" min="1" step="1" style="width:100px;" title="RTC primário">
-                        <span style="color:var(--text-muted);font-size:13px;">/ 5 A</span>
+                <div id="coord-result-container" style="display:none;">
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">Resultado da Coordenação</div>
+                        <div id="coord-result-content"></div>
+                    </div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">Coordenograma - Fase</div>
+                        <div style="position:relative;height:400px;width:100%;">
+                            <canvas id="coord-chart-fase"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">Coordenograma - Neutro</div>
+                        <div style="position:relative;height:400px;width:100%;">
+                            <canvas id="coord-chart-neutro"></canvas>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="table-container" style="margin-top:8px;">
-                <table>
-                    <thead><tr><th>Relé</th><th>Tap</th><th>I primária (A)</th><th>Curva</th><th>TD</th><th>Instantâneo</th><th>I inst prim (A)</th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td>Fase</td>
-                            <td><input type="number" id="coord-tap-fase-cpfl" value="5" min="0.1" step="0.1" style="width:70px;"></td>
-                            <td id="coord-tap-fase-cpfl-prim">600</td>
-                            <td><select id="coord-curva-fase-cpfl"><option value="VI">VI</option><option value="MI">MI</option><option value="NI">NI</option><option value="EI">EI</option></select></td>
-                            <td><input type="number" id="coord-td-fase-cpfl" value="0.2" min="0.01" step="0.01" style="width:70px;"></td>
-                            <td><input type="number" id="coord-inst-fase-cpfl" value="32" min="1" step="0.1" style="width:70px;"></td>
-                            <td id="coord-inst-fase-cpfl-prim">3840</td>
-                        </tr>
-                        <tr>
-                            <td>Neutro</td>
-                            <td><input type="number" id="coord-tap-neutro-cpfl" value="0.5" min="0.05" step="0.05" style="width:70px;"></td>
-                            <td id="coord-tap-neutro-cpfl-prim">60</td>
-                            <td><select id="coord-curva-neutro-cpfl"><option value="NI">NI</option><option value="VI">VI</option><option value="MI">MI</option><option value="EI">EI</option></select></td>
-                            <td><input type="number" id="coord-td-neutro-cpfl" value="0.2" min="0.01" step="0.01" style="width:70px;"></td>
-                            <td><input type="number" id="coord-inst-neutro-cpfl" value="21" min="1" step="0.1" style="width:70px;"></td>
-                            <td id="coord-inst-neutro-cpfl-prim">2520</td>
-                        </tr>
-                        <tr>
-                            <td>51GS</td>
-                            <td><input type="number" id="coord-tap-51gs-cpfl" value="0.1" min="0.01" step="0.01" style="width:70px;"></td>
-                            <td id="coord-tap-51gs-cpfl-prim">12</td>
-                            <td colspan="2" style="text-align:center;color:var(--text-muted);font-size:12px;">Tempo definido</td>
-                            <td>TD</td>
-                            <td><input type="number" id="coord-td-51gs-cpfl" value="5" min="0.1" step="0.1" style="width:70px;"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="coord-trafo" class="coord-tab-content">
-        <div class="card">
-            <div class="card-header">5. Transformador</div>
-            <div class="form-grid col-2">
-                <div class="form-group"><label>Potência (kVA)</label><input type="number" id="coord-potencia-trafo-2" value="1000" min="1" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>Z% (Impedância)</label><input type="number" id="coord-z-trafo" value="5" min="0.1" step="0.1" style="width:100%;"></div>
-                <div class="form-group"><label>Tolerância (%)</label><input type="number" id="coord-tolerancia-trafo" value="0" min="0" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>I inrush (catálogo ou 10×In)</label><input type="text" id="coord-inrush-catalogo" value="582" style="width:100%;" placeholder="Deixe 0 para usar 10×In"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="coord-tc" class="coord-tab-content">
-        <div class="card">
-            <div class="card-header">6. Dimensionamento dos TCs</div>
-            <div class="form-grid col-2">
-                <div class="form-group"><label>RTC Primário</label><input type="number" id="coord-rtc-primario" value="400" min="1" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>RTC Secundário</label><input type="number" id="coord-rtc-secundario" value="5" min="1" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>Comprimento da Fiação (m)</label><input type="number" id="coord-comprimento-fiacao" value="20" min="1" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>Seção dos Condutores (mm²)</label><input type="number" id="coord-secao-fiacao" value="2.5" min="0.5" step="0.5" style="width:100%;"></div>
-                <div class="form-group"><label>Z do Relé (mΩ)</label><input type="number" id="coord-z-rele" value="13.2" min="0" step="0.1" style="width:100%;"></div>
-                <div class="form-group"><label>Z do TC (mΩ) (20% carga)</label><input type="number" id="coord-z-tc" value="100" min="0" step="1" style="width:100%;"></div>
-                <div class="form-group"><label>Carga do TC (VA)</label><input type="number" id="coord-carga-tc" value="12.5" min="1" step="0.5" style="width:100%;"></div>
-                <div class="form-group"><label>Icc máx do sistema (A)</label><input type="number" id="coord-icc-max-sistema" value="10600" min="1" step="1" style="width:100%;"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="coord-ajustes-cliente" class="coord-tab-content">
-        <div class="card">
-            <div class="card-header">7. Ajustes do Cliente - RTC: <span id="coord-rtc-cliente-display">400/5</span></div>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Relé</th><th>Tap</th><th>I primária (A)</th><th>Curva</th><th>TD</th><th>Instantâneo</th><th>I inst prim (A)</th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td>Fase</td>
-                            <td><input type="number" id="coord-tap-fase-cliente" value="3" min="0.1" step="0.1" style="width:70px;"></td>
-                            <td id="coord-tap-fase-cliente-prim">240</td>
-                            <td><select id="coord-curva-fase-cliente"><option>MI</option><option>VI</option><option>NI</option><option>EI</option></select></td>
-                            <td><input type="number" id="coord-td-fase-cliente" value="0.2" min="0.01" step="0.01" style="width:70px;"></td>
-                            <td><input type="number" id="coord-inst-fase-cliente" value="23" min="0.1" step="0.1" style="width:70px;"></td>
-                            <td id="coord-inst-fase-cliente-prim">1840</td>
-                        </tr>
-                        <tr>
-                            <td>Neutro</td>
-                            <td><input type="number" id="coord-tap-neutro-cliente" value="0.25" min="0.05" step="0.05" style="width:70px;"></td>
-                            <td id="coord-tap-neutro-cliente-prim">20</td>
-                            <td><select id="coord-curva-neutro-cliente"><option>NI</option><option value="VI">VI</option><option value="MI">MI</option><option value="EI">EI</option></select></td>
-                            <td><input type="number" id="coord-td-neutro-cliente" value="0.1" min="0.01" step="0.01" style="width:70px;"></td>
-                            <td><input type="number" id="coord-inst-neutro-cliente" value="7.5" min="0.1" step="0.1" style="width:70px;"></td>
-                            <td id="coord-inst-neutro-cliente-prim">600</td>
-                        </tr>
-                        <tr>
-                            <td>51GS</td>
-                            <td><input type="number" id="coord-tap-51gs-cliente" value="0.1" min="0.01" step="0.01" style="width:70px;"></td>
-                            <td id="coord-tap-51gs-cliente-prim">8</td>
-                            <td colspan="2" style="text-align:center;color:var(--text-muted);font-size:12px;">Tempo definido</td>
-                            <td>TD</td>
-                            <td><input type="number" id="coord-td-51gs-cliente" value="3" min="0.1" step="0.1" style="width:70px;"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div style="margin-top:12px;">
-                <button class="btn btn-primary" onclick="calcularCoordSelet()" style="padding:12px 40px;font-size:16px;">📊 Calcular Coordenação</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="coord-resultado" class="coord-tab-content">
-        <div id="coord-loading" style="display:none;text-align:center;padding:40px;">
-            <div class="loading"><div class="spinner"></div>Calculando...</div>
-        </div>
-        <div id="coord-result-container" style="display:none;">
-            <div class="card">
-                <div class="card-header">📊 Resultado da Coordenação</div>
-                <div id="coord-result-content"></div>
-            </div>
-            <div class="card">
-                <div class="card-header">📈 Coordenograma - Fase</div>
-                <div style="position:relative;height:450px;width:100%;">
-                    <canvas id="coord-chart-fase"></canvas>
-                </div>
-                <div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);">
-                    <span><span style="display:inline-block;width:16px;height:3px;background:#2563eb;margin-right:4px;"></span> CPFL Fase</span>
-                    <span><span style="display:inline-block;width:16px;height:3px;background:#dc2626;margin-right:4px;"></span> Cliente Fase</span>
-                    <span><span style="display:inline-block;width:16px;height:3px;background:#f59e0b;margin-right:4px;"></span> Trafo ANSI</span>
-                    <span><span style="display:inline-block;width:16px;height:3px;background:#10b981;margin-right:4px;"></span> Inrush</span>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">📈 Coordenograma - Neutro</div>
-                <div style="position:relative;height:450px;width:100%;">
-                    <canvas id="coord-chart-neutro"></canvas>
-                </div>
-                <div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);">
-                    <span><span style="display:inline-block;width:16px;height:3px;background:#8b5cf6;margin-right:4px;"></span> CPFL Neutro</span>
-                    <span><span style="display:inline-block;width:16px;height:3px;background:#ec4899;margin-right:4px;"></span> Cliente Neutro</span>
+                <div id="coord-preview-empty" style="text-align:center;padding:40px;color:var(--text-muted);">
+                    Preencha os dados ao lado e clique em <strong>Calcular</strong> para gerar o estudo de coordenação.
                 </div>
             </div>
         </div>
@@ -1331,50 +1330,35 @@ function gerarPDF() {
 // --- CoordSelet ---
 let coordChartFase = null, coordChartNeutro = null;
 
-function mudarCoordAba(tabId) {
-    document.querySelectorAll('#coord-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.coord-tab-content').forEach(c => c.classList.remove('active'));
-    const btn = document.querySelector('#coord-tabs [data-tab="' + tabId + '"]');
-    if (btn) btn.classList.add('active');
-    const el = document.getElementById(tabId);
-    if (el) el.classList.add('active');
-}
-
-document.querySelectorAll('#coord-tabs .tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        mudarCoordAba(this.dataset.tab);
-    });
-});
-
 // Sync RTC primario/secundario display
 document.getElementById('coord-rtc-primario')?.addEventListener('input', atualizarRTCDisplay);
 document.getElementById('coord-rtc-secundario')?.addEventListener('input', atualizarRTCDisplay);
 function atualizarRTCDisplay() {
     const prim = parseFloat(document.getElementById('coord-rtc-primario').value) || 400;
     const sec = parseFloat(document.getElementById('coord-rtc-secundario').value) || 5;
-    document.getElementById('coord-rtc-cliente-display').textContent = prim + '/' + sec;
-    // RTC for cliente curve
+    const el = document.getElementById('coord-rtc-cliente-display');
+    if (el) el.textContent = prim + '/' + sec;
     const rtc = prim / sec;
-    // Update primary currents for cliente
     const tapF = parseFloat(document.getElementById('coord-tap-fase-cliente').value) || 0;
     const tapN = parseFloat(document.getElementById('coord-tap-neutro-cliente').value) || 0;
     const tapG = parseFloat(document.getElementById('coord-tap-51gs-cliente').value) || 0;
     const instF = parseFloat(document.getElementById('coord-inst-fase-cliente').value) || 0;
     const instN = parseFloat(document.getElementById('coord-inst-neutro-cliente').value) || 0;
-    document.getElementById('coord-tap-fase-cliente-prim').textContent = Math.round(tapF * rtc);
-    document.getElementById('coord-tap-neutro-cliente-prim').textContent = (tapN * rtc).toFixed(1);
-    document.getElementById('coord-tap-51gs-cliente-prim').textContent = Math.round(tapG * rtc);
-    document.getElementById('coord-inst-fase-cliente-prim').textContent = Math.round(instF * rtc);
-    document.getElementById('coord-inst-neutro-cliente-prim').textContent = Math.round(instN * rtc);
+    const e1 = document.getElementById('coord-tap-fase-cliente-prim'); if (e1) e1.textContent = Math.round(tapF * rtc);
+    const e2 = document.getElementById('coord-tap-neutro-cliente-prim'); if (e2) e2.textContent = (tapN * rtc).toFixed(1);
+    const e3 = document.getElementById('coord-tap-51gs-cliente-prim'); if (e3) e3.textContent = Math.round(tapG * rtc);
+    const e4 = document.getElementById('coord-inst-fase-cliente-prim'); if (e4) e4.textContent = Math.round(instF * rtc);
+    const e5 = document.getElementById('coord-inst-neutro-cliente-prim'); if (e5) e5.textContent = Math.round(instN * rtc);
 }
 ['tap-fase-cliente','tap-neutro-cliente','tap-51gs-cliente','inst-fase-cliente','inst-neutro-cliente'].forEach(function(id) {
-    document.getElementById('coord-' + id)?.addEventListener('input', atualizarRTCDisplay);
+    const el = document.getElementById('coord-' + id);
+    if (el) el.addEventListener('input', atualizarRTCDisplay);
 });
 
-// Sync RTC display for CPFL
 document.getElementById('coord-rtc-fase-cpfl')?.addEventListener('input', atualizarRTC_CPFL);
 ['tap-fase-cpfl','tap-neutro-cpfl','tap-51gs-cpfl','inst-fase-cpfl','inst-neutro-cpfl'].forEach(function(id) {
-    document.getElementById('coord-' + id)?.addEventListener('input', atualizarRTC_CPFL);
+    const el = document.getElementById('coord-' + id);
+    if (el) el.addEventListener('input', atualizarRTC_CPFL);
 });
 function atualizarRTC_CPFL() {
     const rtc = parseFloat(document.getElementById('coord-rtc-fase-cpfl').value) || 120;
@@ -1383,11 +1367,11 @@ function atualizarRTC_CPFL() {
     const tapG = parseFloat(document.getElementById('coord-tap-51gs-cpfl').value) || 0;
     const instF = parseFloat(document.getElementById('coord-inst-fase-cpfl').value) || 0;
     const instN = parseFloat(document.getElementById('coord-inst-neutro-cpfl').value) || 0;
-    document.getElementById('coord-tap-fase-cpfl-prim').textContent = Math.round(tapF * rtc);
-    document.getElementById('coord-tap-neutro-cpfl-prim').textContent = (tapN * rtc).toFixed(1);
-    document.getElementById('coord-tap-51gs-cpfl-prim').textContent = Math.round(tapG * rtc);
-    document.getElementById('coord-inst-fase-cpfl-prim').textContent = Math.round(instF * rtc);
-    document.getElementById('coord-inst-neutro-cpfl-prim').textContent = Math.round(instN * rtc);
+    const e1 = document.getElementById('coord-tap-fase-cpfl-prim'); if (e1) e1.textContent = Math.round(tapF * rtc);
+    const e2 = document.getElementById('coord-tap-neutro-cpfl-prim'); if (e2) e2.textContent = (tapN * rtc).toFixed(1);
+    const e3 = document.getElementById('coord-tap-51gs-cpfl-prim'); if (e3) e3.textContent = Math.round(tapG * rtc);
+    const e4 = document.getElementById('coord-inst-fase-cpfl-prim'); if (e4) e4.textContent = Math.round(instF * rtc);
+    const e5 = document.getElementById('coord-inst-neutro-cpfl-prim'); if (e5) e5.textContent = Math.round(instN * rtc);
 }
 atualizarRTCDisplay();
 atualizarRTC_CPFL();
@@ -1455,7 +1439,7 @@ function calcularCoordSelet() {
     const dados = getCoordDados();
     document.getElementById('coord-loading').style.display = 'block';
     document.getElementById('coord-result-container').style.display = 'none';
-    mudarCoordAba('coord-resultado');
+    document.getElementById('coord-preview-empty').style.display = 'none';
 
     fetch('/api/coordselet/calcular', {
         method: 'POST',
@@ -1472,6 +1456,171 @@ function calcularCoordSelet() {
         document.getElementById('coord-loading').style.display = 'none';
         alert('Erro: ' + err.message);
     });
+}
+
+function mostrarCoordResultado(d) {
+    const container = document.getElementById('coord-result-container');
+    const content = document.getElementById('coord-result-content');
+    container.style.display = 'block';
+    content.innerHTML = gerarRelatorioCoordHTML(d.relatorio);
+
+    if (coordChartFase) { coordChartFase.destroy(); coordChartFase = null; }
+    if (coordChartNeutro) { coordChartNeutro.destroy(); coordChartNeutro = null; }
+
+    var datasetsFase = [];
+    if (d.curva_fase && d.curva_fase.length > 0) {
+        datasetsFase.push({
+            label: 'CPFL Fase',
+            data: d.curva_fase.map(function(p) { return {x: p.i, y: p.t}; }),
+            borderColor: '#2563eb', backgroundColor: '#2563eb',
+            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
+        });
+    }
+    if (d.curva_fase_cliente && d.curva_fase_cliente.length > 0) {
+        datasetsFase.push({
+            label: 'Cliente Fase',
+            data: d.curva_fase_cliente.map(function(p) { return {x: p.i, y: p.t}; }),
+            borderColor: '#dc2626', backgroundColor: '#dc2626',
+            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
+        });
+    }
+    if (d.curva_trafo && d.curva_trafo.pontos && d.curva_trafo.pontos.length > 0) {
+        datasetsFase.push({
+            label: 'Trafo ANSI',
+            data: d.curva_trafo.pontos.map(function(p) { return {x: p.i, y: p.t}; }),
+            borderColor: '#f59e0b', backgroundColor: '#f59e0b',
+            showLine: true, tension: 0, borderWidth: 2, borderDash: [5,5], pointRadius: 0,
+        });
+    }
+    if (d.curva_inrush && d.curva_inrush.pontos && d.curva_inrush.pontos.length > 0) {
+        datasetsFase.push({
+            label: 'Inrush',
+            data: d.curva_inrush.pontos.map(function(p) { return {x: p.i, y: p.t}; }),
+            borderColor: '#10b981', backgroundColor: '#10b981',
+            showLine: true, tension: 0, borderWidth: 2, borderDash: [3,3], pointRadius: 0,
+        });
+    }
+
+    var datasetsNeutro = [];
+    if (d.curva_neutro && d.curva_neutro.length > 0) {
+        datasetsNeutro.push({
+            label: 'CPFL Neutro',
+            data: d.curva_neutro.map(function(p) { return {x: p.i, y: p.t}; }),
+            borderColor: '#8b5cf6', backgroundColor: '#8b5cf6',
+            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
+        });
+    }
+    if (d.curva_neutro_cliente && d.curva_neutro_cliente.length > 0) {
+        datasetsNeutro.push({
+            label: 'Cliente Neutro',
+            data: d.curva_neutro_cliente.map(function(p) { return {x: p.i, y: p.t}; }),
+            borderColor: '#ec4899', backgroundColor: '#ec4899',
+            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
+        });
+    }
+
+    const logAxisOpts = {
+        type: 'logarithmic',
+        title: { display: true, text: '', font: { size: 11 } },
+        min: 1, max: 10000,
+        grid: { color: 'rgba(0,0,0,0.08)' },
+        ticks: {
+            autoSkip: true,
+            font: { size: 9 },
+            callback: function(v, i, ticks) {
+                if (v === 1) return '1';
+                if (v === 10) return '10';
+                if (v === 100) return '100';
+                if (v === 1000) return '1k';
+                if (v === 10000) return '10k';
+                if (v >= 1 && v.toString().match(/^[125]0*$/)) return v.toLocaleString();
+                return '';
+            }
+        }
+    };
+    const logAxisOptsY = {
+        type: 'logarithmic',
+        title: { display: true, text: '', font: { size: 11 } },
+        min: 0.01, max: 1000,
+        grid: { color: 'rgba(0,0,0,0.08)' },
+        ticks: {
+            autoSkip: true,
+            font: { size: 9 },
+            callback: function(v, i, ticks) {
+                if (v === 0.01) return '0.01';
+                if (v === 0.1) return '0.1';
+                if (v === 1) return '1';
+                if (v === 10) return '10';
+                if (v === 100) return '100';
+                if (v === 1000) return '1000';
+                return '';
+            }
+        }
+    };
+
+    const chartOpts = {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            x: Object.assign({}, logAxisOpts, { title: { display: true, text: 'Corrente (A)', font: { size: 11 } } }),
+            y: Object.assign({}, logAxisOptsY, { title: { display: true, text: 'Tempo (s)', font: { size: 11 } } })
+        },
+        plugins: {
+            legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 14, padding: 8 } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        return ctx.dataset.label + ': I=' + Number(ctx.parsed.x).toFixed(1) + 'A, t=' + Number(ctx.parsed.y).toFixed(3) + 's';
+                    }
+                }
+            }
+        }
+    };
+
+    const faseCanvas = document.getElementById('coord-chart-fase');
+    if (faseCanvas && datasetsFase.length > 0) {
+        coordChartFase = new Chart(faseCanvas, {
+            type: 'scatter',
+            data: { datasets: datasetsFase },
+            options: chartOpts
+        });
+    }
+
+    const neutroCanvas = document.getElementById('coord-chart-neutro');
+    if (neutroCanvas && datasetsNeutro.length > 0) {
+        coordChartNeutro = new Chart(neutroCanvas, {
+            type: 'scatter',
+            data: { datasets: datasetsNeutro },
+            options: chartOpts
+        });
+    }
+}
+
+function gerarPDFCoord() {
+    const container = document.getElementById('coord-result-container');
+    if (!container || container.style.display === 'none') {
+        alert('Calcule o estudo primeiro antes de gerar o PDF.');
+        return;
+    }
+    const content = document.getElementById('coord-result-content');
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    printWindow.document.write('<html><head><title>Estudo de Coordenação - ANEXO V</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; }');
+    printWindow.document.write('h3 { font-size: 16px; margin: 20px 0 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; }');
+    printWindow.document.write('h4 { font-size: 14px; margin: 14px 0 6px; }');
+    printWindow.document.write('table { width: 100%; border-collapse: collapse; margin: 8px 0; }');
+    printWindow.document.write('th, td { padding: 4px 8px; border: 1px solid #ccc; text-align: left; font-size: 11px; }');
+    printWindow.document.write('th { background: #f0f0f0; font-weight: 700; }');
+    printWindow.document.write('.ok { color: green; font-weight: 700; }');
+    printWindow.document.write('.fail { color: red; font-weight: 700; }');
+    printWindow.document.write('@media print { body { padding: 0; } }');
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write('<h2 style="text-align:center;">Estudo de Coordenação e Seletividade</h2>');
+    printWindow.document.write('<p style="text-align:center;font-size:11px;color:#666;">ANEXO V - GED-2855</p>');
+    printWindow.document.write(content.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    setTimeout(function() { printWindow.print(); }, 500);
 }
 
 function gerarRelatorioCoordHTML(r) {
@@ -1734,12 +1883,11 @@ document.addEventListener('DOMContentLoaded', function() {
 #print-report-content hr.result-divider {
     border: none; border-top: 1px solid var(--border); margin: 16px 0;
 }
-.coord-tab-content { display: none; }
-.coord-tab-content.active { display: block; }
-#coord-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 0; border-bottom: none; }
-#coord-tabs .tab-btn { font-size: 11px; padding: 6px 12px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); cursor: pointer; }
-#coord-tabs .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-#coord-tabs .tab-btn:hover:not(.active) { background: var(--border); }
+#coord-sidebar details { border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; background: var(--bg); }
+#coord-sidebar details[open] { background: var(--bg); }
+#coord-sidebar summary { font-size: 12px; padding: 2px 0; }
+#coord-sidebar details label { display: block; margin-bottom: 1px; }
+#coord-sidebar details input, #coord-sidebar details select { box-sizing: border-box; }
 .coord-report { font-size: 12px; line-height: 1.6; }
 .coord-report h3 { font-size: 14px; margin: 16px 0 8px; padding: 6px 10px; background: var(--bg-hover); border-radius: 4px; }
 .coord-report h4 { font-size: 13px; margin: 12px 0 6px; }
