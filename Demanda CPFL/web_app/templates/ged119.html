@@ -590,6 +590,7 @@
                     <label class="print-checkbox" draggable="true" data-section="chk_ramal_lig"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_ramal_lig" checked onchange="montarRelatorio()"> Ramal de Ligação</label>
                     <label class="print-checkbox" draggable="true" data-section="chk_duto"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_duto" checked onchange="montarRelatorio()"> Duto</label>
                     <label class="print-checkbox" draggable="true" data-section="chk_ramal"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_ramal" checked onchange="montarRelatorio()"> Ramal de Entrada</label>
+                    <label class="print-checkbox" draggable="true" data-section="chk_disjuntor"><span class="drag-handle">⠿</span><input type="checkbox" id="chk_disjuntor" checked onchange="montarRelatorio()"> Disjuntor</label>
                 </div>
                 <hr style="margin:12px 0;border-color:var(--border);">
                 <div style="font-size:11px;color:var(--text-muted);">Calcule os resultados nas abas correspondentes antes de gerar o relatório.</div>
@@ -3700,6 +3701,23 @@ var sectionRenderers = {
             html += aterrContainer.innerHTML;
             html += '</div>';
         }
+        return html;
+    },
+    chk_disjuntor: function(html, d) {
+        var corrente = ultimoResultadoTransformador && ultimoResultadoTransformador.I
+            ? ultimoResultadoTransformador.I : (parseFloat(document.getElementById('ramal_corrente').value) || 0);
+        if (corrente <= 0) return html;
+        var mode = document.querySelector('input[name="disjuntor_mode"]:checked');
+        var isAuto = mode && mode.value === 'auto';
+        var DISJ = [100,125,150,160,175,200,225,250,300,350,400,450,500,600];
+        var sel = DISJ[0];
+        for (var i = 0; i < DISJ.length; i++) { if (DISJ[i] >= corrente) { sel = DISJ[i]; break; } }
+        html += '<hr class="result-divider"><div class="result-section">';
+        html += '<div class="result-title">Disjuntor Termomagnético (' + (isAuto ? 'Automático' : 'Manual') + ')</div>';
+        html += '<div class="result-line">Corrente Calculada: <span class="value">' + corrente.toFixed(1) + ' A</span></div>';
+        html += '<div class="result-line">Disjuntor: <span class="value">' + sel + ' A</span></div>';
+        html += '<div class="result-line" style="font-size:11px;color:var(--text-muted);">Correntes Nominais: ' + DISJ.join(' - ') + ' A</div>';
+        html += '</div>';
         return html;
     },
     chk_duto: function(html, d) {
