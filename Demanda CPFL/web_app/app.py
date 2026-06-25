@@ -10,9 +10,11 @@ if _dir not in sys.path:
 from core.ged119 import calcular as calc_ged119, calcular_transformador, calcular_poste, calcular_ramal_ligacao, get_tabela_ac, get_tabela4
 from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neutro, get_tipos_eletroduto, calcular_eletroduto
 from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_conn_g13
+from core.ged2855 import calcular as calc_ged2855
 import core.ged119 as ged119_mod
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
 from core.projetos_ged13_db import listar_projetos as listar_projetos_g13, carregar_projeto as carregar_projeto_g13, salvar_projeto as salvar_projeto_g13, excluir_projeto as excluir_projeto_g13
+from core.projetos_ged2855_db import listar_projetos as listar_projetos_g2855, carregar_projeto as carregar_projeto_g2855, salvar_projeto as salvar_projeto_g2855, excluir_projeto as excluir_projeto_g2855
 from core.auth_db import autenticar, registrar_usuario, registrar_login, registrar_logout, listar_usuarios_com_estatisticas
 
 app = Flask(__name__)
@@ -34,6 +36,10 @@ def ged119():
 @app.route('/ged13')
 def ged13():
     return render_template('ged13.html')
+
+@app.route('/ged2855')
+def ged2855():
+    return render_template('ged2855.html')
 
 @app.route('/api/ged119/calcular', methods=['POST'])
 def api_ged119():
@@ -282,6 +288,51 @@ def api_projetos_excluir(projeto_id):
         user = session.get('user')
         if not user: return jsonify({'success': False, 'error': 'Faça login para excluir projetos'}), 401
         excluir_projeto(projeto_id); return jsonify({'success': True})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- GED-2855 API ---
+@app.route('/api/ged2855/calcular', methods=['POST'])
+def api_ged2855():
+    try:
+        dados = request.get_json()
+        resultado = calc_ged2855(dados)
+        return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- GED-2855 PROJECT MANAGEMENT API ---
+@app.route('/api/ged2855/projetos/listar', methods=['GET'])
+def api_ged2855_projetos_listar():
+    try:
+        user = session.get('user')
+        if not user: return jsonify({'success': True, 'data': []})
+        uid = None if user.get('is_admin') else user.get('id')
+        projetos = listar_projetos_g2855(usuario_id=uid)
+        return jsonify({'success': True, 'data': projetos})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged2855/projetos/carregar/<int:projeto_id>', methods=['GET'])
+def api_ged2855_projetos_carregar(projeto_id):
+    try: proj = carregar_projeto_g2855(projeto_id); return jsonify({'success': True, 'data': proj}) if proj else jsonify({'success': False, 'error': 'Projeto nao encontrado'}), 404
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged2855/projetos/salvar', methods=['POST'])
+def api_ged2855_projetos_salvar():
+    try:
+        user = session.get('user')
+        if not user: return jsonify({'success': False, 'error': 'Faça login para salvar projetos'}), 401
+        dados = request.get_json(); projeto_id = dados.get('id')
+        uid = user.get('id')
+        novo_id = salvar_projeto_g2855(projeto_id, dados, usuario_id=uid)
+        return jsonify({'success': True, 'data': {'id': novo_id}})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged2855/projetos/excluir/<int:projeto_id>', methods=['DELETE'])
+def api_ged2855_projetos_excluir(projeto_id):
+    try:
+        user = session.get('user')
+        if not user: return jsonify({'success': False, 'error': 'Faça login para excluir projetos'}), 401
+        excluir_projeto_g2855(projeto_id); return jsonify({'success': True})
     except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 # --- GED-13 PROJECT MANAGEMENT API ---

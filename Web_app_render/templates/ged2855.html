@@ -1,0 +1,1103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="main-layout">
+
+<div class="tabs" id="main-tabs">
+    <button class="tab-btn active" data-tab="tab-projetos">Gerenciamento</button>
+    <button class="tab-btn" data-tab="tab-0">Dados Gerais</button>
+    <button class="tab-btn" data-tab="tab-1">Ilumina&ccedil;&atilde;o e Tomadas</button>
+    <button class="tab-btn" data-tab="tab-2">Chuveiros e Aquecimento</button>
+    <button class="tab-btn" data-tab="tab-3">Eletrodom&eacute;sticos</button>
+    <button class="tab-btn" data-tab="tab-4">Ar Condicionado</button>
+    <button class="tab-btn" data-tab="tab-5">Motores</button>
+    <button class="tab-btn" data-tab="tab-6">Equip. Especiais</button>
+    <button class="tab-btn" data-tab="tab-fp">Corre&ccedil;&atilde;o FP</button>
+    <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
+    <button class="tab-btn" data-tab="tab-impressao" style="background:var(--warning);color:#000;font-weight:700;">🖨️ Impressão</button>
+</div>
+
+<div id="tab-projetos" class="tab-content active">
+    <div class="card">
+        <div class="card-header">Gerenciamento de Projetos</div>
+        <div class="form-grid" style="grid-template-columns:2fr 1fr;">
+            <div class="form-group">
+                <label>Nome do Projeto</label>
+                <input type="text" id="projeto_nome" placeholder="Digite o nome do projeto" style="width:100%;">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" onclick="salvarProjeto()">&#128190; Salvar</button>
+                    <button class="btn btn-primary btn-sm" onclick="novoProjeto()">&#128196; Novo</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirProjeto()">&#128465; Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Projetos Salvos
+            <span class="badge" id="projeto-count">0</span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome do Projeto</th>
+                        <th>Unidade</th>
+                        <th>Tipo</th>
+                        <th>Tens&atilde;o</th>
+                        <th>Data Cria&ccedil;&atilde;o</th>
+                    </tr>
+                </thead>
+                <tbody id="projeto-table-body"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="projeto-empty">Nenhum projeto salvo</div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:16px;" onclick="mudarAba('tab-0')">
+            Novo Projeto &rarr;
+        </button>
+    </div>
+</div>
+
+<div id="tab-0" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dados Gerais</div>
+        <div class="form-grid col-2">
+            <div class="form-group">
+                <label>Unidade / Identifica&ccedil;&atilde;o</label>
+                <input type="text" id="in-unidade" placeholder="Ex: Loja, Escritório, Galpão" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Instala&ccedil;&atilde;o</label>
+                <select id="in-tipo" style="width:100%;">
+                    <option value="Comercial">Comercial</option>
+                    <option value="Residencial">Residencial</option>
+                    <option value="Industrial">Industrial</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tens&atilde;o</label>
+                <select id="in-tensao" style="width:100%;">
+                    <option value="127/220V">127/220V (Trif&aacute;sico)</option>
+                    <option value="220/380V" selected>220/380V (Trif&aacute;sico)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fator de Pot&ecirc;ncia Atual</label>
+                <input type="number" id="in-fp-atual" min="0.5" max="0.99" step="0.01" value="0.85" style="width:100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-1" class="tab-content">
+    <div class="card">
+        <div class="card-header">Ilumina&ccedil;&atilde;o e Tomadas <span class="badge" id="count-1">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-1" placeholder="Ex: Iluminação" list="suggest-1">
+                <datalist id="suggest-1">
+                    <option value="Iluminação">
+                    <option value="Tomadas">
+                    <option value="Iluminação e Tomadas">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-1" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-1" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-1" onclick="addCarga(1)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(1)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(1)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>Qtd</th></tr></thead>
+                <tbody id="tbody-1"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-1">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-2" class="tab-content">
+    <div class="card">
+        <div class="card-header">Chuveiros e Aquecimento <span class="badge" id="count-2">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-2" placeholder="Ex: Chuveiro" list="suggest-2">
+                <datalist id="suggest-2">
+                    <option value="Chuveiro">
+                    <option value="Torneira Elétrica">
+                    <option value="Ferro de Passar">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-2" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-2" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-2" onclick="addCarga(2)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(2)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(2)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>Qtd</th></tr></thead>
+                <tbody id="tbody-2"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-2">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-3" class="tab-content">
+    <div class="card">
+        <div class="card-header">Eletrodom&eacute;sticos <span class="badge" id="count-3">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-3" placeholder="Ex: Geladeira" list="suggest-3">
+                <datalist id="suggest-3">
+                    <option value="Geladeira">
+                    <option value="Microondas">
+                    <option value="Máquina Lavar">
+                    <option value="TV">
+                    <option value="Freezer">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-3" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-3" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-3" onclick="addCarga(3)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(3)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(3)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>Qtd</th></tr></thead>
+                <tbody id="tbody-3"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-3">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-4" class="tab-content">
+    <div class="card">
+        <div class="card-header">Ar Condicionado <span class="badge" id="count-4">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-4" placeholder="Ex: Ar 14000 BTU" list="suggest-4">
+                <datalist id="suggest-4">
+                    <option value="Ar Condicionado">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-4" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>FP</label>
+                <input type="number" id="fp-4" min="0.5" max="1" step="0.01" value="1.0">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-4" onclick="addCarga(4)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(4)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(4)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>FP</th><th>Qtd</th></tr></thead>
+                <tbody id="tbody-4"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-4">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-5" class="tab-content">
+    <div class="card">
+        <div class="card-header">Motores <span class="badge" id="count-5">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-5" placeholder="Ex: Motor 1 CV" list="suggest-5">
+                <datalist id="suggest-5">
+                    <option value="Motor">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (CV)</label>
+                <input type="number" id="cv-5" min="0" step="0.5" placeholder="Ex: 5">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-5" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-5" onclick="addCarga(5)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(5)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(5)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>CV</th><th>Qtd</th></tr></thead>
+                <tbody id="tbody-5"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-5">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-6" class="tab-content">
+    <div class="card">
+        <div class="card-header">Equipamentos Especiais <span class="badge" id="count-6">0</span></div>
+        <div class="form-grid col-4" style="margin-bottom:12px;">
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="nome-6" placeholder="Ex: Máquina Solda" list="suggest-6">
+                <datalist id="suggest-6">
+                    <option value="Máquina de Solda">
+                    <option value="Compressor">
+                    <option value="Elevador">
+                    <option value="Bomba">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Pot&ecirc;ncia (W)</label>
+                <input type="number" id="pot-6" min="0" step="1">
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <input type="number" id="qtd-6" min="1" step="1" value="1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <div class="btn-group" style="margin-top:18px;">
+                    <button class="btn btn-success btn-sm" id="btn-add-6" onclick="addCarga(6)">+ Adicionar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editCarga(6)">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="delCarga(6)">- Excluir</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="width:40px;"></th><th>Descrição</th><th>Potência (W)</th><th>Qtd</th></tr></thead>
+                <tbody id="tbody-6"></tbody>
+            </table>
+        </div>
+        <div class="empty-state" id="empty-6">Nenhuma carga cadastrada</div>
+    </div>
+</div>
+
+<div id="tab-fp" class="tab-content">
+    <div class="card">
+        <div class="card-header">Correção do Fator de Potência</div>
+        <div class="form-grid col-2">
+            <div class="form-group">
+                <label>Fator de Pot&ecirc;ncia Atual</label>
+                <input type="number" id="in-fp-atual-2" min="0.5" max="0.99" step="0.01" value="0.85" style="width:100%;">
+            </div>
+            <div class="form-group">
+                <label>Fator de Pot&ecirc;ncia Desejado</label>
+                <select id="in-fp-desejado" style="width:100%;">
+                    <option value="0.92">0.92</option>
+                    <option value="0.95">0.95</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:12px;font-size:13px;color:var(--text-muted);">
+            O banco de capacitores será calculado automaticamente no resultado com base na demanda total e no fator de potência.
+        </div>
+    </div>
+</div>
+
+<div id="tab-resultado" class="tab-content">
+    <div id="loading-container" style="display:none;text-align:center;padding:40px;">
+        <div class="loading">
+            <div class="spinner"></div>
+            Calculando...
+        </div>
+    </div>
+
+    <div id="result-container" style="display:none;">
+        <div class="card">
+            <div class="card-header">
+                Memorial de C&aacute;lculo - GED-2855
+                <button class="btn btn-primary btn-sm" onclick="calcular()" style="margin-left:12px;">&#128221; Calcular</button>
+                <button class="btn btn-primary btn-sm" onclick="mudarAba('tab-impressao')" style="margin-left:auto;">&#128196; Gerar Relatório</button>
+            </div>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <div style="text-align:center;padding:20px;">
+        <button class="btn btn-primary" style="padding:14px 50px;font-size:18px;" onclick="calcular()">&#128221; Calcular Demanda</button>
+    </div>
+</div>
+
+<div id="tab-impressao" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <span>🖨️ Relatório de Impressão</span>
+            <button class="btn btn-primary btn-sm" onclick="gerarPDF()" style="margin-left:auto;">📄 Gerar PDF</button>
+        </div>
+        <div class="print-report-layout">
+            <div class="print-report-sidebar">
+                <h4 style="margin:0 0 12px 0;font-size:14px;">Seções do Relatório</h4>
+                <label class="print-checkbox"><input type="checkbox" id="chk_dados_gerais" checked onchange="montarRelatorio()"> Dados Gerais</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_cargas" checked onchange="montarRelatorio()"> Cargas</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_demanda" checked onchange="montarRelatorio()"> Demanda Calculada</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_transformador" checked onchange="montarRelatorio()"> Transformador</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_fp" checked onchange="montarRelatorio()"> Correção de FP</label>
+                <label class="print-checkbox"><input type="checkbox" id="chk_padrao" checked onchange="montarRelatorio()"> Padrão de Entrada</label>
+                <hr style="margin:12px 0;border-color:var(--border);">
+                <div style="font-size:11px;color:var(--text-muted);">Calcule o resultado primeiro na aba Resultado antes de gerar o relatório.</div>
+            </div>
+            <div class="print-report-preview" id="relatorio-preview">
+                <div style="text-align:center;padding:40px;color:var(--text-muted);">
+                    Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+let currentProjetoId = null;
+let ultimoResultado = null;
+const cargas = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+const editIndex = { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null };
+
+const nomesPorAba = {
+    1: ['nome-1', 'pot-1', 'qtd-1', '', 'tbody-1', 'empty-1', 'count-1'],
+    2: ['nome-2', 'pot-2', 'qtd-2', '', 'tbody-2', 'empty-2', 'count-2'],
+    3: ['nome-3', 'pot-3', 'qtd-3', '', 'tbody-3', 'empty-3', 'count-3'],
+    4: ['nome-4', 'pot-4', 'qtd-4', 'fp-4', 'tbody-4', 'empty-4', 'count-4'],
+    5: ['nome-5', 'pot-5', 'qtd-5', 'cv-5', 'tbody-5', 'empty-5', 'count-5'],
+    6: ['nome-6', 'pot-6', 'qtd-6', '', 'tbody-6', 'empty-6', 'count-6'],
+};
+
+function mudarAba(tabId) {
+    document.querySelectorAll('#main-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('#main-tabs [data-tab="' + tabId + '"]').classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+document.querySelectorAll('#main-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tab = this.dataset.tab;
+        if (tab === 'tab-resultado') {
+            mudarAba(tab);
+        } else if (tab === 'tab-impressao') {
+            mudarAba(tab);
+            montarRelatorio();
+        } else {
+            mudarAba(tab);
+        }
+    });
+});
+
+function renderAba(aba) {
+    if (!nomesPorAba[aba]) return;
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], tbodyId = arr[4], emptyId = arr[5], countId = arr[6];
+    const extraId = arr[3];
+    const isMotor = aba === 5;
+    const isAr = aba === 4;
+    const tbody = document.getElementById(tbodyId);
+    const empty = document.getElementById(emptyId);
+    const count = document.getElementById(countId);
+    tbody.innerHTML = '';
+    if ((cargas[aba] || []).length === 0) {
+        empty.style.display = 'block';
+        count.textContent = '0';
+        return;
+    }
+    empty.style.display = 'none';
+    count.textContent = cargas[aba].length;
+
+    cargas[aba].forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.onclick = function() {
+            document.querySelectorAll('#' + tbodyId + ' tr').forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById(nomeId).value = c.nome;
+            document.getElementById(potId).value = c.potencia || '';
+            document.getElementById(qtdId).value = c.qtd || 1;
+            if (extraId) document.getElementById(extraId).value = c.cv || c.fp || '';
+        };
+        const qtd = c.qtd || 1;
+        const idx = i + 1;
+        if (isMotor) {
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + (c.cv || '-') + '</td><td>' + qtd + '</td>';
+        } else if (isAr) {
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + (c.potencia || '0') + '</td><td>' + (c.fp || '1.0') + '</td><td>' + qtd + '</td>';
+        } else {
+            tr.innerHTML = '<td style="text-align:center;color:var(--text-muted);">' + idx + '</td><td>' + c.nome + '</td><td>' + (c.potencia || '0') + '</td><td>' + qtd + '</td>';
+        }
+        tbody.appendChild(tr);
+    });
+}
+
+function readCargaFromForm(aba) {
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3];
+    const nome = document.getElementById(nomeId).value.trim();
+    if (!nome) { alert('Preencha todos os campos!'); return null; }
+    const qtdVal = parseInt(document.getElementById(qtdId).value) || 1;
+    const item = { nome, potencia: 0, qtd: qtdVal };
+    if (aba === 5) {
+        const cv = parseFloat(document.getElementById(extraId).value);
+        if (cv > 0) item.cv = cv;
+        else { alert('Informe a potência em CV!'); return null; }
+    } else if (aba === 4) {
+        const p = parseFloat(document.getElementById(potId).value.trim());
+        if (isNaN(p) || p <= 0) { alert('Potência deve ser um número positivo!'); return null; }
+        item.potencia = p;
+        item.fp = parseFloat(document.getElementById(extraId).value) || 1.0;
+    } else {
+        const p = parseFloat(document.getElementById(potId).value.trim());
+        if (isNaN(p) || p <= 0) { alert('Potência deve ser um número positivo!'); return null; }
+        item.potencia = p;
+    }
+    return item;
+}
+
+function limparForm(aba) {
+    const arr = nomesPorAba[aba];
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3];
+    document.getElementById(nomeId).value = '';
+    document.getElementById(potId).value = '';
+    document.getElementById(qtdId).value = 1;
+    if (extraId) document.getElementById(extraId).value = aba === 5 ? '' : (aba === 4 ? '1.0' : '');
+    editIndex[aba] = null;
+    const btn = document.getElementById('btn-add-' + aba);
+    if (btn) btn.textContent = '+ Adicionar';
+    document.getElementById(nomeId).focus();
+}
+
+function addCarga(aba) {
+    const item = readCargaFromForm(aba);
+    if (!item) return;
+    if (editIndex[aba] !== null) {
+        cargas[aba][editIndex[aba]] = item;
+    } else {
+        cargas[aba].push(item);
+    }
+    renderAba(aba);
+    limparForm(aba);
+    autoSalvar();
+}
+
+function editCarga(aba) {
+    const arr = nomesPorAba[aba];
+    const tbodyId = arr[4];
+    const selected = document.querySelector('#' + tbodyId + ' tr.selected');
+    if (!selected) { alert('Selecione uma carga para editar!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    const c = cargas[aba][idx];
+    if (!c) return;
+    const nomeId = arr[0], potId = arr[1], qtdId = arr[2], extraId = arr[3];
+    document.getElementById(nomeId).value = c.nome;
+    document.getElementById(potId).value = c.potencia || '';
+    document.getElementById(qtdId).value = c.qtd || 1;
+    if (extraId) document.getElementById(extraId).value = c.cv || c.fp || '';
+    editIndex[aba] = idx;
+    const btn = document.getElementById('btn-add-' + aba);
+    if (btn) btn.textContent = 'Salvar';
+    document.getElementById(nomeId).focus();
+}
+
+function delCarga(aba) {
+    const arr = nomesPorAba[aba];
+    const tbodyId = arr[4];
+    const selected = document.querySelector('#' + tbodyId + ' tr.selected');
+    if (!selected) { alert('Selecione uma carga para excluir!'); return; }
+    const idx = Array.from(selected.parentElement.children).indexOf(selected);
+    if (confirm('Excluir a carga \'' + cargas[aba][idx].nome + '\'?')) {
+        cargas[aba].splice(idx, 1);
+        renderAba(aba);
+        autoSalvar();
+    }
+}
+
+// Sync FP fields
+document.getElementById('in-fp-atual').addEventListener('input', function() {
+    document.getElementById('in-fp-atual-2').value = this.value;
+});
+document.getElementById('in-fp-atual-2').addEventListener('input', function() {
+    document.getElementById('in-fp-atual').value = this.value;
+});
+
+function getDadosGerais() {
+    return {
+        unidade: document.getElementById('in-unidade').value.trim(),
+        tipo: document.getElementById('in-tipo').value,
+        tensao: document.getElementById('in-tensao').value,
+        fp_atual: parseFloat(document.getElementById('in-fp-atual').value) || 0.85,
+        fp_desejado: parseFloat(document.getElementById('in-fp-desejado').value) || 0.92,
+    };
+}
+
+function setDadosGerais(dados) {
+    document.getElementById('in-unidade').value = dados.unidade || '';
+    if (dados.tipo) document.getElementById('in-tipo').value = dados.tipo;
+    if (dados.tensao) document.getElementById('in-tensao').value = dados.tensao;
+    if (dados.fp_atual) {
+        document.getElementById('in-fp-atual').value = dados.fp_atual;
+        document.getElementById('in-fp-atual-2').value = dados.fp_atual;
+    }
+    if (dados.fp_desejado) document.getElementById('in-fp-desejado').value = dados.fp_desejado;
+}
+
+function montarCargas() {
+    const todas = [];
+    for (let aba = 1; aba <= 6; aba++) {
+        for (const c of cargas[aba]) {
+            const item = { nome: c.nome, potencia: c.potencia || 0, tipo: aba, quantidade: c.qtd || 1 };
+            if (aba === 5 && c.cv) item.cv = c.cv;
+            if (aba === 4 && c.fp) item.fp = c.fp;
+            todas.push(item);
+        }
+    }
+    return todas;
+}
+
+// --- PROJECT MANAGEMENT ---
+
+function listarProjetos() {
+    fetch('/api/ged2855/projetos/listar')
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const tbody = document.getElementById('projeto-table-body');
+        const empty = document.getElementById('projeto-empty');
+        const count = document.getElementById('projeto-count');
+        tbody.innerHTML = '';
+        if (resp.data.length === 0) {
+            empty.style.display = 'block';
+            count.textContent = '0';
+            return;
+        }
+        empty.style.display = 'none';
+        count.textContent = resp.data.length;
+        resp.data.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.onclick = function() {
+                document.querySelectorAll('#projeto-table-body tr').forEach(r => r.classList.remove('selected'));
+                tr.classList.add('selected');
+            };
+            tr.ondblclick = function() {
+                carregarProjeto(p.id);
+            };
+            tr.innerHTML = '<td>' + p.id + '</td><td>' + p.nome + '</td><td>' + (p.unidade || '-') + '</td><td>' + (p.tipo || '-') + '</td><td>' + (p.tensao || '-') + '</td><td>' + p.data_criacao + '</td>';
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(err => alert('Erro ao listar projetos: ' + err.message));
+}
+
+function carregarProjeto(projetoId) {
+    fetch('/api/ged2855/projetos/carregar/' + projetoId)
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        const p = resp.data;
+        currentProjetoId = p.id;
+        document.getElementById('projeto_nome').value = p.nome;
+        setDadosGerais(p);
+
+        for (let aba = 1; aba <= 6; aba++) {
+            cargas[aba] = [];
+            editIndex[aba] = null;
+            const btn = document.getElementById('btn-add-' + aba);
+            if (btn) btn.textContent = '+ Adicionar';
+        }
+
+        for (const c of (p.cargas || [])) {
+            const aba = c.tipo;
+            if (aba >= 1 && aba <= 6) {
+                cargas[aba].push({ nome: c.nome, potencia: c.potencia, qtd: c.quantidade || 1, cv: c.cv || 0, fp: c.fp || 1.0 });
+            }
+        }
+
+        for (let aba = 1; aba <= 6; aba++) {
+            renderAba(aba);
+        }
+
+        mudarAba('tab-0');
+    })
+    .catch(err => alert('Erro ao carregar projeto: ' + err.message));
+}
+
+function montarDadosProjeto() {
+    const geral = getDadosGerais();
+    const todasCargas = montarCargas();
+    return { geral, todasCargas };
+}
+
+let autoSaveTimer = null;
+
+function autoSalvar() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(function() {
+        const nome = document.getElementById('projeto_nome').value.trim();
+        if (!nome) return;
+        const { geral, todasCargas } = montarDadosProjeto();
+        fetch('/api/ged2855/projetos/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, cargas: todasCargas })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) { currentProjetoId = resp.data.id; listarProjetos(); }
+        })
+        .catch(function() {});
+    }, 600);
+}
+
+document.getElementById('projeto_nome').addEventListener('input', autoSalvar);
+document.getElementById('in-unidade').addEventListener('input', autoSalvar);
+document.getElementById('in-tipo').addEventListener('change', autoSalvar);
+document.getElementById('in-tensao').addEventListener('change', autoSalvar);
+document.getElementById('in-fp-atual').addEventListener('input', autoSalvar);
+document.getElementById('in-fp-atual-2').addEventListener('input', autoSalvar);
+document.getElementById('in-fp-desejado').addEventListener('change', autoSalvar);
+
+function salvarProjeto() {
+    const nome = document.getElementById('projeto_nome').value.trim();
+    if (!nome) { alert('Digite um nome para o projeto!'); return; }
+    const { geral, todasCargas } = montarDadosProjeto();
+    fetch('/api/ged2855/projetos/salvar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, cargas: todasCargas })
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        currentProjetoId = resp.data.id;
+        alert('Projeto salvo com sucesso!');
+        listarProjetos();
+    })
+    .catch(err => alert('Erro ao salvar projeto: ' + err.message));
+}
+
+function _limparForm() {
+    currentProjetoId = null;
+    document.getElementById('projeto_nome').value = '';
+    setDadosGerais({ unidade: '', tipo: 'Comercial', tensao: '220/380V', fp_atual: 0.85, fp_desejado: 0.92 });
+    for (let aba = 1; aba <= 6; aba++) {
+        cargas[aba] = [];
+        editIndex[aba] = null;
+        const btn = document.getElementById('btn-add-' + aba);
+        if (btn) btn.textContent = '+ Adicionar';
+        renderAba(aba);
+    }
+    document.getElementById('result-container').style.display = 'none';
+}
+
+function novoProjeto() {
+    const nome = document.getElementById('projeto_nome').value.trim();
+    if (nome) {
+        const { geral, todasCargas } = montarDadosProjeto();
+        fetch('/api/ged2855/projetos/salvar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentProjetoId, nome, unidade: geral.unidade, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, cargas: todasCargas })
+        })
+        .then(r => r.json())
+        .then(function(resp) {
+            if (resp.success) currentProjetoId = resp.data.id;
+            _limparForm();
+            listarProjetos();
+        })
+        .catch(function() {});
+    } else {
+        _limparForm();
+    }
+}
+
+function excluirProjeto() {
+    if (!currentProjetoId) { alert('Carregue um projeto primeiro!'); return; }
+    const nome = document.getElementById('projeto_nome').value;
+    if (!confirm('Excluir o projeto "' + nome + '"?')) return;
+    fetch('/api/ged2855/projetos/excluir/' + currentProjetoId, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(resp => {
+        if (!resp.success) throw new Error(resp.error);
+        currentProjetoId = null;
+        listarProjetos();
+    })
+    .catch(err => alert('Erro ao excluir projeto: ' + err.message));
+}
+
+// --- CALCULATE ---
+function calcular() {
+    const geral = getDadosGerais();
+    const todasCargas = montarCargas();
+
+    document.getElementById('result-container').style.display = 'none';
+    document.getElementById('loading-container').style.display = 'block';
+
+    fetch('/api/ged2855/calcular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cargas: todasCargas, tipo: geral.tipo, tensao: geral.tensao, fp_atual: geral.fp_atual, fp_desejado: geral.fp_desejado, unidade: geral.unidade })
+    })
+    .then(r => r.json())
+    .then(resp => {
+        document.getElementById('loading-container').style.display = 'none';
+        if (!resp.success) throw new Error(resp.error);
+        mostrarResultado(resp.data);
+        mudarAba('tab-resultado');
+    })
+    .catch(err => {
+        document.getElementById('loading-container').style.display = 'none';
+        alert('Erro: ' + err.message);
+    });
+}
+
+function mostrarResultado(d) {
+    ultimoResultado = d;
+    const container = document.getElementById('result-container');
+    const content = document.getElementById('result-content');
+    container.style.display = 'block';
+
+    var html = '';
+
+    // Carga Instalada
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="card-header">📊 Carga Instalada</div>';
+    html += '<table class="result-table"><thead><tr><th>Equipamento</th><th>Potência</th></tr></thead><tbody>';
+    html += '<tr><td>Iluminação e Tomadas</td><td>' + d.carga_ilum_kw + ' kW</td></tr>';
+    if (d.carga_chuveiros_kw > 0) html += '<tr><td>Chuveiros / Aquecimento</td><td>' + d.carga_chuveiros_kw + ' kW</td></tr>';
+    if (d.carga_eletro_kw > 0) html += '<tr><td>Eletrodomésticos</td><td>' + d.carga_eletro_kw + ' kW</td></tr>';
+    if (d.carga_ar_kw > 0) html += '<tr><td>Ar Condicionado</td><td>' + d.carga_ar_kw + ' kW</td></tr>';
+    if (d.d_motores > 0) html += '<tr><td>Motores</td><td>' + (d.carga_instalada_kw - d.carga_ilum_kw - d.carga_chuveiros_kw - d.carga_eletro_kw - d.carga_ar_kw).toFixed(2) + ' kW</td></tr>';
+    if (d.d_especiais > 0) html += '<tr><td>Equip. Especiais</td><td>' + d.d_especiais + ' kW</td></tr>';
+    html += '<tr style="font-weight:700;background:var(--accent);color:#fff;"><td>TOTAL</td><td>' + d.carga_instalada_kw + ' kW</td></tr>';
+    html += '</tbody></table></div>';
+
+    // Demand calculation
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="card-header">📐 Demanda Calculada (GED-2855)</div>';
+
+    if (d.d_ilum > 0) {
+        html += '<div class="result-section"><div class="result-title">Iluminação e Tomadas</div>';
+        html += '<div class="result-line">Carga: ' + d.carga_ilum_kw + ' kW</div>';
+        html += '<div class="result-line">FD (Tabela 10): ' + d.fd_ilum + '</div>';
+        html += '<div class="result-line">D_ilum = ' + d.carga_ilum_kw + ' × ' + d.fd_ilum + ' = <span class="highlight">' + d.d_ilum + ' kVA</span></div></div>';
+    }
+
+    if (d.d_chuv > 0) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title purple">Chuveiros e Aquecimento</div>';
+        html += '<div class="result-line">Carga: ' + d.carga_chuveiros_kw + ' kW</div>';
+        html += '<div class="result-line">Quantidade: ' + d.qtd_chuveiros + ' aparelho(s)</div>';
+        html += '<div class="result-line">FD (Tabela 11): ' + d.fd_chuv + '</div>';
+        html += '<div class="result-line">D_chuv = ' + d.carga_chuveiros_kw + ' × ' + d.fd_chuv + ' = <span class="highlight">' + d.d_chuv + ' kVA</span></div></div>';
+    }
+
+    if (d.d_eletro > 0) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Eletrodomésticos</div>';
+        html += '<div class="result-line">Carga: ' + d.carga_eletro_kw + ' kW</div>';
+        html += '<div class="result-line">FD (Tabela 12): ' + d.fd_eletro + '</div>';
+        html += '<div class="result-line">D_eletro = ' + d.carga_eletro_kw + ' × ' + d.fd_eletro + ' = <span class="highlight">' + d.d_eletro + ' kVA</span></div></div>';
+    }
+
+    if (d.d_ar > 0) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title gold">Ar Condicionado</div>';
+        html += '<div class="result-line">Carga: ' + d.carga_ar_kw + ' kW (' + d.ar_qtd + ' aparelho(s))</div>';
+        html += '<div class="result-line">FD (Tabela 13): ' + d.fd_ar + '</div>';
+        html += '<div class="result-line">D_ar = ' + d.carga_ar_kw + ' × ' + d.fd_ar + ' = <span class="highlight">' + d.d_ar + ' kVA</span></div></div>';
+    }
+
+    if (d.d_motores > 0 && d.motores && d.motores.length > 0) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title purple">Motores</div>';
+        html += '<table class="result-table"><thead><tr><th>Motor</th><th>CV</th><th>VA</th><th>FD (Tab.14)</th><th>Demanda (kVA)</th></tr></thead><tbody>';
+        d.motores.forEach(function(m) {
+            html += '<tr><td>' + m.nome + '</td><td>' + m.cv + '</td><td>' + m.va + '</td><td>' + m.fd + '</td><td>' + m.parcela_kva + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        html += '<div class="result-line">D_motores = <span class="highlight">' + d.d_motores + ' kVA</span></div></div>';
+    }
+
+    if (d.d_especiais > 0) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Equipamentos Especiais</div>';
+        html += '<div class="result-line">D_especiais = <span class="highlight">' + d.d_especiais + ' kVA</span></div></div>';
+    }
+
+    // Total
+    html += '<hr class="result-divider"><div class="result-section"><div class="result-title gold">📈 Demanda Total</div>';
+    html += '<div class="result-line">D_ilum = ' + d.d_ilum + ' kVA</div>';
+    if (d.d_chuv > 0) html += '<div class="result-line">D_chuveiros = ' + d.d_chuv + ' kVA</div>';
+    if (d.d_eletro > 0) html += '<div class="result-line">D_eletro = ' + d.d_eletro + ' kVA</div>';
+    if (d.d_ar > 0) html += '<div class="result-line">D_ar = ' + d.d_ar + ' kVA</div>';
+    if (d.d_motores > 0) html += '<div class="result-line">D_motores = ' + d.d_motores + ' kVA</div>';
+    if (d.d_especiais > 0) html += '<div class="result-line">D_especiais = ' + d.d_especiais + ' kVA</div>';
+    html += '<hr class="result-divider"><div class="result-final"><div class="label">D_total</div><div class="value">' + d.D_total + ' kVA</div></div></div>';
+
+    html += '</div>'; // close card
+
+    // Transformer
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="card-header">⚡ Transformador</div>';
+    html += '<div class="result-section"><div class="result-line">Demanda calculada: <strong>' + d.D_total + ' kVA</strong></div>';
+    html += '<div class="result-line">Transformador selecionado (Tabela 15): <span class="highlight" style="font-size:18px;">' + d.trafo_kva + ' kVA</span></div></div></div>';
+
+    // Power Factor
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="card-header">🔋 Correção de Fator de Potência</div>';
+    html += '<div class="result-section">';
+    html += '<div class="result-line">FP atual: ' + d.fp_atual.toFixed(2) + '</div>';
+    html += '<div class="result-line">FP desejado: ' + d.fp_desejado.toFixed(2) + '</div>';
+    html += '<div class="result-line">Potência ativa: ' + (d.D_total * d.fp_atual).toFixed(1) + ' kW</div>';
+    html += '<div class="result-line">Fator kVar/kW (Tabela 17): ' + d.kvar_por_kw + '</div>';
+    html += '<div class="result-line">Banco de capacitores necessário: <span class="highlight" style="font-size:18px;">' + d.kvar_correcao + ' kVAr</span></div>';
+    html += '</div></div>';
+
+    // Padrão
+    if (d.padrao) {
+        html += '<div class="card" style="margin-bottom:16px;">';
+        html += '<div class="card-header">🔌 Padrão de Entrada</div>';
+        html += '<div class="result-section"><table class="result-table"><tbody>';
+        html += '<tr><td>Categoria</td><td><strong>' + (d.padrao.categoria || '-') + '</strong></td></tr>';
+        html += '<tr><td>Tensão</td><td>' + d.tensao + '</td></tr>';
+        html += '<tr><td>Disjuntor</td><td>' + (d.padrao.disjuntor || '-') + '</td></tr>';
+        html += '<tr><td>Condutor Cobre</td><td>' + (d.padrao.condutor_cobre || '-') + '</td></tr>';
+        html += '<tr><td>Condutor Alumínio</td><td>' + (d.padrao.condutor_aluminio || '-') + '</td></tr>';
+        html += '<tr><td>Eletroduto</td><td>' + (d.padrao.eletroduto || '-') + '</td></tr>';
+        html += '<tr><td>Aterramento</td><td>' + (d.padrao.aterramento || '-') + '</td></tr>';
+        html += '</tbody></table></div></div>';
+    }
+
+    content.innerHTML = html;
+    content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// --- REPORT ---
+function montarRelatorio() {
+    const d = ultimoResultado;
+    const preview = document.getElementById('relatorio-preview');
+    if (!d) {
+        preview.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum resultado disponível. Vá até a aba <strong>Resultado</strong> e clique em <strong>Calcular</strong> primeiro.</div>';
+        return;
+    }
+    const unidade = document.getElementById('in-unidade').value || d.unidade || '-';
+    const tipo = document.getElementById('in-tipo').value || d.tipo || '-';
+    const tensao = document.getElementById('in-tensao').value || d.tensao || '-';
+    var html = '<div class="print-report" id="print-report-content">';
+    html += '<h2 style="text-align:center;margin-bottom:8px;">Memorial de Cálculo - GED-2855</h2>';
+
+    if (document.getElementById('chk_dados_gerais').checked) {
+        html += '<div class="result-section"><div class="result-title">Dados Gerais</div>';
+        html += '<div class="result-line">Unidade: ' + unidade + '</div>';
+        html += '<div class="result-line">Tipo: ' + tipo + '</div>';
+        html += '<div class="result-line">Tensão: ' + tensao + '</div>';
+        html += '<div class="result-line">FP Atual: ' + d.fp_atual.toFixed(2) + '</div>';
+        html += '<div class="result-line">FP Desejado: ' + d.fp_desejado.toFixed(2) + '</div>';
+        html += '</div>';
+    }
+
+    if (document.getElementById('chk_cargas').checked) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Cargas</div>';
+        html += '<div class="result-line">Iluminação e Tomadas: ' + d.carga_ilum_kw + ' kW (FD: ' + d.fd_ilum + ') → ' + d.d_ilum + ' kVA</div>';
+        if (d.carga_chuveiros_kw > 0) html += '<div class="result-line">Chuveiros/Aquecimento: ' + d.carga_chuveiros_kw + ' kW (FD: ' + d.fd_chuv + ') → ' + d.d_chuv + ' kVA</div>';
+        if (d.carga_eletro_kw > 0) html += '<div class="result-line">Eletrodomésticos: ' + d.carga_eletro_kw + ' kW (FD: ' + d.fd_eletro + ') → ' + d.d_eletro + ' kVA</div>';
+        if (d.carga_ar_kw > 0) html += '<div class="result-line">Ar Condicionado: ' + d.carga_ar_kw + ' kW (FD: ' + d.fd_ar + ') → ' + d.d_ar + ' kVA</div>';
+        if (d.d_motores > 0) html += '<div class="result-line">Motores: ' + d.d_motores + ' kVA</div>';
+        if (d.d_especiais > 0) html += '<div class="result-line">Equip. Especiais: ' + d.d_especiais + ' kVA</div>';
+        html += '<div class="result-line" style="font-weight:700;">Carga Instalada Total: ' + d.carga_instalada_kw + ' kW</div>';
+        html += '</div>';
+    }
+
+    if (document.getElementById('chk_demanda').checked) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Demanda Calculada</div>';
+        html += '<div class="result-line">D_ilum = ' + d.d_ilum + ' kVA</div>';
+        if (d.d_chuv > 0) html += '<div class="result-line">D_chuveiros = ' + d.d_chuv + ' kVA</div>';
+        if (d.d_eletro > 0) html += '<div class="result-line">D_eletro = ' + d.d_eletro + ' kVA</div>';
+        if (d.d_ar > 0) html += '<div class="result-line">D_ar = ' + d.d_ar + ' kVA</div>';
+        if (d.d_motores > 0) html += '<div class="result-line">D_motores = ' + d.d_motores + ' kVA</div>';
+        if (d.d_especiais > 0) html += '<div class="result-line">D_especiais = ' + d.d_especiais + ' kVA</div>';
+        html += '<div class="result-final" style="margin-top:8px;"><div class="label">D_total</div><div class="value">' + d.D_total + ' kVA</div></div>';
+        html += '</div>';
+    }
+
+    if (document.getElementById('chk_transformador').checked) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Transformador</div>';
+        html += '<div class="result-line">Demanda: ' + d.D_total + ' kVA</div>';
+        html += '<div class="result-line">Trafo (Tabela 15): <span class="value">' + d.trafo_kva + ' kVA</span></div>';
+        html += '</div>';
+    }
+
+    if (document.getElementById('chk_fp').checked) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Correção de Fator de Potência</div>';
+        html += '<div class="result-line">FP atual: ' + d.fp_atual.toFixed(2) + '</div>';
+        html += '<div class="result-line">FP desejado: ' + d.fp_desejado.toFixed(2) + '</div>';
+        html += '<div class="result-line">Potência ativa: ' + (d.D_total * d.fp_atual).toFixed(1) + ' kW</div>';
+        html += '<div class="result-line">Fator kVar/kW: ' + d.kvar_por_kw + '</div>';
+        html += '<div class="result-line">Banco de capacitores: <span class="value">' + d.kvar_correcao + ' kVAr</span></div>';
+        html += '</div>';
+    }
+
+    if (document.getElementById('chk_padrao').checked && d.padrao) {
+        html += '<hr class="result-divider"><div class="result-section"><div class="result-title">Padrão de Entrada</div>';
+        html += '<div class="result-line">Categoria: <span class="value">' + (d.padrao.categoria || '-') + '</span></div>';
+        html += '<div class="result-line">Disjuntor: ' + (d.padrao.disjuntor || '-') + '</div>';
+        html += '<div class="result-line">Condutor Cobre: ' + (d.padrao.condutor_cobre || '-') + '</div>';
+        html += '<div class="result-line">Condutor Alumínio: ' + (d.padrao.condutor_aluminio || '-') + '</div>';
+        html += '<div class="result-line">Eletroduto: ' + (d.padrao.eletroduto || '-') + '</div>';
+        html += '<div class="result-line">Aterramento: ' + (d.padrao.aterramento || '-') + '</div>';
+        html += '</div>';
+    }
+
+    html += '</div>';
+    preview.innerHTML = html;
+}
+
+function gerarPDF() {
+    if (!ultimoResultado) {
+        alert('Calcule o resultado primeiro na aba "Resultado"!');
+        return;
+    }
+    montarRelatorio();
+    var content = document.getElementById('print-report-content').innerHTML;
+    var css = 'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#333;line-height:1.6;}' +
+        '.result-section{margin-bottom:12px;}' +
+        '.result-title{font-size:14px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#f0f0f0;border-radius:4px;}' +
+        '.result-line{margin:4px 0;font-size:12px;}' +
+        '.label{font-weight:600;}.value{font-weight:600;color:#2563eb;}' +
+        '.highlight{background:#fff3cd;padding:2px 6px;border-radius:3px;font-weight:700;}' +
+        '.result-final{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f0f0f0;border-radius:6px;}' +
+        'hr.result-divider{border:none;border-top:1px solid #ddd;margin:16px 0;}' +
+        'h2{font-size:18px;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:16px;}';
+    var iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:0;';
+    document.body.appendChild(iframe);
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<html><head><title>Relatório GED-2855</title><style>' + css + '@media print{body{padding:0;margin:0;}}</style></head><body>' +
+        '<div style="max-width:800px;margin:0 auto;">' + content + '</div></body></html>');
+    doc.close();
+    iframe.contentWindow.focus();
+    setTimeout(function() {
+        iframe.contentWindow.print();
+        setTimeout(function() { iframe.remove(); }, 200);
+    }, 500);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    listarProjetos();
+});
+</script>
+
+<style>
+.print-report-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+.print-report-sidebar {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    position: sticky;
+    top: 12px;
+    align-self: start;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.print-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 0;
+    cursor: pointer;
+    color: var(--text);
+}
+.print-checkbox input { margin: 0; }
+.print-report-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 400px;
+    color: var(--text);
+}
+#print-report-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+#print-report-content h2 {
+    font-size: 18px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    color: var(--text);
+}
+#print-report-content .result-section { margin-bottom: 12px; }
+#print-report-content .result-title {
+    font-size: 14px; font-weight: 700; margin-bottom: 8px;
+    padding: 6px 10px; background: var(--bg-hover); border-radius: 4px;
+}
+#print-report-content .result-line { margin: 4px 0; font-size: 12px; }
+#print-report-content .label { font-weight: 600; }
+#print-report-content .value { font-weight: 600; color: #2563eb; }
+#print-report-content .highlight {
+    background: #fff3cd; padding: 2px 6px; border-radius: 3px; font-weight: 700; color: #000;
+}
+#print-report-content .result-final {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px; background: var(--bg-hover); border-radius: 6px;
+}
+#print-report-content hr.result-divider {
+    border: none; border-top: 1px solid var(--border); margin: 16px 0;
+}
+</style>
+{% endblock %}

@@ -59,6 +59,7 @@
             <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Início</a></li>
             <li id="nav-ged119" class="hidden"><a href="/ged119" class="{% if request.path == '/ged119' %}active{% endif %}">GED-119</a></li>
             <li id="nav-ged13" class="hidden"><a href="/ged13" class="{% if request.path == '/ged13' %}active{% endif %}">GED-13</a></li>
+            <li id="nav-ged2855" class="hidden"><a href="/ged2855" class="{% if request.path == '/ged2855' %}active{% endif %}">GED-2855</a></li>
             <li id="admin-link-li" class="hidden"><a href="/admin" class="nav-admin-link">🔧 Admin</a></li>
         </ul>
         <div id="user-info">
@@ -261,6 +262,7 @@
             const adminLink = document.getElementById('admin-link-li');
             const nav119 = document.getElementById('nav-ged119');
             const nav13 = document.getElementById('nav-ged13');
+            const nav2855 = document.getElementById('nav-ged2855');
             if (currentUser) {
                 loginBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
@@ -269,6 +271,7 @@
                 userNameSpan.classList.remove('hidden');
                 nav119.classList.remove('hidden');
                 nav13.classList.remove('hidden');
+                nav2855.classList.remove('hidden');
                 if (currentUser.is_admin) {
                     adminLink.classList.remove('hidden');
                 } else {
@@ -281,6 +284,7 @@
                 userNameSpan.classList.add('hidden');
                 nav119.classList.add('hidden');
                 nav13.classList.add('hidden');
+                nav2855.classList.add('hidden');
                 adminLink.classList.add('hidden');
             }
         }
@@ -323,7 +327,7 @@
                     }
                 } else {
                     const path = window.location.pathname;
-                    if (path === '/ged119' || path === '/ged13' || path === '/admin') {
+                    if (path === '/ged119' || path === '/ged13' || path === '/ged2855' || path === '/admin') {
                         window.location.href = '/';
                     } else {
                         setTimeout(function() {
