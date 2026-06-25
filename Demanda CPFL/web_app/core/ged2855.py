@@ -51,11 +51,10 @@ def get_trafo(demanda_kva):
     sizes = [float(r[0]) for r in cursor.fetchall()]
     conn.close()
     if not sizes: return demanda_kva
-    best = sizes[-1]
+    best = sizes[0]
     for s in sizes:
-        if s >= demanda_kva:
+        if abs(s - demanda_kva) < abs(best - demanda_kva):
             best = s
-            break
     return best
 
 def get_padrao(demanda_kva, tipo_ligacao='Trifásico'):
