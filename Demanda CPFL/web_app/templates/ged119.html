@@ -2951,10 +2951,18 @@ function atualizarRamalParSelecao() {
     var op = ultimoResultadoRamal.opcoes_paralelo[idxSalvo];
     if (!op) return;
     var cfg = getRamalParConfig(idxSalvo);
-    var neutroVal = getRamalParNeutro(op, cfg);
-    var protVal = getRamalParProtecao(op, cfg);
-    var neutroDisplay = getRamalParDisplay(parseFloat(neutroVal), op.n_condutores);
-    var protDisplay = getRamalParDisplay(parseFloat(protVal), op.n_condutores);
+    var neutroVal, protVal, neutroDisplay, protDisplay;
+    if (cfg.tabela48) {
+        neutroVal = parseFloat(ultimoResultadoRamal.neutro_mm2 || ultimoResultadoRamal.secao_mm2);
+        protVal = parseFloat(ultimoResultadoRamal.protecao_mm2 || ultimoResultadoRamal.secao_mm2);
+        neutroDisplay = typeof getRamalParDisplay === 'function' ? getRamalParDisplay(neutroVal, 1) : (ultimoResultadoRamal.neutro_display || neutroVal);
+        protDisplay = typeof getRamalParDisplay === 'function' ? getRamalParDisplay(protVal, 1) : (ultimoResultadoRamal.protecao_display || protVal);
+    } else {
+        neutroVal = getRamalParNeutro(op, cfg);
+        protVal = getRamalParProtecao(op, cfg);
+        neutroDisplay = getRamalParDisplay(parseFloat(neutroVal), op.n_condutores);
+        protDisplay = getRamalParDisplay(parseFloat(protVal), op.n_condutores);
+    }
 
     var el = document.getElementById('ramal-par-selecionado');
     if (!el) return;
@@ -3016,10 +3024,18 @@ function mostrarResultadoRamal(d) {
             if (chkN === null) nChecked = true;
             if (chkP === null) pChecked = true;
             var cfg = { neutro: nChecked, protecao: pChecked, tabela48: tChecked };
-            var neutroVal = getRamalParNeutro(op, cfg);
-            var protVal = getRamalParProtecao(op, cfg);
-            var neutroDisp = getRamalParDisplay(parseFloat(neutroVal), op.n_condutores);
-            var protDisp = getRamalParDisplay(parseFloat(protVal), op.n_condutores);
+            var neutroVal, protVal, neutroDisp, protDisp;
+            if (tChecked) {
+                neutroVal = parseFloat(d.neutro_mm2 || d.secao_mm2);
+                protVal = parseFloat(d.protecao_mm2 || d.secao_mm2);
+                neutroDisp = typeof getRamalParDisplay === 'function' ? getRamalParDisplay(neutroVal, 1) : (d.neutro_display || neutroVal);
+                protDisp = typeof getRamalParDisplay === 'function' ? getRamalParDisplay(protVal, 1) : (d.protecao_display || protVal);
+            } else {
+                neutroVal = getRamalParNeutro(op, cfg);
+                protVal = getRamalParProtecao(op, cfg);
+                neutroDisp = getRamalParDisplay(parseFloat(neutroVal), op.n_condutores);
+                protDisp = getRamalParDisplay(parseFloat(protVal), op.n_condutores);
+            }
             var borda = sel ? '2px solid var(--warning)' : '1px solid var(--border)';
             var bg = sel ? 'var(--bg-hover)' : 'transparent';
             paraleloHtml += '<div class="ramal-par-option" style="border:' + borda + ';background:' + bg + ';border-radius:6px;padding:8px 10px;margin-bottom:8px;cursor:pointer;" onclick="selecionarRamalParalelo(' + i + ')">';
@@ -3135,8 +3151,14 @@ function getRamalParEfetivo() {
         idx = (idx >= 0 && idx < d.opcoes_paralelo.length) ? idx : 0;
         opt = d.opcoes_paralelo[idx];
         var cfg = getRamalParConfig(idx);
-        var neutroVal = parseFloat(getRamalParNeutro(opt, cfg));
-        var protVal = parseFloat(getRamalParProtecao(opt, cfg));
+        var neutroVal, protVal;
+        if (cfg.tabela48) {
+            neutroVal = parseFloat(d.neutro_mm2 || d.secao_mm2);
+            protVal = parseFloat(d.protecao_mm2 || d.secao_mm2);
+        } else {
+            neutroVal = parseFloat(getRamalParNeutro(opt, cfg));
+            protVal = parseFloat(getRamalParProtecao(opt, cfg));
+        }
         opt._neutro_efetivo = neutroVal;
         opt._protecao_efetivo = protVal;
         opt._idx = idx;
@@ -3496,10 +3518,18 @@ var sectionRenderers = {
             var rd_paralelo_sel = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
             var rd_cfg = { neutro: true, protecao: true, tabela48: false };
             if (typeof getRamalParConfig === 'function') rd_cfg = getRamalParConfig(rd_paralelo_idx);
-            var rd_neutro_val = (typeof getRamalParNeutro === 'function') ? parseFloat(getRamalParNeutro(rd_paralelo_sel, rd_cfg)) : parseFloat(rd_paralelo_sel.neutro_mm2 || rd_paralelo_sel.neutro_cheio_mm2);
-            var rd_prot_val = (typeof getRamalParProtecao === 'function') ? parseFloat(getRamalParProtecao(rd_paralelo_sel, rd_cfg)) : parseFloat(rd_paralelo_sel.protecao_mm2 || rd_paralelo_sel.protecao_cheio_mm2);
-            var rd_neutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_neutro_val, rd_paralelo_sel.n_condutores) : (rd_paralelo_sel.neutro_display || rd_paralelo_sel.neutro_mm2);
-            var rd_prot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_prot_val, rd_paralelo_sel.n_condutores) : (rd_paralelo_sel.protecao_display || rd_paralelo_sel.protecao_mm2);
+            var rd_neutro_val, rd_prot_val, rd_neutro_disp, rd_prot_disp;
+            if (rd_cfg.tabela48) {
+                rd_neutro_val = parseFloat(rd.neutro_mm2 || rd.secao_mm2);
+                rd_prot_val = parseFloat(rd.protecao_mm2 || rd.secao_mm2);
+                rd_neutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_neutro_val, 1) : (rd.neutro_display || rd_neutro_val);
+                rd_prot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_prot_val, 1) : (rd.protecao_display || rd_prot_val);
+            } else {
+                rd_neutro_val = (typeof getRamalParNeutro === 'function') ? parseFloat(getRamalParNeutro(rd_paralelo_sel, rd_cfg)) : parseFloat(rd_paralelo_sel.neutro_mm2 || rd_paralelo_sel.neutro_cheio_mm2);
+                rd_prot_val = (typeof getRamalParProtecao === 'function') ? parseFloat(getRamalParProtecao(rd_paralelo_sel, rd_cfg)) : parseFloat(rd_paralelo_sel.protecao_mm2 || rd_paralelo_sel.protecao_cheio_mm2);
+                rd_neutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_neutro_val, rd_paralelo_sel.n_condutores) : (rd_paralelo_sel.neutro_display || rd_paralelo_sel.neutro_mm2);
+                rd_prot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_prot_val, rd_paralelo_sel.n_condutores) : (rd_paralelo_sel.protecao_display || rd_paralelo_sel.protecao_mm2);
+            }
             var rd_nLabel = rd_cfg.tabela48 ? 'Neutro (Tab. 48)' : 'Neutro';
             var rd_pLabel = rd_cfg.tabela48 ? 'Proteção (Tab. 58)' : 'Proteção';
             var rd_op_det = ' | ' + rd_nLabel + ': ' + rd_neutro_disp + ' mm² | ' + rd_pLabel + ': ' + rd_prot_disp + ' mm²';
@@ -3510,10 +3540,18 @@ var sectionRenderers = {
             var rd_par_final = rd.opcoes_paralelo[rd_paralelo_idx] || rd.opcoes_paralelo[0];
             var rd_fcfg = { neutro: true, protecao: true, tabela48: false };
             if (typeof getRamalParConfig === 'function') rd_fcfg = getRamalParConfig(rd_paralelo_idx);
-            var rd_fneutro = (typeof getRamalParNeutro === 'function') ? parseFloat(getRamalParNeutro(rd_par_final, rd_fcfg)) : parseFloat(rd_par_final.neutro_mm2 || rd_par_final.neutro_cheio_mm2);
-            var rd_fprot = (typeof getRamalParProtecao === 'function') ? parseFloat(getRamalParProtecao(rd_par_final, rd_fcfg)) : parseFloat(rd_par_final.protecao_mm2 || rd_par_final.protecao_cheio_mm2);
-            var rd_fneutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fneutro, rd_par_final.n_condutores) : (rd_par_final.neutro_display || rd_par_final.neutro_mm2);
-            var rd_fprot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fprot, rd_par_final.n_condutores) : (rd_par_final.protecao_display || rd_par_final.protecao_mm2);
+            var rd_fneutro, rd_fprot, rd_fneutro_disp, rd_fprot_disp;
+            if (rd_fcfg.tabela48) {
+                rd_fneutro = parseFloat(rd.neutro_mm2 || rd.secao_mm2);
+                rd_fprot = parseFloat(rd.protecao_mm2 || rd.secao_mm2);
+                rd_fneutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fneutro, 1) : (rd.neutro_display || rd_fneutro);
+                rd_fprot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fprot, 1) : (rd.protecao_display || rd_fprot);
+            } else {
+                rd_fneutro = (typeof getRamalParNeutro === 'function') ? parseFloat(getRamalParNeutro(rd_par_final, rd_fcfg)) : parseFloat(rd_par_final.neutro_mm2 || rd_par_final.neutro_cheio_mm2);
+                rd_fprot = (typeof getRamalParProtecao === 'function') ? parseFloat(getRamalParProtecao(rd_par_final, rd_fcfg)) : parseFloat(rd_par_final.protecao_mm2 || rd_par_final.protecao_cheio_mm2);
+                rd_fneutro_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fneutro, rd_par_final.n_condutores) : (rd_par_final.neutro_display || rd_par_final.neutro_mm2);
+                rd_fprot_disp = (typeof getRamalParDisplay === 'function') ? getRamalParDisplay(rd_fprot, rd_par_final.n_condutores) : (rd_par_final.protecao_display || rd_par_final.protecao_mm2);
+            }
             var rd_fnLabel = rd_fcfg.tabela48 ? 'Neutro (Tab. 48)' : 'Neutro';
             var rd_fpLabel = rd_fcfg.tabela48 ? 'Proteção (Tab. 58)' : 'Proteção';
             html += '<div class="result-final"><div class="label">Condutor Recomendado</div><div class="value">' + rd_par_final.n_condutores + '×' + rd_par_final.secao_mm2 + ' mm² - ' + rd_par_final.capacidade_total + ' A total (' + rd_fnLabel + ': ' + rd_fneutro_disp + ' mm², ' + rd_fpLabel + ': ' + rd_fprot_disp + ' mm²)</div></div>';
