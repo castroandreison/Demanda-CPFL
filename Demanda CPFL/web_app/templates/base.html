@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CPFL - Cálculo de Demanda</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999; }
         .modal-box { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:32px; width:100%; max-width:420px; box-shadow:var(--shadow); max-height:90vh; overflow-y:auto; }
@@ -322,7 +323,7 @@
                     atualizarInterface();
                     if (window.location.pathname === '/' || window.location.pathname === '') {
                         document.getElementById('main-content')?.classList.remove('hidden');
-                    } else if (window.location.pathname === '/ged119' || window.location.pathname === '/ged13' || window.location.pathname === '/ged2855') {
+                    } else if (window.location.pathname === '/ged119' || window.location.pathname === '/ged13') {
                         document.querySelector('.container')?.classList.remove('hidden');
                     }
                 } else {

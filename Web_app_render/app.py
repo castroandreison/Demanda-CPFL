@@ -12,6 +12,7 @@ from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neut
 from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_conn_g13
 import core.ged119 as ged119_mod
 from core.ged2855 import calcular as calc_ged2855
+from core.coord_selet import calcular as calc_coord_selet
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
 from core.projetos_ged13_db import listar_projetos as listar_projetos_g13, carregar_projeto as carregar_projeto_g13, salvar_projeto as salvar_projeto_g13, excluir_projeto as excluir_projeto_g13
 from core.projetos_ged2855_db import listar_projetos as listar_projetos_g2855, carregar_projeto as carregar_projeto_g2855, salvar_projeto as salvar_projeto_g2855, excluir_projeto as excluir_projeto_g2855
@@ -294,6 +295,15 @@ def api_ged2855_projetos_excluir(projeto_id):
         if not user: return jsonify({'success': False, 'error': 'Faça login para excluir projetos'}), 401
         excluir_projeto_g2855(projeto_id); return jsonify({'success': True})
     except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/coordselet/calcular', methods=['POST'])
+def api_coord_selet():
+    try:
+        dados = request.get_json()
+        resultado = calc_coord_selet(dados)
+        return jsonify({'success': True, 'data': resultado})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=False)
