@@ -10,7 +10,7 @@ def get_conn():
         return db_helper.connect_projetos()
     import sqlite3
     _dir = os.path.dirname(os.path.abspath(__file__))
-    _db_path = os.path.normpath(os.path.join(_dir, '..', 'db', 'projetos_ged2855.db'))
+    _db_path = os.path.normpath(os.path.join(_dir, '..', '..', 'Ged2855', 'Projeto TK', 'projetos_ged2855.db'))
     conn = sqlite3.connect(_db_path)
     conn.row_factory = sqlite3.Row
     return conn
