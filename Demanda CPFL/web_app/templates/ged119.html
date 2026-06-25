@@ -11,6 +11,7 @@
     <button class="tab-btn" data-tab="tab-motores">Motores</button>
     <button class="tab-btn" data-tab="tab-resultado">Resultado</button>
     <button class="tab-btn" data-tab="tab-ramal">Ramal de Entrada</button>
+    <button class="tab-btn" data-tab="tab-disjuntor">Disjuntor</button>
     <button class="tab-btn" data-tab="tab-duto">Duto</button>
     <button class="tab-btn" data-tab="tab-transformador">Calcular Transformador</button>
     <button class="tab-btn" data-tab="tab-poste">Poste</button>
@@ -707,6 +708,34 @@
         <div class="card">
             <div class="card-header">Resultado do Dimensionamento do Ramal</div>
             <div id="ramal-content"></div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-disjuntor" class="tab-content">
+    <div class="card">
+        <div class="card-header">Dimensionamento do Disjuntor</div>
+        <div class="form-grid col-2">
+            <div class="form-group">
+                <label>Corrente Calculada (A)</label>
+                <input type="number" id="disjuntor_corrente" step="0.1" min="0" readonly style="background:var(--bg-hover);">
+            </div>
+            <div class="form-group">
+                <label>Disjuntor Selecionado (A)</label>
+                <input type="text" id="disjuntor_selecionado" readonly style="background:var(--bg-hover);font-weight:700;color:var(--warning);font-size:16px;">
+            </div>
+        </div>
+        <div class="form-grid col-1" style="margin-top:8px;">
+            <div class="form-group">
+                <label>Correntes Nominais Padronizadas (A)</label>
+                <div id="disjuntor-lista" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;"></div>
+            </div>
+        </div>
+        <div style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="calcularDisjuntor()">Calcular Disjuntor</button>
+        </div>
+        <div id="disjuntor-result" style="display:none;margin-top:16px;">
+            <div class="result-section" id="disjuntor-content"></div>
         </div>
     </div>
 </div>
@@ -2096,21 +2125,21 @@ function mostrarResultadoTransformador(d) {
             ? `<div class="result-line">Transformador: <span class="value">${d.trafo_kva} kVA</span></div>
                <div class="result-line">Faixa: ${d.trafo_faixa_min} a ${d.trafo_faixa_max} kVA (Tabela 10)</div>
                ${d.cap_interrupcao_kA ? `<div class="result-line">Capacidade de Interrupcao: ${d.cap_interrupcao_kA} kA (Z = ${d.cap_z_percent}%)</div>` : ''}`
-            : '<div class="result-line">Nenhum transformador encontrado.</div>';
+            : '';
 
     const caboHtml = d.secao_mm2
         ? `<div class="result-line">Secao do Cabo: <span class="value">${d.secao_mm2} mm²</span></div>
            <div class="result-line">Capacidade (Tabela): ${d.capacidade_cabo_A} A${d.fator_380 > 1 ? ` x ${d.fator_380} = ${(d.capacidade_cabo_A * d.fator_380).toFixed(0)} A` : ''}</div>
            ${d.diametro_externo_mm ? `<div class="result-line">Diametro Externo: ${d.diametro_externo_mm} mm</div>` : ''}`
-        : '<div class="result-line" style="color:var(--danger);">Nenhum cabo encontrado com capacidade suficiente para os parametros informados.</div>';
+        : '';
 
     const barraHtml = d.barramento_mm
         ? `<div class="result-line">Barramento BT: <span class="value">${d.barramento_mm} mm</span> (${d.barramento_pol})</div>`
-        : '<div class="result-line">Nenhum barramento encontrado.</div>';
+        : '';
 
     const disjHtml = d.disjuntor_A
         ? `<div class="result-line">Disjuntor: <span class="value">${d.disjuntor_A} A</span></div>`
-        : '<div class="result-line">Nenhum disjuntor padronizado encontrado.</div>';
+        : '';
 
     content.innerHTML = `
         <div id="print-area-transf">
@@ -2871,6 +2900,38 @@ document.getElementById('ramal_tipo_temp').addEventListener('change', function()
     }
 });
 
+var DISJUNTORES_PADRAO = [100, 125, 150, 160, 175, 200, 225, 250, 300, 350, 400, 450, 500, 600];
+
+function calcularDisjuntor() {
+    const corrente = ultimoResultadoTransformador && ultimoResultadoTransformador.I
+        ? ultimoResultadoTransformador.I
+        : (parseFloat(document.getElementById('ramal_corrente').value) || 0);
+    if (corrente <= 0) {
+        document.getElementById('disjuntor-result').style.display = 'none';
+        return;
+    }
+    document.getElementById('disjuntor_corrente').value = corrente.toFixed(1);
+    var sel = DISJUNTORES_PADRAO[0];
+    for (var i = 0; i < DISJUNTORES_PADRAO.length; i++) {
+        if (DISJUNTORES_PADRAO[i] >= corrente) { sel = DISJUNTORES_PADRAO[i]; break; }
+    }
+    document.getElementById('disjuntor_selecionado').value = sel + ' A';
+    var listaEl = document.getElementById('disjuntor-lista');
+    listaEl.innerHTML = '';
+    DISJUNTORES_PADRAO.forEach(function(d) {
+        var span = document.createElement('span');
+        span.textContent = d + ' A';
+        span.style.cssText = 'padding:4px 10px;border-radius:4px;font-size:13px;' +
+            (d === sel ? 'background:var(--warning);color:var(--bg);font-weight:700;' : 'background:var(--bg-hover);color:var(--text-secondary);');
+        listaEl.appendChild(span);
+    });
+    var content = document.getElementById('disjuntor-content');
+    content.innerHTML = '<hr class="result-divider"><div class="result-line">Corrente Calculada: <span class="value">' + corrente.toFixed(1) + ' A</span></div>' +
+        '<div class="result-line" style="font-size:16px;font-weight:700;">Disjuntor: <span class="value" style="color:var(--warning);">' + sel + ' A</span></div>' +
+        '<div class="result-line" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Correntes Nominais: ' + DISJUNTORES_PADRAO.join(' - ') + ' A</div>';
+    document.getElementById('disjuntor-result').style.display = 'block';
+}
+
 function calcularRamal() {
     const corrente = parseFloat(document.getElementById('ramal_corrente').value);
     if (isNaN(corrente) || corrente <= 0) {
@@ -3423,7 +3484,7 @@ var sectionRenderers = {
             html += '<div class="result-line">Transformador: <span class="value">' + td.trafo_kva + ' kVA</span></div>';
             html += '<div class="result-line">Faixa: ' + td.trafo_faixa_min + ' a ' + td.trafo_faixa_max + ' kVA</div>';
             if (td.cap_interrupcao_kA) html += '<div class="result-line">Cap. Interrupção: ' + td.cap_interrupcao_kA + ' kA (Z=' + td.cap_z_percent + '%)</div>';
-        } else { html += '<div class="result-line">Nenhum transformador encontrado.</div>'; }
+        }
         html += '<br><div class="result-title">Condutores BT (Tabela 11)</div>';
         html += '<div class="result-line">Tensão: ' + td.tensao + ' | Método: ' + td.metodo_inst + '</div>';
         html += '<div class="result-line">I = <span class="value">' + td.I + ' A</span> | Fator Cor.: ' + td.fator_correcao + ' | I\' = ' + td.I_corrigida + ' A</div>';
@@ -3431,7 +3492,8 @@ var sectionRenderers = {
         html += '<br><div class="result-title">Barramento BT (Tabela 12)</div>';
         html += '<div class="result-line">Barramento: ' + (td.barramento_mm ? '<span class="value">' + td.barramento_mm + ' mm</span> (' + td.barramento_pol + ')' : 'Nenhum') + '</div>';
         html += '<br><div class="result-title">Disjuntor Termomagnético</div>';
-        html += '<div class="result-line">Disjuntor: ' + (td.disjuntor_A ? '<span class="value">' + td.disjuntor_A + ' A</span>' : 'Nenhum') + '</div>';
+        html += '<div class="result-line">Disjuntor: ' + (td.disjuntor_A ? '<span class="value">' + td.disjuntor_A + ' A</span>' : '---') + '</div>';
+        if (td.disjuntor_A) html += '<div class="result-line" style="font-size:11px;color:var(--text-muted);">Correntes Nominais: 100 - 125 - 150 - 160 - 175 - 200 - 225 - 250 - 300 - 350 - 400 - 450 - 500 - 600 A</div>';
         html += '</div>';
         return html;
     },
@@ -3726,6 +3788,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         }
         if (this.dataset.tab === 'tab-ramal' && document.getElementById('ramal_corrente').value) {
             calcularRamal();
+        }
+        if (this.dataset.tab === 'tab-disjuntor') {
+            calcularDisjuntor();
         }
         if (this.dataset.tab === 'tab-poste' && ultimoDg) {
             document.getElementById('poste_dg').value = ultimoDg;
