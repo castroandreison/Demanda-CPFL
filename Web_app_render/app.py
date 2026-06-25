@@ -263,7 +263,9 @@ def api_ged2855():
 def api_ged2855_projetos_listar():
     try:
         user = session.get('user')
-        if not user: return jsonify({'success': True, 'data': []})
+        if not user:
+            projetos = listar_projetos_g2855(usuario_id=-1)
+            return jsonify({'success': True, 'data': projetos})
         uid = None if user.get('is_admin') else user.get('id')
         projetos = listar_projetos_g2855(usuario_id=uid)
         return jsonify({'success': True, 'data': projetos})
