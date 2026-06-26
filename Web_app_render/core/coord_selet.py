@@ -1,22 +1,34 @@
-import math
+import math, io, base64
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def calcular(dados):
     rtc_cliente = _n(dados.get('rtc_primario', 400)) / _n(dados.get('rtc_secundario', 5))
     rtc_cpfl = _n(dados.get('rtc_fase_cpfl', 120))
-    return {
-        'itens': _calc_curva_fase(dados),
-        'itens_neutro': _calc_curva_neutro(dados),
+    curva_fase = _calc_curva_fase(dados)
+    curva_fase_cliente = _gen_curva(dados.get('curva_fase_cliente', 'MI'), _n(dados.get('td_fase_cliente', 0.2)), _n(dados.get('tap_fase_cliente', 3)), rtc_cliente, i_min=1, i_max=20000, pontos=300)
+    curva_neutro = _calc_curva_neutro(dados)
+    curva_neutro_cliente = _gen_curva(dados.get('curva_neutro_cliente', 'NI'), _n(dados.get('td_neutro_cliente', 0.1)), _n(dados.get('tap_neutro_cliente', 0.25)), rtc_cliente, i_min=1, i_max=20000, pontos=300)
+    curva_trafo = _calc_curva_trafo(dados)
+    curva_inrush = _calc_curva_inrush(dados)
+    result = {
+        'itens': curva_fase,
+        'itens_neutro': curva_neutro,
         'tcs': _calc_tc(dados),
         'relatorio': _gerar_relatorio(dados),
-        'curva_fase': _calc_curva_fase(dados),
-        'curva_fase_cliente': _gen_curva(dados.get('curva_fase_cliente', 'MI'), _n(dados.get('td_fase_cliente', 0.2)), _n(dados.get('tap_fase_cliente', 3)), rtc_cliente, i_min=1, i_max=20000, pontos=300),
-        'curva_neutro': _calc_curva_neutro(dados),
-        'curva_neutro_cliente': _gen_curva(dados.get('curva_neutro_cliente', 'NI'), _n(dados.get('td_neutro_cliente', 0.1)), _n(dados.get('tap_neutro_cliente', 0.25)), rtc_cliente, i_min=1, i_max=20000, pontos=300),
-        'curva_trafo': _calc_curva_trafo(dados),
-        'curva_inrush': _calc_curva_inrush(dados),
+        'curva_fase': curva_fase,
+        'curva_fase_cliente': curva_fase_cliente,
+        'curva_neutro': curva_neutro,
+        'curva_neutro_cliente': curva_neutro_cliente,
+        'curva_trafo': curva_trafo,
+        'curva_inrush': curva_inrush,
         'ponto_ansi': _calc_ponto_ansi(dados),
         'inrush_real': _calc_inrush_real(dados),
     }
+    result['chart_fase'] = _gerar_chart_fase(curva_fase, curva_fase_cliente, curva_trafo, curva_inrush)
+    result['chart_neutro'] = _gerar_chart_neutro(curva_neutro, curva_neutro_cliente)
+    return result
 
 def _n(v, default=0):
     try: return float(v) if v is not None and v != '' else default
@@ -246,3 +258,61 @@ def _gerar_relatorio(dados):
             'carga_va': tc['carga_tc_va'],
         }
     }
+
+def _fig_to_b64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    buf.seek(0)
+    b64 = base64.b64encode(buf.read()).decode()
+    plt.close(fig)
+    return b64
+
+def _gerar_chart_fase(curva_fase, curva_cliente, curva_trafo, curva_inrush):
+    fig, ax = plt.subplots(figsize=(9, 6))
+    if curva_fase:
+        xs = [p['i'] for p in curva_fase]
+        ys = [p['t'] for p in curva_fase]
+        ax.plot(xs, ys, color='#2563eb', linewidth=1.8, label='CPFL Fase')
+    if curva_cliente:
+        xs = [p['i'] for p in curva_cliente]
+        ys = [p['t'] for p in curva_cliente]
+        ax.plot(xs, ys, color='#dc2626', linewidth=1.8, label='Cliente Fase')
+    if curva_trafo and curva_trafo.get('pontos'):
+        xs = [p['i'] for p in curva_trafo['pontos']]
+        ys = [p['t'] for p in curva_trafo['pontos']]
+        ax.plot(xs, ys, color='#f59e0b', linewidth=1.8, linestyle='--', label='Trafo ANSI')
+    if curva_inrush and curva_inrush.get('pontos'):
+        xs = [p['i'] for p in curva_inrush['pontos']]
+        ys = [p['t'] for p in curva_inrush['pontos']]
+        ax.plot(xs, ys, color='#10b981', linewidth=1.8, linestyle=':', label='Inrush')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Corrente (A)', fontsize=11)
+    ax.set_ylabel('Tempo (s)', fontsize=11)
+    ax.set_title('Coordenograma - Fase', fontsize=13, fontweight='bold')
+    ax.grid(True, which='both', alpha=0.3)
+    ax.legend(fontsize=9, loc='upper right')
+    ax.set_xlim(1, 20000)
+    ax.set_ylim(0.01, 1000)
+    return 'data:image/png;base64,' + _fig_to_b64(fig)
+
+def _gerar_chart_neutro(curva_neutro, curva_cliente):
+    fig, ax = plt.subplots(figsize=(9, 6))
+    if curva_neutro:
+        xs = [p['i'] for p in curva_neutro]
+        ys = [p['t'] for p in curva_neutro]
+        ax.plot(xs, ys, color='#8b5cf6', linewidth=1.8, label='CPFL Neutro')
+    if curva_cliente:
+        xs = [p['i'] for p in curva_cliente]
+        ys = [p['t'] for p in curva_cliente]
+        ax.plot(xs, ys, color='#ec4899', linewidth=1.8, label='Cliente Neutro')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Corrente (A)', fontsize=11)
+    ax.set_ylabel('Tempo (s)', fontsize=11)
+    ax.set_title('Coordenograma - Neutro', fontsize=13, fontweight='bold')
+    ax.grid(True, which='both', alpha=0.3)
+    ax.legend(fontsize=9, loc='upper right')
+    ax.set_xlim(1, 20000)
+    ax.set_ylim(0.01, 1000)
+    return 'data:image/png;base64,' + _fig_to_b64(fig)
