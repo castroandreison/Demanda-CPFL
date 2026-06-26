@@ -1540,6 +1540,7 @@ function gerarRelatorioCoordHTML(r) {
     html += '<tr><td>Subestação</td><td>' + (r.subestacao || '-') + '</td></tr>';
     html += '<tr><td>Município</td><td>' + (r.municipio || '-') + '</td></tr>';
     html += '</tbody></table>';
+    html += '<div style="font-size:10px;color:#444;margin:2px 0 6px;padding:4px 8px;background:#f9f9f9;border-left:3px solid #90EE90;border-radius:3px;"><strong>Fórmulas:</strong><br><span style="font-family:serif;font-style:italic;">I<sub>n</sub> = S / (√3 × V)</span> — corrente nominal do transformador</div>';
 
     html += '<h4>3. Correntes de Curto-Circuito</h4>';
     html += '<table><thead><tr><th>Tipo</th><th>Simétrica (A)</th><th>Assimétrica (A)</th></tr></thead><tbody>';
@@ -1556,6 +1557,7 @@ function gerarRelatorioCoordHTML(r) {
     html += '<tr><td>Neutro</td><td>' + r.ajustes_cpfl.neutro.tap + '</td><td>' + r.ajustes_cpfl.neutro.i_prim + '</td><td>' + r.ajustes_cpfl.neutro.curva + '</td><td>' + r.ajustes_cpfl.neutro.td + '</td><td>' + r.ajustes_cpfl.neutro.inst_prim + '</td></tr>';
     html += '<tr><td>51GS</td><td>' + r.ajustes_cpfl['51gs'].tap + '</td><td>' + r.ajustes_cpfl['51gs'].i_prim + '</td><td>Definido</td><td>' + r.ajustes_cpfl['51gs'].td + '</td><td>-</td></tr>';
     html += '</tbody></table>';
+    html += '<div style="font-size:10px;color:#444;margin:2px 0 6px;padding:4px 8px;background:#f9f9f9;border-left:3px solid #90EE90;border-radius:3px;"><strong>Fórmulas:</strong><br><span style="font-family:serif;font-style:italic;">I<sub>prim</sub> = Tap × RTC</span><br><span style="font-family:serif;font-style:italic;">I<sub>inst_prim</sub> = Inst × RTC</span><br><span style="font-family:serif;font-style:italic;">51GS: t = TD</span> (tempo definido)</div>';
 
     html += '<h4>5. Transformador</h4>';
     html += '<table><tbody>';
@@ -1566,6 +1568,7 @@ function gerarRelatorioCoordHTML(r) {
     html += '<tr><td>I inrush real</td><td>' + r.inrush_real + '</td></tr>';
     html += '<tr><td>Ponto ANSI</td><td>' + r.ponto_ansi + '</td></tr>';
     html += '</tbody></table>';
+    html += '<div style="font-size:10px;color:#444;margin:2px 0 6px;padding:4px 8px;background:#f9f9f9;border-left:3px solid #90EE90;border-radius:3px;"><strong>Fórmulas:</strong><br><span style="font-family:serif;font-style:italic;">I<sub>n</sub> = S / (√3 × V)</span><br><span style="font-family:serif;font-style:italic;">I<sub>inrush</sub> = 10 × I<sub>n</sub></span><br><span style="font-family:serif;font-style:italic;">I<sub>ANSI</sub> = I<sub>n</sub> × (100 / Z%)</span><br><span style="font-family:serif;font-style:italic;">I<sub>inrush_real</sub> = 1 / (1/I<sub>cc</sub> + 1/I<sub>inrush</sub>)</span></div>';
 
     html += '<h4>6. Dimensionamento dos TCs</h4>';
     html += '<table><tbody>';
@@ -1580,6 +1583,7 @@ function gerarRelatorioCoordHTML(r) {
     html += '<tr><td>V<sub>SAT max</sub></td><td>' + r.tc.v_sat_max + ' V</td></tr>';
     html += '<tr><td>Status</td><td class="' + (r.tc.tc_ok ? 'ok' : 'fail') + '">' + (r.tc.tc_ok ? '✓ OK - TC não satura' : '✗ SATURAÇÃO - Aumentar carga do TC') + '</td></tr>';
     html += '</tbody></table>';
+    html += '<div style="font-size:10px;color:#444;margin:2px 0 6px;padding:4px 8px;background:#f9f9f9;border-left:3px solid #90EE90;border-radius:3px;"><strong>Fórmulas:</strong><br><span style="font-family:serif;font-style:italic;">I<sub>n</sub> = S / (√3 × V)</span><br><span style="font-family:serif;font-style:italic;">I<sub>np</sub> = I<sub>cc_assim</sub> / 20</span><br><span style="font-family:serif;font-style:italic;">Z<sub>fiação</sub> = 0,02 × L / S × 1000</span><br><span style="font-family:serif;font-style:italic;">Z<sub>total</sub> = Z<sub>fiação</sub> + Z<sub>relé</sub> + Z<sub>TC</sub></span><br><span style="font-family:serif;font-style:italic;">I<sub>cc_sec</sub> = I<sub>cc_max</sub> / RTC</span><br><span style="font-family:serif;font-style:italic;">V<sub>SAT</sub> = I<sub>cc_sec</sub> × Z<sub>total</sub> / 1000</span><br><span style="font-family:serif;font-style:italic;">V<sub>SAT_max</sub> = 0,5 × (20 × RTC<sub>sec</sub>)</span><br><span style="font-style:italic;">Condi&ccedil;&atilde;o: V<sub>SAT</sub> ≤ V<sub>SAT_max</sub></span> → TC n&atilde;o satura</div>';
 
     html += '<h4>7. Ajustes do Cliente</h4>';
     html += '<p style="margin:4px 0;">RTC: ' + r.rtc_cliente + '</p>';
@@ -1588,6 +1592,7 @@ function gerarRelatorioCoordHTML(r) {
     html += '<tr><td>Neutro</td><td>' + r.ajustes_cliente.neutro.tap + '</td><td>' + r.ajustes_cliente.neutro.i_prim + '</td><td>' + r.ajustes_cliente.neutro.curva + '</td><td>' + r.ajustes_cliente.neutro.td + '</td><td>' + r.ajustes_cliente.neutro.inst_prim + '</td></tr>';
     html += '<tr><td>51GS</td><td>' + r.ajustes_cliente['51gs'].tap + '</td><td>' + r.ajustes_cliente['51gs'].i_prim + '</td><td>Definido</td><td>' + r.ajustes_cliente['51gs'].td + '</td><td>-</td></tr>';
     html += '</tbody></table>';
+    html += '<div style="font-size:10px;color:#444;margin:2px 0 6px;padding:4px 8px;background:#f9f9f9;border-left:3px solid #90EE90;border-radius:3px;"><strong>Fórmulas:</strong><br><span style="font-family:serif;font-style:italic;">I<sub>prim</sub> = Tap × RTC</span><br><span style="font-family:serif;font-style:italic;">I<sub>inst_prim</sub> = Inst × RTC</span><br><span style="font-family:serif;font-style:italic;">51GS: t = TD</span> (tempo definido)</div>';
     html += '</div>';
     return html;
 }
