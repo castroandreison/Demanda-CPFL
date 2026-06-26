@@ -573,11 +573,29 @@
         </div>
         <div class="card" style="margin:0;border-radius:0;border-top:1px solid var(--border);">
             <div class="card-header">Coordenograma - Fase</div>
-            <div style="text-align:center;"><img id="coord-chart-fase" style="max-width:100%;"></div>
+            <div class="chart-viewer" id="chart-viewer-fase">
+                <div class="chart-viewer-container">
+                    <img id="coord-chart-fase" class="chart-viewer-img" style="display:none;">
+                </div>
+                <div class="chart-viewer-toolbar">
+                    <button type="button" onclick="zoomIn('fase')" title="Aumentar zoom">&#128269;+</button>
+                    <button type="button" onclick="zoomOut('fase')" title="Reduzir zoom">&#128269;&#8722;</button>
+                    <button type="button" onclick="zoomReset('fase')" title="Resetar zoom">&#10227;</button>
+                </div>
+            </div>
         </div>
         <div class="card" style="margin:0;border-radius:0;border-top:1px solid var(--border);">
             <div class="card-header">Coordenograma - Neutro</div>
-            <div style="text-align:center;"><img id="coord-chart-neutro" style="max-width:100%;"></div>
+            <div class="chart-viewer" id="chart-viewer-neutro">
+                <div class="chart-viewer-container">
+                    <img id="coord-chart-neutro" class="chart-viewer-img" style="display:none;">
+                </div>
+                <div class="chart-viewer-toolbar">
+                    <button type="button" onclick="zoomIn('neutro')" title="Aumentar zoom">&#128269;+</button>
+                    <button type="button" onclick="zoomOut('neutro')" title="Reduzir zoom">&#128269;&#8722;</button>
+                    <button type="button" onclick="zoomReset('neutro')" title="Resetar zoom">&#10227;</button>
+                </div>
+            </div>
         </div>
     </div>
     <div id="coord-preview-empty" style="display:none;"></div>
@@ -1455,8 +1473,10 @@ function mostrarCoordResultado(d) {
     const content = document.getElementById('coord-result-content');
     container.style.display = 'block';
     content.innerHTML = gerarRelatorioCoordHTML(d.relatorio);
-    document.getElementById('coord-chart-fase').src = d.chart_fase;
-    document.getElementById('coord-chart-neutro').src = d.chart_neutro;
+    const elFase = document.getElementById('coord-chart-fase');
+    const elNeutro = document.getElementById('coord-chart-neutro');
+    if (elFase && d.chart_fase) { elFase.src = d.chart_fase; elFase.style.display = 'inline'; }
+    if (elNeutro && d.chart_neutro) { elNeutro.src = d.chart_neutro; elNeutro.style.display = 'inline'; }
 }
 
 function montarRelatorioCoord() {
@@ -1467,7 +1487,12 @@ function montarRelatorioCoord() {
         return;
     }
     const content = document.getElementById('coord-result-content');
-    preview.innerHTML = content.innerHTML;
+    const imgFase = document.getElementById('coord-chart-fase');
+    const imgNeutro = document.getElementById('coord-chart-neutro');
+    var html = content.innerHTML;
+    if (imgFase && imgFase.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Fase</h3><img src="' + imgFase.src + '" style="max-width:100%;">';
+    if (imgNeutro && imgNeutro.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Neutro</h3><img src="' + imgNeutro.src + '" style="max-width:100%;">';
+    preview.innerHTML = html;
 }
 
 function gerarPDFCoord() {
@@ -1477,6 +1502,11 @@ function gerarPDFCoord() {
         return;
     }
     const content = document.getElementById('coord-result-content');
+    const imgFase = document.getElementById('coord-chart-fase');
+    const imgNeutro = document.getElementById('coord-chart-neutro');
+    var html = content.innerHTML;
+    if (imgFase && imgFase.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Fase</h3><img src="' + imgFase.src + '" style="max-width:100%;">';
+    if (imgNeutro && imgNeutro.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Neutro</h3><img src="' + imgNeutro.src + '" style="max-width:100%;">';
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write('<html><head><title>Estudo de Coordenação - ANEXO V</title>');
     printWindow.document.write('<style>');
@@ -1488,11 +1518,12 @@ function gerarPDFCoord() {
     printWindow.document.write('th { background: #f0f0f0; font-weight: 700; }');
     printWindow.document.write('.ok { color: green; font-weight: 700; }');
     printWindow.document.write('.fail { color: red; font-weight: 700; }');
+    printWindow.document.write('.img-chart-pdf { max-width: 100%; height: auto; margin: 16px 0; border: 1px solid #ddd; border-radius: 4px; }');
     printWindow.document.write('@media print { body { padding: 0; } }');
     printWindow.document.write('</style></head><body>');
     printWindow.document.write('<h2 style="text-align:center;">Estudo de Coordenação e Seletividade</h2>');
     printWindow.document.write('<p style="text-align:center;font-size:11px;color:#666;">ANEXO V - GED-2855</p>');
-    printWindow.document.write(content.innerHTML);
+    printWindow.document.write(html);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
@@ -1570,6 +1601,64 @@ function gerarRelatorioCoordHTML(r) {
     html += '</div>';
     return html;
 }
+
+var chartViewerState = { fase: { zoom: 1, panX: 0, panY: 0, dragging: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 }, neutro: { zoom: 1, panX: 0, panY: 0, dragging: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 } };
+
+function applyTransform(key) {
+    var s = chartViewerState[key];
+    var img = document.querySelector('#chart-viewer-' + key + ' .chart-viewer-img');
+    if (!img) return;
+    img.style.transform = 'translate(' + s.panX + 'px, ' + s.panY + 'px) scale(' + s.zoom + ')';
+}
+
+function zoomIn(key) {
+    var s = chartViewerState[key];
+    s.zoom = Math.min(s.zoom * 1.3, 10);
+    applyTransform(key);
+}
+
+function zoomOut(key) {
+    var s = chartViewerState[key];
+    s.zoom = Math.max(s.zoom / 1.3, 0.3);
+    applyTransform(key);
+}
+
+function zoomReset(key) {
+    var s = chartViewerState[key];
+    s.zoom = 1; s.panX = 0; s.panY = 0;
+    applyTransform(key);
+}
+
+document.querySelectorAll('.chart-viewer-container').forEach(function(container) {
+    var key = container.closest('.chart-viewer').id.replace('chart-viewer-', '');
+    container.addEventListener('mousedown', function(e) {
+        var s = chartViewerState[key];
+        s.dragging = true;
+        s.startX = e.clientX;
+        s.startY = e.clientY;
+        s.startPanX = s.panX;
+        s.startPanY = s.panY;
+        container.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', function(e) {
+        var s = chartViewerState[key];
+        if (!s.dragging) return;
+        s.panX = s.startPanX + (e.clientX - s.startX);
+        s.panY = s.startPanY + (e.clientY - s.startY);
+        applyTransform(key);
+    });
+    document.addEventListener('mouseup', function() {
+        var s = chartViewerState[key];
+        if (s.dragging) { s.dragging = false; container.style.cursor = 'grab'; }
+    });
+    container.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var s = chartViewerState[key];
+        if (e.deltaY < 0) s.zoom = Math.min(s.zoom * 1.1, 10);
+        else s.zoom = Math.max(s.zoom / 1.1, 0.3);
+        applyTransform(key);
+    });
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     toggleRamo();
@@ -1654,5 +1743,12 @@ document.addEventListener('DOMContentLoaded', function() {
 .coord-report th { background: var(--bg-hover); font-weight: 700; }
 .coord-report .ok { color: var(--success); font-weight: 700; }
 .coord-report .fail { color: var(--danger); font-weight: 700; }
+.chart-viewer { border: 1px solid var(--border); border-radius: 0 0 8px 8px; overflow: hidden; }
+.chart-viewer-container { position: relative; overflow: hidden; cursor: grab; width: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; background: #fafafa; }
+.chart-viewer-container:active { cursor: grabbing; }
+.chart-viewer-img { max-width: 100%; max-height: 500px; transition: transform 0.1s ease; transform-origin: center center; }
+.chart-viewer-toolbar { display: flex; gap: 4px; padding: 6px 10px; background: var(--bg-hover); border-top: 1px solid var(--border); justify-content: center; }
+.chart-viewer-toolbar button { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 14px; line-height: 1.4; }
+.chart-viewer-toolbar button:hover { background: var(--primary); color: #fff; }
 </style>
 {% endblock %}

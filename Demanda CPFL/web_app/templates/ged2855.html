@@ -573,14 +573,28 @@
         </div>
         <div class="card" style="margin:0;border-radius:0;border-top:1px solid var(--border);">
             <div class="card-header">Coordenograma - Fase</div>
-            <div style="position:relative;height:400px;width:100%;">
-                <canvas id="coord-chart-fase"></canvas>
+            <div class="chart-viewer" id="chart-viewer-fase">
+                <div class="chart-viewer-container">
+                    <img id="coord-chart-fase" class="chart-viewer-img" style="display:none;">
+                </div>
+                <div class="chart-viewer-toolbar">
+                    <button type="button" onclick="zoomIn('fase')" title="Aumentar zoom">&#128269;+</button>
+                    <button type="button" onclick="zoomOut('fase')" title="Reduzir zoom">&#128269;&#8722;</button>
+                    <button type="button" onclick="zoomReset('fase')" title="Resetar zoom">&#10227;</button>
+                </div>
             </div>
         </div>
         <div class="card" style="margin:0;border-radius:0;border-top:1px solid var(--border);">
             <div class="card-header">Coordenograma - Neutro</div>
-            <div style="position:relative;height:400px;width:100%;">
-                <canvas id="coord-chart-neutro"></canvas>
+            <div class="chart-viewer" id="chart-viewer-neutro">
+                <div class="chart-viewer-container">
+                    <img id="coord-chart-neutro" class="chart-viewer-img" style="display:none;">
+                </div>
+                <div class="chart-viewer-toolbar">
+                    <button type="button" onclick="zoomIn('neutro')" title="Aumentar zoom">&#128269;+</button>
+                    <button type="button" onclick="zoomOut('neutro')" title="Reduzir zoom">&#128269;&#8722;</button>
+                    <button type="button" onclick="zoomReset('neutro')" title="Resetar zoom">&#10227;</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1325,7 +1339,6 @@ function gerarPDF() {
 }
 
 // --- CoordSelet ---
-let coordChartFase = null, coordChartNeutro = null;
 
 // Sync RTC primario/secundario display
 document.getElementById('coord-rtc-primario')?.addEventListener('input', atualizarRTCDisplay);
@@ -1456,143 +1469,6 @@ function calcularCoordSelet() {
     });
 }
 
-function mostrarCoordResultado(d) {
-    const container = document.getElementById('coord-result-container');
-    const content = document.getElementById('coord-result-content');
-    container.style.display = 'block';
-    content.innerHTML = gerarRelatorioCoordHTML(d.relatorio);
-
-    if (coordChartFase) { coordChartFase.destroy(); coordChartFase = null; }
-    if (coordChartNeutro) { coordChartNeutro.destroy(); coordChartNeutro = null; }
-
-    var datasetsFase = [];
-    if (d.curva_fase && d.curva_fase.length > 0) {
-        datasetsFase.push({
-            label: 'CPFL Fase',
-            data: d.curva_fase.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#2563eb', backgroundColor: '#2563eb',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-    if (d.curva_fase_cliente && d.curva_fase_cliente.length > 0) {
-        datasetsFase.push({
-            label: 'Cliente Fase',
-            data: d.curva_fase_cliente.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#dc2626', backgroundColor: '#dc2626',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-    if (d.curva_trafo && d.curva_trafo.pontos && d.curva_trafo.pontos.length > 0) {
-        datasetsFase.push({
-            label: 'Trafo ANSI',
-            data: d.curva_trafo.pontos.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#f59e0b', backgroundColor: '#f59e0b',
-            showLine: true, tension: 0, borderWidth: 2, borderDash: [5,5], pointRadius: 0,
-        });
-    }
-    if (d.curva_inrush && d.curva_inrush.pontos && d.curva_inrush.pontos.length > 0) {
-        datasetsFase.push({
-            label: 'Inrush',
-            data: d.curva_inrush.pontos.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#10b981', backgroundColor: '#10b981',
-            showLine: true, tension: 0, borderWidth: 2, borderDash: [3,3], pointRadius: 0,
-        });
-    }
-
-    var datasetsNeutro = [];
-    if (d.curva_neutro && d.curva_neutro.length > 0) {
-        datasetsNeutro.push({
-            label: 'CPFL Neutro',
-            data: d.curva_neutro.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#8b5cf6', backgroundColor: '#8b5cf6',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-    if (d.curva_neutro_cliente && d.curva_neutro_cliente.length > 0) {
-        datasetsNeutro.push({
-            label: 'Cliente Neutro',
-            data: d.curva_neutro_cliente.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#ec4899', backgroundColor: '#ec4899',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-
-    const logAxisOpts = {
-        type: 'logarithmic',
-        title: { display: true, text: '', font: { size: 11 } },
-        min: 1, max: 10000,
-        grid: { color: 'rgba(0,0,0,0.08)' },
-        ticks: {
-            autoSkip: true,
-            font: { size: 9 },
-            callback: function(v, i, ticks) {
-                if (v === 1) return '1';
-                if (v === 10) return '10';
-                if (v === 100) return '100';
-                if (v === 1000) return '1k';
-                if (v === 10000) return '10k';
-                if (v >= 1 && v.toString().match(/^[125]0*$/)) return v.toLocaleString();
-                return '';
-            }
-        }
-    };
-    const logAxisOptsY = {
-        type: 'logarithmic',
-        title: { display: true, text: '', font: { size: 11 } },
-        min: 0.01, max: 1000,
-        grid: { color: 'rgba(0,0,0,0.08)' },
-        ticks: {
-            autoSkip: true,
-            font: { size: 9 },
-            callback: function(v, i, ticks) {
-                if (v === 0.01) return '0.01';
-                if (v === 0.1) return '0.1';
-                if (v === 1) return '1';
-                if (v === 10) return '10';
-                if (v === 100) return '100';
-                if (v === 1000) return '1000';
-                return '';
-            }
-        }
-    };
-
-    const chartOpts = {
-        responsive: true, maintainAspectRatio: false,
-        scales: {
-            x: Object.assign({}, logAxisOpts, { title: { display: true, text: 'Corrente (A)', font: { size: 11 } } }),
-            y: Object.assign({}, logAxisOptsY, { title: { display: true, text: 'Tempo (s)', font: { size: 11 } } })
-        },
-        plugins: {
-            legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 14, padding: 8 } },
-            tooltip: {
-                callbacks: {
-                    label: function(ctx) {
-                        return ctx.dataset.label + ': I=' + Number(ctx.parsed.x).toFixed(1) + 'A, t=' + Number(ctx.parsed.y).toFixed(3) + 's';
-                    }
-                }
-            }
-        }
-    };
-
-    const faseCanvas = document.getElementById('coord-chart-fase');
-    if (faseCanvas && datasetsFase.length > 0) {
-        coordChartFase = new Chart(faseCanvas, {
-            type: 'scatter',
-            data: { datasets: datasetsFase },
-            options: chartOpts
-        });
-    }
-
-    const neutroCanvas = document.getElementById('coord-chart-neutro');
-    if (neutroCanvas && datasetsNeutro.length > 0) {
-        coordChartNeutro = new Chart(neutroCanvas, {
-            type: 'scatter',
-            data: { datasets: datasetsNeutro },
-            options: chartOpts
-        });
-    }
-}
-
 function montarRelatorioCoord() {
     const container = document.getElementById('coord-result-container');
     const preview = document.getElementById('coord-relatorio-preview');
@@ -1601,7 +1477,12 @@ function montarRelatorioCoord() {
         return;
     }
     const content = document.getElementById('coord-result-content');
-    preview.innerHTML = content.innerHTML;
+    const imgFase = document.getElementById('coord-chart-fase');
+    const imgNeutro = document.getElementById('coord-chart-neutro');
+    var html = content.innerHTML;
+    if (imgFase && imgFase.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Fase</h3><img src="' + imgFase.src + '" style="max-width:100%;">';
+    if (imgNeutro && imgNeutro.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Neutro</h3><img src="' + imgNeutro.src + '" style="max-width:100%;">';
+    preview.innerHTML = html;
 }
 
 function gerarPDFCoord() {
@@ -1611,6 +1492,11 @@ function gerarPDFCoord() {
         return;
     }
     const content = document.getElementById('coord-result-content');
+    const imgFase = document.getElementById('coord-chart-fase');
+    const imgNeutro = document.getElementById('coord-chart-neutro');
+    var html = content.innerHTML;
+    if (imgFase && imgFase.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Fase</h3><img src="' + imgFase.src + '" style="max-width:100%;">';
+    if (imgNeutro && imgNeutro.src) html += '<div style="page-break-before:always;"></div><h3 style="margin-top:20px;">Coordenograma - Neutro</h3><img src="' + imgNeutro.src + '" style="max-width:100%;">';
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write('<html><head><title>Estudo de Coordenação - ANEXO V</title>');
     printWindow.document.write('<style>');
@@ -1622,11 +1508,12 @@ function gerarPDFCoord() {
     printWindow.document.write('th { background: #f0f0f0; font-weight: 700; }');
     printWindow.document.write('.ok { color: green; font-weight: 700; }');
     printWindow.document.write('.fail { color: red; font-weight: 700; }');
+    printWindow.document.write('.img-chart-pdf { max-width: 100%; height: auto; margin: 16px 0; border: 1px solid #ddd; border-radius: 4px; }');
     printWindow.document.write('@media print { body { padding: 0; } }');
     printWindow.document.write('</style></head><body>');
     printWindow.document.write('<h2 style="text-align:center;">Estudo de Coordenação e Seletividade</h2>');
     printWindow.document.write('<p style="text-align:center;font-size:11px;color:#666;">ANEXO V - GED-2855</p>');
-    printWindow.document.write(content.innerHTML);
+    printWindow.document.write(html);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     setTimeout(function() { printWindow.print(); }, 500);
@@ -1711,115 +1598,69 @@ function mostrarCoordResultado(d) {
     container.style.display = 'block';
     content.innerHTML = gerarRelatorioCoordHTML(d.relatorio);
     content.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // Destroy old charts
-    if (coordChartFase) { coordChartFase.destroy(); coordChartFase = null; }
-    if (coordChartNeutro) { coordChartNeutro.destroy(); coordChartNeutro = null; }
-
-    var datasetsFase = [];
-    if (d.curva_fase && d.curva_fase.length > 0) {
-        datasetsFase.push({
-            label: 'CPFL Fase',
-            data: d.curva_fase.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#2563eb', backgroundColor: '#2563eb',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-    if (d.curva_fase_cliente && d.curva_fase_cliente.length > 0) {
-        datasetsFase.push({
-            label: 'Cliente Fase',
-            data: d.curva_fase_cliente.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#dc2626', backgroundColor: '#dc2626',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-    if (d.curva_trafo && d.curva_trafo.pontos && d.curva_trafo.pontos.length > 0) {
-        datasetsFase.push({
-            label: 'Trafo ANSI',
-            data: d.curva_trafo.pontos.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#f59e0b', backgroundColor: '#f59e0b',
-            showLine: true, tension: 0, borderWidth: 2, borderDash: [5,5], pointRadius: 0,
-        });
-    }
-    if (d.curva_inrush && d.curva_inrush.pontos && d.curva_inrush.pontos.length > 0) {
-        datasetsFase.push({
-            label: 'Inrush',
-            data: d.curva_inrush.pontos.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#10b981', backgroundColor: '#10b981',
-            showLine: true, tension: 0, borderWidth: 2, borderDash: [3,3], pointRadius: 0,
-        });
-    }
-
-    var datasetsNeutro = [];
-    if (d.curva_neutro && d.curva_neutro.length > 0) {
-        datasetsNeutro.push({
-            label: 'CPFL Neutro',
-            data: d.curva_neutro.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#8b5cf6', backgroundColor: '#8b5cf6',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-    if (d.curva_neutro_cliente && d.curva_neutro_cliente.length > 0) {
-        datasetsNeutro.push({
-            label: 'Cliente Neutro',
-            data: d.curva_neutro_cliente.map(function(p) { return {x: p.i, y: p.t}; }),
-            borderColor: '#ec4899', backgroundColor: '#ec4899',
-            showLine: true, tension: 0, borderWidth: 2, pointRadius: 0,
-        });
-    }
-
-    // Fase chart
-    const faseCanvas = document.getElementById('coord-chart-fase');
-    if (faseCanvas && datasetsFase.length > 0) {
-        coordChartFase = new Chart(faseCanvas, {
-            type: 'scatter',
-            data: { datasets: datasetsFase },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: {
-                    x: { type: 'logarithmic', title: { display: true, text: 'Corrente (A)' },
-                         min: 1, max: 20000, ticks: { callback: function(v) { return v.toLocaleString(); } } },
-                    y: { type: 'logarithmic', title: { display: true, text: 'Tempo (s)' },
-                         min: 0.01, max: 10000, ticks: { callback: function(v) { return v.toFixed(2); } } }
-                },
-                plugins: {
-                    legend: { position: 'top', labels: { font: { size: 11 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) { return ctx.dataset.label + ': I=' + ctx.parsed.x.toFixed(1) + 'A, t=' + ctx.parsed.y.toFixed(3) + 's'; }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Neutro chart
-    const neutroCanvas = document.getElementById('coord-chart-neutro');
-    if (neutroCanvas && datasetsNeutro.length > 0) {
-        coordChartNeutro = new Chart(neutroCanvas, {
-            type: 'scatter',
-            data: { datasets: datasetsNeutro },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: {
-                    x: { type: 'logarithmic', title: { display: true, text: 'Corrente (A)' },
-                         min: 1, max: 20000, ticks: { callback: function(v) { return v.toLocaleString(); } } },
-                    y: { type: 'logarithmic', title: { display: true, text: 'Tempo (s)' },
-                         min: 0.01, max: 10000, ticks: { callback: function(v) { return v.toFixed(2); } } }
-                },
-                plugins: {
-                    legend: { position: 'top', labels: { font: { size: 11 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) { return ctx.dataset.label + ': I=' + ctx.parsed.x.toFixed(1) + 'A, t=' + ctx.parsed.y.toFixed(3) + 's'; }
-                        }
-                    }
-                }
-            }
-        });
-    }
+    const elFase = document.getElementById('coord-chart-fase');
+    const elNeutro = document.getElementById('coord-chart-neutro');
+    if (elFase && d.chart_fase) { elFase.src = d.chart_fase; elFase.style.display = 'inline'; }
+    if (elNeutro && d.chart_neutro) { elNeutro.src = d.chart_neutro; elNeutro.style.display = 'inline'; }
 }
+
+var chartViewerState = { fase: { zoom: 1, panX: 0, panY: 0, dragging: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 }, neutro: { zoom: 1, panX: 0, panY: 0, dragging: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 } };
+
+function applyTransform(key) {
+    var s = chartViewerState[key];
+    var img = document.querySelector('#chart-viewer-' + key + ' .chart-viewer-img');
+    if (!img) return;
+    img.style.transform = 'translate(' + s.panX + 'px, ' + s.panY + 'px) scale(' + s.zoom + ')';
+}
+
+function zoomIn(key) {
+    var s = chartViewerState[key];
+    s.zoom = Math.min(s.zoom * 1.3, 10);
+    applyTransform(key);
+}
+
+function zoomOut(key) {
+    var s = chartViewerState[key];
+    s.zoom = Math.max(s.zoom / 1.3, 0.3);
+    applyTransform(key);
+}
+
+function zoomReset(key) {
+    var s = chartViewerState[key];
+    s.zoom = 1; s.panX = 0; s.panY = 0;
+    applyTransform(key);
+}
+
+document.querySelectorAll('.chart-viewer-container').forEach(function(container) {
+    var key = container.closest('.chart-viewer').id.replace('chart-viewer-', '');
+    container.addEventListener('mousedown', function(e) {
+        var s = chartViewerState[key];
+        s.dragging = true;
+        s.startX = e.clientX;
+        s.startY = e.clientY;
+        s.startPanX = s.panX;
+        s.startPanY = s.panY;
+        container.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', function(e) {
+        var s = chartViewerState[key];
+        if (!s.dragging) return;
+        s.panX = s.startPanX + (e.clientX - s.startX);
+        s.panY = s.startPanY + (e.clientY - s.startY);
+        applyTransform(key);
+    });
+    document.addEventListener('mouseup', function() {
+        var s = chartViewerState[key];
+        if (s.dragging) { s.dragging = false; container.style.cursor = 'grab'; }
+    });
+    container.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var s = chartViewerState[key];
+        if (e.deltaY < 0) s.zoom = Math.min(s.zoom * 1.1, 10);
+        else s.zoom = Math.max(s.zoom / 1.1, 0.3);
+        applyTransform(key);
+    });
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     toggleRamo();
@@ -1901,5 +1742,12 @@ document.addEventListener('DOMContentLoaded', function() {
 .coord-report th { background: var(--bg-hover); font-weight: 700; }
 .coord-report .ok { color: var(--success); font-weight: 700; }
 .coord-report .fail { color: var(--danger); font-weight: 700; }
+.chart-viewer { border: 1px solid var(--border); border-radius: 0 0 8px 8px; overflow: hidden; }
+.chart-viewer-container { position: relative; overflow: hidden; cursor: grab; width: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; background: #fafafa; }
+.chart-viewer-container:active { cursor: grabbing; }
+.chart-viewer-img { max-width: 100%; max-height: 500px; transition: transform 0.1s ease; transform-origin: center center; }
+.chart-viewer-toolbar { display: flex; gap: 4px; padding: 6px 10px; background: var(--bg-hover); border-top: 1px solid var(--border); justify-content: center; }
+.chart-viewer-toolbar button { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 14px; line-height: 1.4; }
+.chart-viewer-toolbar button:hover { background: var(--primary); color: #fff; }
 </style>
 {% endblock %}
