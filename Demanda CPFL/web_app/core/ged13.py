@@ -55,6 +55,29 @@ def fd_ar_condicionado(qtd):
     conn.close()
     return 1.0
 
+def fd_tabela15(tipo, carga_kw):
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT fator_demanda FROM tabela_15 WHERE descricao = ?", (tipo,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row: return 1.0
+    fd_text = str(row[0]).strip()
+    if fd_text == '1': return 1.0
+    import re
+    parts = fd_text.split(';')
+    if len(parts) == 2:
+        m1 = re.match(r'([\d,]+)\s+para os primeiros\s+([\d.]+)\s*kW', parts[0].strip())
+        m2 = re.match(r'([\d,]+)\s+para o que exceder a\s+([\d.]+)\s*kW', parts[1].strip())
+        if m1 and m2:
+            fd1 = float(m1.group(1).replace(',', '.'))
+            limit = float(m2.group(2))
+            fd2 = float(m2.group(1).replace(',', '.'))
+            if carga_kw <= 0: return 1.0
+            if carga_kw <= limit: return fd1
+            return (limit * fd1 + (carga_kw - limit) * fd2) / carga_kw
+    return 1.0
+
 def get_valor(tabela, campo_busca, valor, campo_saida):
     conn = get_conn()
     cursor = conn.cursor()
@@ -111,7 +134,11 @@ def get_sugestao(area, tipo):
     cursor = conn.cursor()
 
     # Tabela 1: minimum illumination W/m²
-    va_m2 = TABELA1_MAP.get(tipo, 15.0)
+    va_m2 = TABELA1_MAP.get(tipo)
+    if va_m2 is None:
+        cursor.execute("SELECT carga_minima_w_m2 FROM tabela_15 WHERE descricao = ?", (tipo,))
+        row = cursor.fetchone()
+        va_m2 = float(row[0]) if row else 15.0
     if va_m2 > 0:
         sug_ilum = max(100, int(-(-(area * va_m2) // 100)) * 100)
     else:
@@ -254,7 +281,10 @@ def calcular(dados):
     # (a) Iluminacao e Tomadas
     ilum_va = sum(w / fp for _, w, fp in itens_iluminacao)
     carga_a_kw = ilum_va / 1000
-    if tipo == "Industrial":
+    tabela15_tipos = ['Escolas e semelhantes','Escritórios (edifícios)','Hospitais e semelhantes','Hotéis e semelhantes']
+    if tipo in tabela15_tipos:
+        fd_a = fd_tabela15(tipo, carga_a_kw)
+    elif tipo == "Industrial":
         fd_a = 1.0  # Tabela 15 - Industrias: FD=1
     else:
         fd_a = fd_kw(carga_a_kw)

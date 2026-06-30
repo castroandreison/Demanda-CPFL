@@ -80,6 +80,10 @@
                     <option value="Residencial">Residencial</option>
                     <option value="Comercial">Comercial</option>
                     <option value="Industrial">Industrial</option>
+                    <option value="Escolas e semelhantes">Escolas e semelhantes</option>
+                    <option value="Escritórios (edifícios)">Escritórios (edifícios)</option>
+                    <option value="Hospitais e semelhantes">Hospitais e semelhantes</option>
+                    <option value="Hotéis e semelhantes">Hotéis e semelhantes</option>
                 </select>
             </div>
             <div class="form-group">
@@ -909,8 +913,12 @@ function mostrarResultadoGed13(d) {
 
     // Section a
     let sectionA = '<div class="result-section"><div class="result-title">a) Demanda referente a iluminação e tomadas</div>';
-    if (d.tipo === 'Industrial') {
-        sectionA += '<div class="result-line">FD conforme Tabela 2 (Industrial): 1,0</div>';
+    var tabela15Tipos = ['Escolas e semelhantes','Escritórios (edifícios)','Hospitais e semelhantes','Hotéis e semelhantes'];
+    if (tabela15Tipos.indexOf(d.tipo) >= 0) {
+        sectionA += '<div class="result-line">Carga Instalada: ' + ilumTotalW + ' W = ' + d.carga_a_kw + ' kW</div>';
+        sectionA += '<div class="result-line">Pela Tabela 15 (' + d.tipo + '), FD efetivo = ' + d.fd_a + '</div>';
+    } else if (d.tipo === 'Industrial') {
+        sectionA += '<div class="result-line">FD conforme Tabela 15 (Industrial): 1,0</div>';
     } else {
         sectionA += '<div class="result-line">Carga Instalada: ' + ilumTotalW + ' W = ' + d.carga_a_kw + ' kW</div>';
         sectionA += '<div class="result-line">Pela Tabela 3, FD = ' + d.fd_a + '</div>';
@@ -1086,7 +1094,14 @@ function montarRelatorioG13() {
         html += '<div class="result-title">a) Iluminação e Tomadas</div>';
         var ilumTotalW = (d.itens_iluminacao || []).reduce(function(s, i) { return s + i.w; }, 0);
         html += '<div class="result-line">Carga Instalada: ' + ilumTotalW + ' W = ' + d.carga_a_kw + ' kW</div>';
-        html += '<div class="result-line">FD (Tabela 3): ' + d.fd_a + '</div>';
+        var tabela15Tipos = ['Escolas e semelhantes','Escritórios (edifícios)','Hospitais e semelhantes','Hotéis e semelhantes'];
+        if (tabela15Tipos.indexOf(d.tipo) >= 0) {
+            html += '<div class="result-line">FD (Tabela 15 - ' + d.tipo + '): ' + d.fd_a + '</div>';
+        } else if (d.tipo === 'Industrial') {
+            html += '<div class="result-line">FD (Tabela 15 - Industrial): 1,0</div>';
+        } else {
+            html += '<div class="result-line">FD (Tabela 3): ' + d.fd_a + '</div>';
+        }
         html += '<div class="result-line">a = ' + d.carga_a_kw + ' × ' + d.fd_a + ' = <span class="value">' + d.a_kva + ' kVA</span></div>';
         html += '</div>';
     }
