@@ -2411,7 +2411,9 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
     var margem = 50, largFrente = 1200;
     var eqs = [];
     qmDetalhes.forEach(function(q, i) {
-        eqs.push({ nome: 'QM' + (i+1), larg: q.largura_total });
+        for (var s = 0; s < q.linhas; s++) {
+            eqs.push({ nome: 'QM' + (i+1) + '-' + (s+1), larg: q.largura_total });
+        }
     });
     if (cd) eqs.push({ nome: 'CD', larg: cd.largura });
     eqs.push({ nome: 'DPS', larg: dps.largura });
@@ -2435,8 +2437,15 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
         };
     }
 
+    function qmEfetiva(q) { return q.largura_total * q.linhas; }
+
+    function totalSecoesQm() {
+        var t = 0; qmDetalhes.forEach(function(q) { t += q.linhas; }); return t;
+    }
+
     function layoutL() {
-        var qmTotal = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0);
+        var nSec = totalSecoesQm();
+        var qmTotal = qmDetalhes.reduce(function(s, q) { return s + qmEfetiva(q); }, 0);
         var cdDps = (cd ? cd.largura : 0) + dps.largura;
         var comp = Math.max(qmTotal, cdDps) + 2 * margem;
         var larg = 350 + largFrente;
@@ -2444,15 +2453,16 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
             comp: Math.ceil(comp), larg: Math.ceil(larg),
             area: m2(comp, larg), perim: perim(comp, larg),
             paredes: [
-                { nome: 'Fundo (A)', itens: eqs.slice(0, qmDetalhes.length), soma: qmTotal },
-                { nome: 'Direita (C)', itens: eqs.slice(qmDetalhes.length), soma: cdDps }
+                { nome: 'Fundo (A)', itens: eqs.slice(0, nSec), soma: qmTotal },
+                { nome: 'Direita (C)', itens: eqs.slice(nSec), soma: cdDps }
             ],
             perimParede: qmTotal + cdDps
         };
     }
 
     function layoutOpostas() {
-        var qmTotal = qmDetalhes.reduce(function(s, q) { return s + q.largura_total; }, 0);
+        var nSec = totalSecoesQm();
+        var qmTotal = qmDetalhes.reduce(function(s, q) { return s + qmEfetiva(q); }, 0);
         var cdDps = (cd ? cd.largura : 0) + dps.largura;
         var comp = Math.max(qmTotal, cdDps) + 2 * margem;
         var larg = 350 + largFrente + 350;
@@ -2460,8 +2470,8 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
             comp: Math.ceil(comp), larg: Math.ceil(larg),
             area: m2(comp, larg), perim: perim(comp, larg),
             paredes: [
-                { nome: 'Parede 1', itens: eqs.slice(0, qmDetalhes.length), soma: qmTotal },
-                { nome: 'Parede 2 (oposta)', itens: eqs.slice(qmDetalhes.length), soma: cdDps }
+                { nome: 'Parede 1', itens: eqs.slice(0, nSec), soma: qmTotal },
+                { nome: 'Parede 2 (oposta)', itens: eqs.slice(nSec), soma: cdDps }
             ],
             perimParede: qmTotal + cdDps
         };
@@ -2470,20 +2480,30 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
     function layoutU() {
         var n = qmDetalhes.length;
         if (n <= 1) return layoutReto();
-        var sorted = qmDetalhes.slice().sort(function(a, b) { return b.largura_total - a.largura_total; });
+        var sorted = qmDetalhes.slice().sort(function(a, b) { return qmEfetiva(b) - qmEfetiva(a); });
         var fundoList = [sorted[0], sorted[1]];
         var esqList = sorted.slice(2);
-        var compFundo = fundoList.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem;
-        var compEsq = esqList.length > 0 ? esqList.reduce(function(s, q) { return s + q.largura_total; }, 0) + 2 * margem : 0;
+        var compFundo = fundoList.reduce(function(s, q) { return s + qmEfetiva(q); }, 0) + 2 * margem;
+        var compEsq = esqList.length > 0 ? esqList.reduce(function(s, q) { return s + qmEfetiva(q); }, 0) + 2 * margem : 0;
         var compDir = (cd ? cd.largura : 0) + dps.largura + 2 * margem;
         var comp = Math.max(compFundo, compEsq, compDir);
         var larg = 350 + largFrente + 350;
 
+        // Expand sections per QM for display
+        var fundoSec = [], esqSec = [];
+        qmDetalhes.forEach(function(q, idx) {
+            var naFundo = (q === sorted[0] || q === sorted[1]);
+            for (var s = 0; s < q.linhas; s++) {
+                var sec = { nome: 'QM' + (idx+1) + '-' + (s+1), larg: q.largura_total };
+                if (naFundo) fundoSec.push(sec); else esqSec.push(sec);
+            }
+        });
+
         var paredes = [
-            { nome: 'Fundo (A)', itens: fundoList.map(function(q, i) { return { nome: 'QM' + (sorted.indexOf(q)+1), larg: q.largura_total }; }), soma: fundoList.reduce(function(s,q){return s+q.largura_total;},0) }
+            { nome: 'Fundo (A)', itens: fundoSec, soma: fundoSec.reduce(function(s,e){return s+e.larg;},0) }
         ];
-        if (esqList.length > 0) {
-            paredes.push({ nome: 'Esquerda (B)', itens: esqList.map(function(q, i) { return { nome: 'QM' + (sorted.indexOf(q)+1), larg: q.largura_total }; }), soma: esqList.reduce(function(s,q){return s+q.largura_total;},0) });
+        if (esqSec.length > 0) {
+            paredes.push({ nome: 'Esquerda (B)', itens: esqSec, soma: esqSec.reduce(function(s,e){return s+e.larg;},0) });
         }
         var dirItens = [];
         if (cd) dirItens.push({ nome: 'CD', larg: cd.largura });
@@ -2649,7 +2669,7 @@ function calcularQM() {
     var cdNecessaria = false;
     if (qms >= 2) {
         cdNecessaria = true;
-        if (qms <= 3) cd = { tipo: 'U', norma: 'GED-6262', desenho: 'Des. 7', altura: 1450, largura: 800, profundidade: 350 };
+        if (qms <= 3) cd = { tipo: 'U', norma: 'GED-6262', desenho: 'Des. 7', altura: 800, largura: 1450, profundidade: 350 };
         else if (qms === 4) cd = { tipo: 'V', norma: 'GED-6263', desenho: 'Des. 8', altura: 2000, largura: 1000, profundidade: 350 };
         else if (qms === 5) cd = { tipo: 'W', norma: 'GED-6264', desenho: 'Des. 9', altura: 2600, largura: 1200, profundidade: 350 };
         else cd = { tipo: 'ESPECIAL', descricao: 'Montagem múltipla ou projeto especial. Consultar CPFL.' };
@@ -2678,20 +2698,21 @@ function calcularQM() {
 
     // --- Espaço na parede ---
     var folga = 100;
-    var qmW = 0, qmAltMax = 0;
+    var qmW = 0, qmAltMax = 0, totalSecoes = 0;
     qmDetalhes.forEach(function(q) {
-        qmW += q.largura_total;
+        qmW += q.largura_total * q.linhas;
+        totalSecoes += q.linhas;
         if (q.altura > qmAltMax) qmAltMax = q.altura;
     });
     var larguraTotal, alturaTotal, largDetalhe;
     if (cdNecessaria && cd) {
         larguraTotal = cd.largura + qmW + dps.largura + folga;
         alturaTotal = Math.max(cd.altura, qmAltMax, dps.altura);
-        largDetalhe = cd.largura + ' mm CD + ' + qmW + ' mm QMs';
+        largDetalhe = cd.largura + ' mm CD + ' + qmW + ' mm (' + totalSecoes + ' seções QM)';
     } else {
         larguraTotal = qmW + dps.largura + folga;
         alturaTotal = Math.max(qmAltMax, dps.altura);
-        largDetalhe = qmW + ' mm QMs';
+        largDetalhe = qmW + ' mm (' + totalSecoes + ' seções QM)';
     }
 
     // --- Render ---
@@ -2761,8 +2782,8 @@ function calcularQM() {
 
     // Espaço na parede
     h += '<div class="result-title" style="margin-top:8px;">Espaço na Parede</div>';
-    var largDetalhe = cdNecessaria && cd ? cd.largura + ' mm CD + ' + qmW + ' mm QMs' : qmW + ' mm QMs';
     h += '<div class="result-line">Largura total estimada: <span class="value">' + larguraTotal + ' mm</span> (' + largDetalhe + ' + ' + dps.largura + ' mm DPS + ' + folga + ' mm folga)</div>';
+    h += '<div class="result-line">Total de seções QM: <span class="value">' + totalSecoes + '</span> (cada seção ' + qmDetalhes[0].largura_total + ' mm)</div>';
     h += '<div class="result-line">Altura máxima: <span class="value">' + alturaTotal + ' mm</span></div>';
     h += '</div>';
 
