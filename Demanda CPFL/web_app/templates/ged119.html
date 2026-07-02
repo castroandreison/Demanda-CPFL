@@ -853,6 +853,114 @@
             <div id="qm-content"></div>
     </div>
 </div>
+
+<div class="card" style="margin-top:16px;">
+    <div class="card-header">Dimensionamento do CD/QM (GED-119)</div>
+    <div class="sub-tabs" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;background:var(--bg-alt);border-bottom:1px solid var(--border);">
+        <button class="sub-tab-btn active" data-subtab="cdqm-demanda">Demanda Individual</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-condutores">Condutores</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-disjuntor">Disjuntores</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-queda">Queda de Tensão</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-barramento">Barramento</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-aterramento">Aterramento</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-eletroduto">Eletroduto</button>
+        <button class="sub-tab-btn" data-subtab="cdqm-memorial">Memorial</button>
+    </div>
+
+        <div class="sub-tab-content active" id="cdqm-demanda">
+            <div class="form-grid col-3" style="padding:12px;">
+                <div class="form-group"><label>Total de Medidores</label><input type="number" id="cdqm_total_med" min="1" value="36"></div>
+                <div class="form-group"><label>Limite por QM</label><input type="number" id="cdqm_limite_qm" min="1" value="18"></div>
+                <div class="form-group"><label>Área do Apartamento (m²)</label><input type="number" id="cdqm_area_apto" min="0" step="0.1" value="0"></div>
+                <div class="form-group"><label>Chuveiro (W/apt)</label><input type="number" id="cdqm_chuveiro_w" min="0" step="1" value="5500" title="Potência do chuveiro por apartamento"></div>
+                <div class="form-group"><label>Micro-ondas (W/apt)</label><input type="number" id="cdqm_microondas_w" min="0" step="1" value="1500" title="Potência do micro-ondas por apartamento"></div>
+                <div class="form-group"><label>Fogão (W/apt)</label><input type="number" id="cdqm_fogao_w" min="0" step="1" value="2000" title="Potência do fogão/cooktop por apartamento"></div>
+                <div class="form-group"><label>Ar Condicionado (W/apt)</label><input type="number" id="cdqm_ar_w" min="0" step="1" value="1400" title="Potência média de ar condicionado por apartamento (potência total AC / nº aptos)"></div>
+                <div class="form-group" style="justify-content:flex-end;grid-column:span 2;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="autoPreencherCDQM()">🔄 Buscar do Projeto</button><button class="btn btn-primary" onclick="calcDemandaIndividualQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-dados-projeto" class="result-area" style="padding:4px 12px;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border);"></div>
+            <div id="cdqm-demanda-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-condutores">
+            <div class="form-grid col-3" style="padding:12px;">
+                <div class="form-group"><label>Isolação</label><select id="cdqm_isolacao"><option value="EPR" selected>EPR/XLPE 90°C</option><option value="PVC">PVC 70°C 750V</option></select></div>
+                <div class="form-group"><label>Fator de Temperatura</label><input type="number" id="cdqm_fc_temp" min="0.1" max="1.0" step="0.01" value="1.0"></div>
+                <div class="form-group"><label>Fator de Agrupamento</label><input type="number" id="cdqm_fc_agrup" min="0.1" max="1.0" step="0.01" value="1.0"></div>
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('condutores')">🔄 QMs do Cálculo</button><button class="btn btn-primary" onclick="calcCondutoresCDQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-condutores-qms" style="padding:0 12px;"></div>
+            <div id="cdqm-condutores-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-disjuntor">
+            <div class="form-grid col-2" style="padding:12px;">
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('disjuntor')">🔄 QMs do Cálculo</button><button class="btn btn-primary" onclick="calcDisjuntorCDQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-disjuntor-qms" style="padding:0 12px;"></div>
+            <div id="cdqm-disjuntor-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-queda">
+            <div class="form-grid col-3" style="padding:12px;">
+                <div class="form-group"><label>Tensão (V)</label><input type="number" id="cdqm_tensao" min="0" value="380"></div>
+                <div class="form-group"><label>Comprimento (m)</label><input type="number" id="cdqm_comprimento" min="0" value="50"></div>
+                <div class="form-group"><label>Condutividade (Cu)</label><input type="number" id="cdqm_condutividade" min="0" value="56"></div>
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('queda')">🔄 QMs do Cálculo</button><button class="btn btn-primary" onclick="calcQuedaTensaoCDQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-queda-qms" style="padding:0 12px;"></div>
+            <div id="cdqm-queda-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-barramento">
+            <div class="form-grid col-3" style="padding:12px;">
+                <div class="form-group"><label>Demanda Total (kVA)</label><input type="number" id="cdqm_demanda_total_kva" step="0.01" min="0" placeholder="Auto"></div>
+                <div class="form-group"><label>Corrente Total (A)</label><input type="number" id="cdqm_corrente_total_a" step="0.01" min="0" placeholder="Auto"></div>
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherDemandaTotal()">🔄 Da Demanda Individual</button><button class="btn btn-primary" onclick="calcBarramentoCDQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-barramento-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-aterramento">
+            <div class="form-grid col-3" style="padding:12px;">
+                <div class="form-group"><label>Demanda (kVA)</label><input type="number" id="cdqm_aterr_demanda" step="0.01" min="0" placeholder="Auto"></div>
+                <div class="form-group"><label>Tensão</label><select id="cdqm_aterr_tensao"><option value="BT" selected>BT (Baixa Tensão)</option><option value="MT">MT (Média Tensão)</option></select></div>
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherAterr()">🔄 Da Demanda Individual</button><button class="btn btn-primary" onclick="calcAterramentoCDQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-aterramento-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-eletroduto">
+            <div class="form-grid col-2" style="padding:12px;">
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('eletroduto')">🔄 QMs do Cálculo (bitolas)</button><button class="btn btn-primary" onclick="calcEletrodutoCDQM()">📐 Calcular</button></div></div>
+            </div>
+            <div id="cdqm-eletroduto-qms" style="padding:0 12px;"></div>
+            <div id="cdqm-eletroduto-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+
+        <div class="sub-tab-content" id="cdqm-memorial">
+            <div class="form-grid col-2" style="padding:12px;">
+                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-primary" onclick="calcMemorialCDQM()">📐 Gerar Memorial</button></div></div>
+            </div>
+            <div id="cdqm-memorial-result" class="result-area" style="padding:0 12px 12px;"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sub-tab-btn { padding:6px 14px; border:1px solid var(--border); background:var(--bg-alt); color:var(--text); border-radius:4px; cursor:pointer; font-size:13px; }
+.sub-tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.sub-tab-content { display:none; }
+.sub-tab-content.active { display:block; }
+.result-area { background:var(--bg); border-top:1px solid var(--border); }
+.result-area .result-title { font-weight:700; padding:8px 0; color:var(--primary); }
+.result-area .result-line { padding:2px 0; font-size:13px; }
+.result-area .result-line .value { font-weight:700; color:var(--accent); }
+.result-table { width:100%; border-collapse:collapse; margin-top:8px; }
+.result-table th { background:var(--bg-alt); text-align:left; padding:6px 8px; font-size:12px; border:1px solid var(--border); }
+.result-table td { padding:6px 8px; font-size:12px; border:1px solid var(--border); }
+</style>
+
 </div>
 
 <div id="tab-dps" class="tab-content">
@@ -2411,9 +2519,7 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
     var margem = 50, largFrente = 1200;
     var eqs = [];
     qmDetalhes.forEach(function(q, i) {
-        for (var s = 0; s < q.linhas; s++) {
-            eqs.push({ nome: 'QM' + (i+1) + '-' + (s+1), larg: q.largura_total });
-        }
+        eqs.push({ nome: 'QM' + (i+1), larg: q.largura_total * q.linhas });
     });
     if (cd) eqs.push({ nome: 'CD', larg: cd.largura });
     eqs.push({ nome: 'DPS', larg: dps.largura });
@@ -2421,10 +2527,6 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
 
     function m2(c, l) { return Math.round(c * l / 1e6 * 100) / 100; }
     function perim(c, l) { return Math.round(2 * (c + l) / 1000 * 100) / 100; }
-
-    function paredeStr(items) {
-        return items.map(function(e) { return e.nome + ' ' + e.larg + 'mm'; }).join(' + ');
-    }
 
     function layoutReto() {
         var comp = totalLinear + 2 * margem;
@@ -2439,39 +2541,37 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
 
     function qmEfetiva(q) { return q.largura_total * q.linhas; }
 
-    function totalSecoesQm() {
-        var t = 0; qmDetalhes.forEach(function(q) { t += q.linhas; }); return t;
-    }
-
     function layoutL() {
-        var nSec = totalSecoesQm();
         var qmTotal = qmDetalhes.reduce(function(s, q) { return s + qmEfetiva(q); }, 0);
         var cdDps = (cd ? cd.largura : 0) + dps.largura;
         var comp = Math.max(qmTotal, cdDps) + 2 * margem;
         var larg = 350 + largFrente;
+        var qmItems = eqs.filter(function(e) { return e.nome.indexOf('QM') === 0; });
+        var outros = eqs.filter(function(e) { return e.nome.indexOf('QM') !== 0; });
         return {
             comp: Math.ceil(comp), larg: Math.ceil(larg),
             area: m2(comp, larg), perim: perim(comp, larg),
             paredes: [
-                { nome: 'Fundo (A)', itens: eqs.slice(0, nSec), soma: qmTotal },
-                { nome: 'Direita (C)', itens: eqs.slice(nSec), soma: cdDps }
+                { nome: 'Fundo (A)', itens: qmItems, soma: qmTotal },
+                { nome: 'Direita (C)', itens: outros, soma: cdDps }
             ],
             perimParede: qmTotal + cdDps
         };
     }
 
     function layoutOpostas() {
-        var nSec = totalSecoesQm();
         var qmTotal = qmDetalhes.reduce(function(s, q) { return s + qmEfetiva(q); }, 0);
         var cdDps = (cd ? cd.largura : 0) + dps.largura;
         var comp = Math.max(qmTotal, cdDps) + 2 * margem;
         var larg = 350 + largFrente + 350;
+        var qmItems = eqs.filter(function(e) { return e.nome.indexOf('QM') === 0; });
+        var outros = eqs.filter(function(e) { return e.nome.indexOf('QM') !== 0; });
         return {
             comp: Math.ceil(comp), larg: Math.ceil(larg),
             area: m2(comp, larg), perim: perim(comp, larg),
             paredes: [
-                { nome: 'Parede 1', itens: eqs.slice(0, nSec), soma: qmTotal },
-                { nome: 'Parede 2 (oposta)', itens: eqs.slice(nSec), soma: cdDps }
+                { nome: 'Parede 1', itens: qmItems, soma: qmTotal },
+                { nome: 'Parede 2 (oposta)', itens: outros, soma: cdDps }
             ],
             perimParede: qmTotal + cdDps
         };
@@ -2489,14 +2589,10 @@ function calcularLayoutSala(qmDetalhes, cd, dps) {
         var comp = Math.max(compFundo, compEsq, compDir);
         var larg = 350 + largFrente + 350;
 
-        // Expand sections per QM for display
         var fundoSec = [], esqSec = [];
         qmDetalhes.forEach(function(q, idx) {
             var naFundo = (q === sorted[0] || q === sorted[1]);
-            for (var s = 0; s < q.linhas; s++) {
-                var sec = { nome: 'QM' + (idx+1) + '-' + (s+1), larg: q.largura_total };
-                if (naFundo) fundoSec.push(sec); else esqSec.push(sec);
-            }
+            (naFundo ? fundoSec : esqSec).push({ nome: 'QM' + (idx+1), larg: qmEfetiva(q) });
         });
 
         var paredes = [
@@ -2850,12 +2946,124 @@ function calcularQM() {
     h += '<span id="layout_area_final" style="font-size:12px;color:#8b949e;"></span></div>';
     h += '</div>';
     h += '<hr class="result-divider">';
+    h += '<div class="result-section" id="dim-individual-section">';
+    h += '<div class="result-title">Dimensionamento Individual dos QMs</div>';
+    h += '<div class="result-subtitle" style="color:#8b949e;">Informe a distância do CD até cada QM e calcule condutor, disjuntor, queda de tensão, barramento, aterramento e eletroduto.</div>';
+    h += '<div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding:8px 0;">';
+    for (var i = 0; i < qms; i++) {
+        h += '<div class="form-group"><label>Dist. CD ao QM ' + (i+1) + ' (m)</label>';
+        h += '<input type="number" id="qm_dist_' + (i+1) + '" class="qm-dist-input" min="0" step="0.5" value="10" style="width:80px;"></div>';
+    }
+    h += '</div>';
+    h += '<div class="btn-group" style="margin-top:4px;"><button class="btn btn-primary btn-sm" onclick="calcularDimensionamentoIndividualQM()">📐 Calcular Dimensionamento Individual</button></div>';
+    h += '<div id="dim-individual-result" style="margin-top:8px;"></div>';
+    h += '</div>';
+    h += '<hr class="result-divider">';
     h += '<div class="result-final"><div class="label">Configuração Recomendada</div>';
     h += '<div class="value">' + qms + '× QM (' + material + ')' + (cdNecessaria && cd ? ' + CD tipo ' + cd.tipo : '') + ' + Caixa DPS</div></div>';
     h += '</div>';
 
+    window._qmDetalhes = qmDetalhes;
     div.innerHTML = h;
     document.getElementById('qm-result').style.display = 'block';
+}
+
+function calcularDimensionamentoIndividualQM() {
+    var el = function(id) { return document.getElementById(id); };
+    var aptos = parseInt(el('qm_aptos').value) || 0;
+    var adm = parseInt(el('qm_adm').value) || 0;
+    var totalMed = aptos + adm;
+    if (totalMed < 1) { alert('Calcule o dimensionamento dos QMs primeiro.'); return; }
+    var cdqmVals = getCdqmProjectValues();
+    var limite = parseInt(el('cdqm_limite_qm') ? el('cdqm_limite_qm').value : 18) || 18;
+
+    var resultEl = el('dim-individual-result');
+    resultEl.innerHTML = '<div class="result-line" style="color:var(--text-muted);">Calculando...</div>';
+
+    apiPost('/api/ged119/cd_qm/demanda_individual', {
+        total_medidores: totalMed,
+        limite_por_qm: limite,
+        area_apto: cdqmVals.area_apto,
+        chuveiro_w: cdqmVals.chuveiro_w,
+        microondas_w: cdqmVals.microondas_w,
+        fogao_w: cdqmVals.fogao_w,
+        ar_w: cdqmVals.ar_w,
+    }, function(r1) {
+        if (!r1.success) { resultEl.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: '+(r1.error||'desconhecido')+'</div>'; return; }
+        var data = r1.data;
+        cdqmLastResult = data;
+
+        var distancias = [];
+        data.qms.forEach(function(q, i) {
+            var dist = parseFloat(el('qm_dist_' + (i+1)).value) || 10;
+            distancias.push(dist);
+        });
+
+        var isolacao = el('cdqm_isolacao') ? el('cdqm_isolacao').value : 'EPR';
+        var fcTemp = parseFloat(el('cdqm_fc_temp') ? el('cdqm_fc_temp').value : 1.0) || 1.0;
+        var fcAgrup = parseFloat(el('cdqm_fc_agrup') ? el('cdqm_fc_agrup').value : 1.0) || 1.0;
+        var tensao = parseFloat(el('cdqm_tensao') ? el('cdqm_tensao').value : 380) || 380;
+        var condutividade = parseFloat(el('cdqm_condutividade') ? el('cdqm_condutividade').value : 56) || 56;
+
+        apiPost('/api/ged119/cd_qm/condutores', {
+            qms: data.qms,
+            isolacao: isolacao,
+            fc_temp: fcTemp,
+            fc_agrup: fcAgrup,
+        }, function(r2) {
+            var bitolaMap = {};
+            if (r2.success) { cdqmLastCondResult = r2.data; r2.data.condutores.forEach(function(c){bitolaMap[c.qm]=c.bitola_mm2;}); }
+
+            var qmsCond = data.qms.map(function(q, i){return{qm:q.qm,corrente_A:q.corrente_A,bitola_mm2:bitolaMap[q.qm]||25,distancia_m:distancias[i]};});
+
+            apiPost('/api/ged119/cd_qm/disjuntor', {qms: data.qms}, function(r3) {
+                apiPost('/api/ged119/cd_qm/queda_tensao', {
+                    qms: qmsCond,
+                    tensao: tensao,
+                    condutividade: condutividade,
+                }, function(r4) {
+                    var dTotalKva = data.soma_dapt_kva;
+                    var dTotalA = data.soma_corrente_A;
+                    apiPost('/api/ged119/cd_qm/barramento', {
+                        demanda_total_kva: dTotalKva,
+                        corrente_total_A: dTotalA,
+                    }, function(r5) {
+                        apiPost('/api/ged119/cd_qm/aterramento', {
+                            demanda_kva: dTotalKva,
+                            tensao: 'BT',
+                        }, function(r6) {
+                            apiPost('/api/ged119/cd_qm/eletroduto', {
+                                qms: data.qms.map(function(q){return{qm:q.qm,bitola_mm2:bitolaMap[q.qm]||25};}),
+                            }, function(r7) {
+                                var h = '<div class="result-title">Resultado do Dimensionamento Individual</div>';
+                                h += '<table class="result-table" style="margin-top:4px;">';
+                                h += '<tr><th>QM</th><th>Med</th><th>I(A)</th><th>Dist(m)</th><th>Cond.</th><th>Disj.</th><th>Barra</th><th>dV(%)</th><th>GND(Cu)</th><th>Eletrod.</th></tr>';
+
+                                data.qms.forEach(function(q, i) {
+                                    var cond = (r2.success && r2.data.condutores[i]) ? r2.data.condutores[i].bitola_mm2 + ' mm²' : '—';
+                                    var disj = (r3.success && r3.data.disjuntores[i]) ? r3.data.disjuntores[i].disjuntor_A + ' A' : '—';
+                                    var barra = (r3.success && r3.data.disjuntores[i]) ? r3.data.disjuntores[i].barramento_mm : '—';
+                                    var dV = (r4.success && r4.data.resultados[i]) ? r4.data.resultados[i].dV_percent + '%' : '—';
+                                    var gnd = (r6.success) ? r6.data.condutor_cobre : '—';
+                                    var elet = (r7.success && r7.data.eletrodutos[i]) ? r7.data.eletrodutos[i].eletroduto_pol : '—';
+                                    h += '<tr><td>' + q.qm + '</td><td>' + q.medidores + '</td><td>' + q.corrente_A + '</td><td>' + distancias[i] + '</td><td>' + cond + '</td><td>' + disj + '</td><td>' + barra + '</td><td>' + dV + '</td><td>' + gnd + '</td><td>' + elet + '</td></tr>';
+                                });
+                                h += '</table>';
+
+                                if (r5.success) {
+                                    h += '<div class="result-line" style="margin-top:6px;">Barramento CD — Disjuntor Geral: <span class="value">' + r5.data.disjuntor_geral_A + ' A</span> | Barra: <span class="value">' + r5.data.barramento_mm + '</span> (' + r5.data.barramento_pol + ')</div>';
+                                }
+                                h += '<div class="result-line" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Condutor EPR/XLPE 90°C | Queda de tensão limite: 3% | Aterramento BT</div>';
+
+                                resultEl.innerHTML = h;
+                                resultEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
 }
 
 // Recalcula dimensões com acréscimo percentual no perímetro
@@ -3888,6 +4096,345 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         }
     });
 });
+
+/* ===== CD/QM Submenu ===== */
+var cdqmLastResult = null;
+var cdqmLastCondResult = null;
+
+document.querySelectorAll('#tab-qm .sub-tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('#tab-qm .sub-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('#tab-qm .sub-tab-content').forEach(function(c) { c.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.subtab).classList.add('active');
+    });
+});
+
+function cdqmPreencherQMs(prefix) {
+    if (!cdqmLastResult || !cdqmLastResult.qms) return;
+    var container = document.getElementById('cdqm-' + prefix + '-qms');
+    var html = '<div class="result-title">QMs utilizados (da Demanda Individual):</div>';
+    html += '<table class="result-table"><tr><th>QM</th><th>Medidores</th><th>Dapt (kVA)</th><th>Corrente (A)</th></tr>';
+    cdqmLastResult.qms.forEach(function(q) {
+        html += '<tr><td>' + q.qm + '</td><td>' + q.medidores + '</td><td>' + q.dapt_kva + '</td><td>' + q.corrente_A + '</td></tr>';
+    });
+    html += '</table>';
+    container.innerHTML = html;
+}
+
+function cdqmPreencherDemandaTotal() {
+    if (cdqmLastResult) {
+        document.getElementById('cdqm_demanda_total_kva').value = cdqmLastResult.soma_dapt_kva || '';
+        document.getElementById('cdqm_corrente_total_a').value = cdqmLastResult.soma_corrente_A || '';
+    }
+}
+
+function cdqmPreencherAterr() {
+    if (cdqmLastResult) {
+        document.getElementById('cdqm_aterr_demanda').value = cdqmLastResult.soma_dapt_kva || '';
+    }
+}
+
+function renderQmTable(qms, cols) {
+    var h = '<table class="result-table"><tr>' + cols.map(function(c) { return '<th>' + c.label + '</th>'; }).join('') + '</tr>';
+    qms.forEach(function(q) {
+        h += '<tr>' + cols.map(function(c) { return '<td>' + (q[c.key] !== undefined ? q[c.key] : '-') + '</td>'; }).join('') + '</tr>';
+    });
+    h += '</table>';
+    return h;
+}
+
+function apiPost(url, data, callback) {
+    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(function(r) { return r.json(); })
+        .then(function(j) { callback(j); })
+        .catch(function(e) { callback({ success: false, error: e.message }); });
+}
+
+function getCdqmProjectValues() {
+    var el = function(id) { return document.getElementById(id); };
+    var v = {
+        total_medidores: parseInt(el('cdqm_total_med').value) || 0,
+        area_apto: parseFloat(el('cdqm_area_apto').value) || 0,
+        chuveiro_w: parseFloat(el('cdqm_chuveiro_w').value) || 5500,
+        microondas_w: parseFloat(el('cdqm_microondas_w').value) || 1500,
+        fogao_w: parseFloat(el('cdqm_fogao_w').value) || 2000,
+        ar_w: parseFloat(el('cdqm_ar_w').value) || 1400,
+        _display: [],
+    };
+    if (v.area_apto > 0) v._display.push('Área: ' + v.area_apto + ' m²');
+    v._display.push('Chuveiro: ' + (v.chuveiro_w/1000).toFixed(1) + ' kW/apt');
+    if (v.microondas_w > 0) v._display.push('Micro-ondas: ' + (v.microondas_w/1000).toFixed(1) + ' kW/apt');
+    if (v.fogao_w > 0) v._display.push('Fogão: ' + (v.fogao_w/1000).toFixed(1) + ' kW/apt');
+    v._display.push('Ar cond.: ' + (v.ar_w/1000).toFixed(1) + ' kW/apt');
+    return v;
+}
+
+function autoPreencherCDQM() {
+    var el = function(id) { return document.getElementById(id); };
+    var aptosEl = el('aptos');
+    var areaEl = el('area_apto');
+    var chuvKwEl = el('chuveiro_kw');
+    var qtdChuvEl = el('qtd_chuveiros');
+    var totalMed = (aptosEl && parseFloat(aptosEl.value) > 0) ? parseInt(aptosEl.value) : 36;
+    var areaApto = (areaEl && parseFloat(areaEl.value) > 0) ? parseFloat(areaEl.value) : 0;
+    var chuveiroW = 5500;
+    if (chuvKwEl && parseFloat(chuvKwEl.value) > 0 && qtdChuvEl && parseInt(qtdChuvEl.value) > 0) {
+        chuveiroW = parseFloat(chuvKwEl.value) * parseInt(qtdChuvEl.value) * 1000;
+    }
+    var microondasW = 1500;
+    var fogaoW = 2000;
+    if (typeof outrasCargas !== 'undefined' && outrasCargas.apt) {
+        outrasCargas.apt.forEach(function(c) {
+            var n = c.desc.toLowerCase();
+            if (n.indexOf('micro') !== -1) microondasW = c.pot * 1000;
+            if (n.indexOf('fogao') !== -1 || n.indexOf('fogão') !== -1) fogaoW = c.pot * 1000;
+        });
+    }
+    var arW = 1400;
+    if (typeof acData !== 'undefined' && acData.apt && totalMed > 0) {
+        var totalAcW = 0;
+        acData.apt.forEach(function(c) { if (c.incluir !== 0) totalAcW += c.pot * c.qtd; });
+        if (totalAcW > 0) arW = Math.round(totalAcW / totalMed);
+    }
+    el('cdqm_total_med').value = totalMed;
+    el('cdqm_limite_qm').value = Math.min(totalMed, 18);
+    el('cdqm_area_apto').value = areaApto;
+    el('cdqm_chuveiro_w').value = chuveiroW;
+    el('cdqm_microondas_w').value = microondasW;
+    el('cdqm_fogao_w').value = fogaoW;
+    el('cdqm_ar_w').value = arW;
+    var display = [];
+    if (areaApto > 0) display.push('Área: ' + areaApto + ' m²');
+    display.push('Chuveiro: ' + (chuveiroW/1000).toFixed(1) + ' kW/apt');
+    if (microondasW > 0) display.push('Micro-ondas: ' + (microondasW/1000).toFixed(1) + ' kW/apt');
+    if (fogaoW > 0) display.push('Fogão: ' + (fogaoW/1000).toFixed(1) + ' kW/apt');
+    display.push('Ar cond.: ' + (arW/1000).toFixed(1) + ' kW/apt');
+    var dadosEl = el('cdqm-dados-projeto');
+    if (dadosEl) dadosEl.innerHTML = 'Dados do Projeto — ' + display.join(' | ');
+}
+
+function renderCdqmDadosProjeto(v) {
+    var el = document.getElementById('cdqm-dados-projeto');
+    if (!v || !v._display || !v._display.length) { el.innerHTML = ''; return; }
+    el.innerHTML = 'Dados do Projeto — ' + v._display.join(' | ');
+}
+
+function calcDemandaIndividualQM() {
+    var v = getCdqmProjectValues();
+    renderCdqmDadosProjeto(v);
+    apiPost('/api/ged119/cd_qm/demanda_individual',{
+        total_medidores: v.total_medidores,
+        limite_por_qm: parseInt(document.getElementById('cdqm_limite_qm').value),
+        area_apto: v.area_apto,
+        chuveiro_w: v.chuveiro_w,
+        microondas_w: v.microondas_w,
+        fogao_w: v.fogao_w,
+        ar_w: v.ar_w,
+    }, function(j) {
+        var el = document.getElementById('cdqm-demanda-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        cdqmLastResult = d;
+        var h = '<div class="result-title">Resultado da Demanda Individual</div>';
+        h += '<div class="result-line">Total de medidores: <span class="value">' + d.total_medidores + '</span></div>';
+        h += '<div class="result-line">Limite por QM: <span class="value">' + d.limite_por_qm + '</span> medidores</div>';
+        h += '<div class="result-line">Quantidade de QMs: <span class="value">' + d.quantidade_qms + '</span></div>';
+        h += '<div class="result-line">Soma Dapt: <span class="value">' + d.soma_dapt_kva + '</span> kVA</div>';
+        h += '<div class="result-line">Soma Corrente: <span class="value">' + d.soma_corrente_A + '</span> A</div>';
+        h += '<table class="result-table"><tr><th>QM</th><th>Med</th><th>D1a (kVA)</th><th>D2 (kVA)</th><th>Sim</th><th>Dapt (kVA)</th><th>I (A)</th></tr>';
+        d.qms.forEach(function(q) {
+            h += '<tr><td>' + q.qm + '</td><td>' + q.medidores + '</td><td>' + q.d1a_kva + '</td><td>' + q.d2_kva + '</td><td>' + q.coef_sim + '</td><td>' + q.dapt_kva + '</td><td>' + q.corrente_A + '</td></tr>';
+        });
+        h += '</table>';
+        el.innerHTML = h;
+        el.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+}
+
+function calcCondutoresCDQM() {
+    if (!cdqmLastResult || !cdqmLastResult.qms) { alert('Calcule a Demanda Individual primeiro.'); return; }
+    var dados = {
+        qms: cdqmLastResult.qms,
+        isolacao: document.getElementById('cdqm_isolacao').value,
+        fc_temp: parseFloat(document.getElementById('cdqm_fc_temp').value),
+        fc_agrup: parseFloat(document.getElementById('cdqm_fc_agrup').value),
+    };
+    apiPost('/api/ged119/cd_qm/condutores', dados, function(j) {
+        var el = document.getElementById('cdqm-condutores-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        var h = '<div class="result-title">Condutores por QM</div>';
+        h += '<div class="result-line">Isolação: <span class="value">' + d.isolacao + '</span> | Fc Temp: <span class="value">' + d.fc_temp + '</span> | Fc Agrup: <span class="value">' + d.fc_agrup + '</span></div>';
+        h += renderQmTable(d.condutores, [
+            {label:'QM', key:'qm'}, {label:'I (A)', key:'corrente_A'}, {label:'I\'(A)', key:'I_corrigida_A'}, {label:'Bitola (mm²)', key:'bitola_mm2'}, {label:'Cap. Max (A)', key:'capacidade_max_A'}
+        ]);
+        el.innerHTML = h;
+        cdqmLastCondResult = d;
+    });
+}
+
+function calcDisjuntorCDQM() {
+    if (!cdqmLastResult || !cdqmLastResult.qms) { alert('Calcule a Demanda Individual primeiro.'); return; }
+    apiPost('/api/ged119/cd_qm/disjuntor', { qms: cdqmLastResult.qms }, function(j) {
+        var el = document.getElementById('cdqm-disjuntor-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        var h = '<div class="result-title">Disjuntores por QM</div>';
+        h += renderQmTable(d.disjuntores, [
+            {label:'QM', key:'qm'}, {label:'I (A)', key:'corrente_A'}, {label:'Disjuntor (A)', key:'disjuntor_A'}, {label:'Barra (mm)', key:'barramento_mm'}, {label:'Barra (pol)', key:'barramento_pol'}
+        ]);
+        el.innerHTML = h;
+    });
+}
+
+function calcQuedaTensaoCDQM() {
+    if (!cdqmLastResult || !cdqmLastResult.qms) { alert('Calcule a Demanda Individual primeiro.'); return; }
+    var bitolaMap = {};
+    if (cdqmLastCondResult && cdqmLastCondResult.condutores) {
+        cdqmLastCondResult.condutores.forEach(function(c) { bitolaMap[c.qm] = c.bitola_mm2; });
+    }
+    var distDefault = parseFloat(document.getElementById('cdqm_comprimento').value) || 50;
+    var qms = cdqmLastResult.qms.map(function(q) {
+        return { qm: q.qm, corrente_A: q.corrente_A, bitola_mm2: bitolaMap[q.qm] || 25, distancia_m: distDefault };
+    });
+    var dados = {
+        qms: qms,
+        tensao: parseFloat(document.getElementById('cdqm_tensao').value),
+        condutividade: parseFloat(document.getElementById('cdqm_condutividade').value),
+    };
+    apiPost('/api/ged119/cd_qm/queda_tensao', dados, function(j) {
+        var el = document.getElementById('cdqm-queda-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        var h = '<div class="result-title">Queda de Tensão</div>';
+        h += '<div class="result-line">Tensão: <span class="value">' + d.tensao_V + ' V</span> | Limite: <span class="value">' + d.limite_percent + '%</span></div>';
+        h += renderQmTable(d.resultados, [
+            {label:'QM', key:'qm'}, {label:'I (A)', key:'corrente_A'}, {label:'L (m)', key:'comprimento_m'}, {label:'Bitola (mm²)', key:'bitola_mm2'}, {label:'dV (%)', key:'dV_percent'}, {label:'Situação', key:'situacao'}
+        ]);
+        el.innerHTML = h;
+    });
+}
+
+function calcBarramentoCDQM() {
+    var dados = {
+        demanda_total_kva: parseFloat(document.getElementById('cdqm_demanda_total_kva').value) || 0,
+        corrente_total_A: parseFloat(document.getElementById('cdqm_corrente_total_a').value) || 0,
+    };
+    apiPost('/api/ged119/cd_qm/barramento', dados, function(j) {
+        var el = document.getElementById('cdqm-barramento-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        var h = '<div class="result-title">Barramento do CD</div>';
+        h += '<div class="result-line">Corrente Total: <span class="value">' + d.corrente_total_A + ' A</span></div>';
+        h += '<div class="result-line">Disjuntor Geral: <span class="value">' + d.disjuntor_geral_A + ' A</span></div>';
+        h += '<div class="result-line">Barramento: <span class="value">' + d.barramento_mm + '</span> (' + d.barramento_pol + ')</div>';
+        el.innerHTML = h;
+    });
+}
+
+function calcAterramentoCDQM() {
+    var dados = {
+        demanda_kva: parseFloat(document.getElementById('cdqm_aterr_demanda').value) || 0,
+        tensao: document.getElementById('cdqm_aterr_tensao').value,
+    };
+    apiPost('/api/ged119/cd_qm/aterramento', dados, function(j) {
+        var el = document.getElementById('cdqm-aterramento-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        var h = '<div class="result-title">Aterramento</div>';
+        h += '<div class="result-line">Condutor Cobre: <span class="value">' + d.condutor_cobre + '</span></div>';
+        h += '<div class="result-line">Condutor Alumínio: <span class="value">' + d.condutor_aluminio + '</span></div>';
+        h += '<div class="result-line">Vergalhão: <span class="value">' + d.vergalhao + '</span></div>';
+        el.innerHTML = h;
+    });
+}
+
+function calcEletrodutoCDQM() {
+    if (!cdqmLastResult || !cdqmLastResult.qms) { alert('Calcule a Demanda Individual primeiro.'); return; }
+    var bitolaMap = {};
+    if (cdqmLastCondResult && cdqmLastCondResult.condutores) {
+        cdqmLastCondResult.condutores.forEach(function(c) { bitolaMap[c.qm] = c.bitola_mm2; });
+    }
+    var qms = cdqmLastResult.qms.map(function(q) {
+        return { qm: q.qm, bitola_mm2: bitolaMap[q.qm] || 25 };
+    });
+    apiPost('/api/ged119/cd_qm/eletroduto', { qms: qms }, function(j) {
+        var el = document.getElementById('cdqm-eletroduto-result');
+        if (!j.success) { el.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + (j.error || 'desconhecido') + '</div>'; return; }
+        var d = j.data;
+        var h = '<div class="result-title">Eletrodutos por QM</div>';
+        h += renderQmTable(d.eletrodutos, [
+            {label:'QM', key:'qm'}, {label:'Bitola (mm²)', key:'bitola_condutor_mm2'}, {label:'Ø (mm)', key:'eletroduto_mm'}, {label:'Pol.', key:'eletroduto_pol'}
+        ]);
+        el.innerHTML = h;
+    });
+}
+
+function calcMemorialCDQM() {
+    var v = getCdqmProjectValues();
+    var dados = {
+        total_medidores: v.total_medidores,
+        limite_por_qm: parseInt(document.getElementById('cdqm_limite_qm').value),
+        area_apto: v.area_apto,
+        chuveiro_w: v.chuveiro_w,
+        microondas_w: v.microondas_w,
+        fogao_w: v.fogao_w,
+        ar_w: v.ar_w,
+    };
+    apiPost('/api/ged119/cd_qm/demanda_individual', dados, function(r1) {
+        if (!r1.success) return;
+        cdqmLastResult = r1.data;
+        var isolacao = document.getElementById('cdqm_isolacao').value;
+        var fc_temp = parseFloat(document.getElementById('cdqm_fc_temp').value);
+        var fc_agrup = parseFloat(document.getElementById('cdqm_fc_agrup').value);
+        var tensao = parseFloat(document.getElementById('cdqm_tensao').value);
+        var comprimento = parseFloat(document.getElementById('cdqm_comprimento').value);
+        var condutividade = parseFloat(document.getElementById('cdqm_condutividade').value);
+        var dtotal_kva = r1.data.soma_dapt_kva;
+        var dtotal_A = r1.data.soma_corrente_A;
+        apiPost('/api/ged119/cd_qm/condutores', {qms:r1.data.qms,isolacao:isolacao,fc_temp:fc_temp,fc_agrup:fc_agrup}, function(r2) {
+            var bitolaMap = {};
+            if (r2.success) { cdqmLastCondResult = r2.data; r2.data.condutores.forEach(function(c){bitolaMap[c.qm]=c.bitola_mm2;}); }
+            var qmsQt = r1.data.qms.map(function(q){return{qm:q.qm,corrente_A:q.corrente_A,bitola_mm2:bitolaMap[q.qm]||25};});
+            var qmsEl = r1.data.qms.map(function(q){return{qm:q.qm,bitola_mm2:bitolaMap[q.qm]||25};});
+            apiPost('/api/ged119/cd_qm/queda_tensao', {qms:qmsQt,tensao:tensao,comprimento:comprimento,condutividade:condutividade}, function(r4) {
+                apiPost('/api/ged119/cd_qm/barramento', {demanda_total_kva:dtotal_kva,corrente_total_A:dtotal_A}, function(r5) {
+                    apiPost('/api/ged119/cd_qm/aterramento', {demanda_kva:dtotal_kva,tensao:'BT'}, function(r6) {
+                        apiPost('/api/ged119/cd_qm/eletroduto', {qms:qmsEl}, function(r7) {
+                            var el = document.getElementById('cdqm-memorial-result');
+                            var h = '<div class="result-title">Memorial de Cálculo — CD/QM</div>';
+                            h += '<div class="result-line" style="margin:8px 0;color:var(--accent);font-weight:700;">1. Demanda Individual</div>';
+                            h += '<div class="result-line">Total QMs: <span class="value">'+r1.data.quantidade_qms+'</span> | Dapt: <span class="value">'+r1.data.soma_dapt_kva+' kVA</span> | I: <span class="value">'+r1.data.soma_corrente_A+' A</span></div>';
+                            if (r2.success) {
+                                h += '<div class="result-line" style="margin:8px 0;color:var(--accent);font-weight:700;">2. Condutores</div>';
+                                h += renderQmTable(r2.data.condutores,[{label:'QM',key:'qm'},{label:'Cap(A)',key:'capacidade_max_A'},{label:'Bitola',key:'bitola_mm2'}]);
+                            }
+                            if (r5.success) {
+                                h += '<div class="result-line" style="margin:8px 0;color:var(--accent);font-weight:700;">3. Barramento CD</div>';
+                                h += '<div class="result-line">Disjuntor Geral: <span class="value">'+r5.data.disjuntor_geral_A+' A</span> | Barra: <span class="value">'+r5.data.barramento_mm+'</span> ('+r5.data.barramento_pol+')</div>';
+                            }
+                            if (r6.success) {
+                                h += '<div class="result-line" style="margin:8px 0;color:var(--accent);font-weight:700;">4. Aterramento</div>';
+                                h += '<div class="result-line">Cobre: <span class="value">'+r6.data.condutor_cobre+'</span> | Al: <span class="value">'+r6.data.condutor_aluminio+'</span></div>';
+                            }
+                            if (r7.success) {
+                                h += '<div class="result-line" style="margin:8px 0;color:var(--accent);font-weight:700;">5. Eletrodutos</div>';
+                                h += renderQmTable(r7.data.eletrodutos,[{label:'QM',key:'qm'},{label:'Bitola',key:'bitola_condutor_mm2'},{label:'Eletroduto',key:'eletroduto_pol'}]);
+                            }
+                            if (r4.success) {
+                                h += '<div class="result-line" style="margin:8px 0;color:var(--accent);font-weight:700;">6. Queda de Tensão</div>';
+                                h += renderQmTable(r4.data.resultados,[{label:'QM',key:'qm'},{label:'dV(%)',key:'dV_percent'},{label:'',key:'situacao'}]);
+                            }
+                            el.innerHTML = h;
+                            el.parentElement.scrollIntoView({behavior:'smooth',block:'nearest'});
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
 </script>
 
 <style>

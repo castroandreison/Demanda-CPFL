@@ -11,6 +11,7 @@ from core.ged119 import calcular as calc_ged119, calcular_transformador, calcula
 from core.ramal import calcular_ramal, get_formas_agrupamento_nbr, calcular_neutro, get_tipos_eletroduto, calcular_eletroduto
 from core.ged13 import calcular as calc_ged13, get_sugestao, get_conn as get_conn_g13
 import core.ged119 as ged119_mod
+from core.cd_qm import demanda_individual_qm, condutores_cd_qm, disjuntor_qm, queda_tensao, barramento_cd, aterramento, eletroduto, memorial_completo
 from core.ged2855 import calcular as calc_ged2855
 from core.coord_selet import calcular as calc_coord_selet
 from core.projetos_db import listar_projetos, carregar_projeto, salvar_projeto, excluir_projeto
@@ -166,6 +167,47 @@ def api_ged119_tabela_ac():
 @app.route('/api/ged119/tabela4', methods=['GET'])
 def api_ged119_tabela4():
     try: data = get_tabela4(); return jsonify({'success': True, 'data': data})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+# --- CD/QM API (GED-119) ---
+@app.route('/api/ged119/cd_qm/demanda_individual', methods=['POST'])
+def api_cd_qm_demanda():
+    try: dados = request.get_json(); resultado = demanda_individual_qm(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/condutores', methods=['POST'])
+def api_cd_qm_condutores():
+    try: dados = request.get_json(); resultado = condutores_cd_qm(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/disjuntor', methods=['POST'])
+def api_cd_qm_disjuntor():
+    try: dados = request.get_json(); resultado = disjuntor_qm(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/queda_tensao', methods=['POST'])
+def api_cd_qm_queda_tensao():
+    try: dados = request.get_json(); resultado = queda_tensao(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/barramento', methods=['POST'])
+def api_cd_qm_barramento():
+    try: dados = request.get_json(); resultado = barramento_cd(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/aterramento', methods=['POST'])
+def api_cd_qm_aterramento():
+    try: dados = request.get_json(); resultado = aterramento(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/eletroduto', methods=['POST'])
+def api_cd_qm_eletroduto():
+    try: dados = request.get_json(); resultado = eletroduto(dados); return jsonify({'success': True, 'data': resultado})
+    except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/ged119/cd_qm/memorial', methods=['POST'])
+def api_cd_qm_memorial():
+    try: dados = request.get_json(); resultado = memorial_completo(dados); return jsonify({'success': True, 'data': resultado})
     except Exception as e: return jsonify({'success': False, 'error': str(e)}), 400
 
 # --- GED-13 API ---
