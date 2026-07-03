@@ -2663,15 +2663,21 @@ function calcularQM() {
 
     // Distribuir medidores pelos QMs
     var medPorQm = [];
-    var restante = totalMedidores;
-    for (var i = 0; i < qms; i++) {
-        var n = Math.min(restante, (i < qms - 1) ? 36 : restante);
-        medPorQm.push(n);
-        restante -= n;
-    }
-    // Se sobrou (qms > qmsPorMed), preencher os QMs extras com 0
-    while (medPorQm.length < qms) {
-        medPorQm.push(0);
+    if (alertaDemanda) {
+        // Demanda determinou mais QMs: distribuir uniformemente
+        var base = Math.floor(totalMedidores / qms);
+        var resto = totalMedidores % qms;
+        for (var i = 0; i < qms; i++) {
+            medPorQm.push(base + (i < resto ? 1 : 0));
+        }
+    } else {
+        // Medidores determinaram: preencher atÃ© 36 por QM, resto no Ãºltimo
+        var restante = totalMedidores;
+        for (var i = 0; i < qms; i++) {
+            var n = Math.min(restante, 36);
+            medPorQm.push(n);
+            restante -= n;
+        }
     }
 
     // --- Caixa de Distribuição (Tabela 9) — só necessária com 2+ QMs ---
@@ -2765,9 +2771,8 @@ function calcularQM() {
         } else {
             det = 'Conforme fabricante cadastrado GED-3412 (GED-13 / GED-12903)';
         }
-        var demandaQm = dg > 0 ? (dg / qms).toFixed(2) + ' kVA' : '—';
         h += '<div class="result-line" style="font-weight:700;">QM ' + (i+1) + ': ' + q.medidores + ' medidores — ' + det;
-        if (dg > 0) h += ' — Demanda: <span class="value">' + demandaQm + '</span>';
+        if (dg > 0) h += ' — Demanda: <span class="value" id="qm-demand-' + (i+1) + '">calculando...</span>';
         h += '</div>';
     });
     if (admTc) {
@@ -2885,8 +2890,36 @@ function calcularQM() {
     h += '</div>';
 
     window._qmDetalhes = qmDetalhes;
+    window._qmMedPorQm = medPorQm;
     div.innerHTML = h;
     document.getElementById('qm-result').style.display = 'block';
+
+    // Buscar demanda real por QM via API
+    if (dg > 0) {
+        var areaApto = 0, chuveiroW = 5500;
+        if (typeof el === 'undefined') { var el2 = function(id){return document.getElementById(id);}; } else { var el2 = el; }
+        var areaEl = el2('area_apto');
+        if (areaEl) areaApto = parseFloat(areaEl.value) || 0;
+        var chuvEl = el2('chuveiro_kw');
+        if (chuvEl) chuveiroW = parseFloat(chuvEl.value) * 1000 || 5500;
+        apiPost('/api/ged119/cd_qm/demanda_individual', {
+            total_medidores: totalMedidores,
+            limite_por_qm: 36,
+            medidores_list: medPorQm,
+            area_apto: areaApto,
+            chuveiro_w: chuveiroW,
+            microondas_w: 1500,
+            fogao_w: 2000,
+            ar_w: 1400,
+        }, function(r) {
+            if (r.success && r.data.qms) {
+                r.data.qms.forEach(function(q) {
+                    var elDem = document.getElementById('qm-demand-' + q.qm);
+                    if (elDem) elDem.textContent = q.dapt_kva + ' kVA';
+                });
+            }
+        });
+    }
 }
 
 function calcularDimensionamentoIndividualQM() {
@@ -2898,7 +2931,28 @@ function calcularDimensionamentoIndividualQM() {
     var adm = parseInt(el('qm_adm').value) || 0;
     var totalMed = aptos + adm;
     if (totalMed < 1) { alert('Calcule o dimensionamento dos QMs primeiro.'); return; }
-    var limite = Math.min(Math.max(totalMed, 1), 36);
+    // Calcular distribuiÃ§Ã£o de medidores (mesma lÃ³gica do calcularQM)
+    var dg = parseFloat(el('qm_dg').value) || 0;
+    var qmsPorMed = Math.ceil(totalMed / 36);
+    var qmsPorDemanda = dg > 0 ? Math.ceil(dg / 200) : qmsPorMed;
+    var qmsTotal = Math.max(qmsPorMed, qmsPorDemanda);
+    var alertaDemanda = qmsTotal > qmsPorMed;
+    var medidoresPorQm = [];
+    if (alertaDemanda) {
+        var base = Math.floor(totalMed / qmsTotal);
+        var resto = totalMed % qmsTotal;
+        for (var i = 0; i < qmsTotal; i++) {
+            medidoresPorQm.push(base + (i < resto ? 1 : 0));
+        }
+    } else {
+        var restante = totalMed;
+        for (var i = 0; i < qmsTotal; i++) {
+            var n = Math.min(restante, 36);
+            medidoresPorQm.push(n);
+            restante -= n;
+        }
+    }
+    var limite = Math.min(totalMed, 36);
 
     var areaApto = parseFloat(el('area_apto') ? el('area_apto').value : 0) || 0;
     var chuveiroW = parseFloat(el('chuveiro_kw') ? el('chuveiro_kw').value * 1000 : 5500) || 5500;
@@ -2912,6 +2966,7 @@ function calcularDimensionamentoIndividualQM() {
     apiPost('/api/ged119/cd_qm/demanda_individual', {
         total_medidores: totalMed,
         limite_por_qm: limite,
+        medidores_list: medidoresPorQm,
         area_apto: areaApto,
         chuveiro_w: chuveiroW,
         microondas_w: microondasW,
@@ -2966,7 +3021,7 @@ function calcularDimensionamentoIndividualQM() {
                             }, function(r7) {
                                 var h = '<div class="result-title">Resultado do Dimensionamento Individual</div>';
                                 h += '<table class="result-table" style="margin-top:4px;">';
-                                h += '<tr><th>QM</th><th>Med</th><th>I(A)</th><th>Dist(m)</th><th>Cond.</th><th>Disj.</th><th>Barra</th><th>dV(%)</th><th>GND(Cu)</th><th>Eletrod.</th></tr>';
+                                h += '<tr><th>QM</th><th>Demanda<br>(kVA)</th><th>Med</th><th>I(A)</th><th>Dist(m)</th><th>Cond.</th><th>Disj.</th><th>Barra</th><th>dV(%)</th><th>GND(Cu)</th><th>Eletrod.</th></tr>';
 
                                 data.qms.forEach(function(q, i) {
                                     var cond = (r2.success && r2.data.condutores[i]) ? r2.data.condutores[i].bitola_mm2 + ' mm²' : '—';
@@ -2975,7 +3030,7 @@ function calcularDimensionamentoIndividualQM() {
                                     var dV = (r4.success && r4.data.resultados[i]) ? r4.data.resultados[i].dV_percent + '%' : '—';
                                     var gnd = (r6.success) ? r6.data.condutor_cobre : '—';
                                     var elet = (r7.success && r7.data.eletrodutos[i]) ? r7.data.eletrodutos[i].eletroduto_pol : '—';
-                                    h += '<tr><td>' + q.qm + '</td><td>' + q.medidores + '</td><td>' + q.corrente_A + '</td><td>' + distancias[i] + '</td><td>' + cond + '</td><td>' + disj + '</td><td>' + barra + '</td><td>' + dV + '</td><td>' + gnd + '</td><td>' + elet + '</td></tr>';
+                                    h += '<tr><td>' + q.qm + '</td><td>' + q.dapt_kva + '</td><td>' + q.medidores + '</td><td>' + q.corrente_A + '</td><td>' + distancias[i] + '</td><td>' + cond + '</td><td>' + disj + '</td><td>' + barra + '</td><td>' + dV + '</td><td>' + gnd + '</td><td>' + elet + '</td></tr>';
                                 });
                                 h += '</table>';
 

@@ -52,15 +52,37 @@ TABELA11_PVC = [
     (210, 95), (240, 120), (278, 150), (318, 185), (363, 240),
 ]
 
-# Tabela 12 - Disjuntores e Barramento (por corrente)
+# Tabela 12 - Barramento BT (por demanda kVA)
+# GED-119: BARRAMENTO DE BAIXA TENSÃO DAS CAIXAS E DO QUADRO DE MEDIDORES E DA CABINE
+TABELA12_BARRAMENTO = [
+    (60,   '25,4 x 6,4',   '1" x 1/4"'),
+    (120,  '31,8 x 6,4',   '1.1/4" x 1/4"'),
+    (150,  '38,1 x 6,4',   '1.1/2" x 1/4"'),
+    (200,  '50,8 x 6,4',   '2" x 1/4"'),
+    (250,  '38,1 x 12,7',  '1.1/2" x 1/2"'),
+    (300,  '50,8 x 12,7',  '2" x 1/2"'),
+    (350,  '63,5 x 12,7',  '2.1/2" x 1/2"'),
+    (450,  '88,9 x 12,7',  '3" x 1/2"'),
+    (550,  '101,6 x 12,7', '4" x 1/2"'),
+    (700,  '127 x 12,7',   '5" x 1/2"'),
+]
+
+# Disjuntores termomagnéticos padronizados (por corrente A)
 TABELA12_DISJ = [
-    (200,  200,  '25,4 x 6,4',   '1" x 1/4"'),
-    (300,  300,  '31,8 x 6,4',   '1.1/4" x 1/4"'),
-    (400,  400,  '38,1 x 6,4',   '1.1/2" x 1/4"'),
-    (600,  600,  '50,8 x 6,4',   '2" x 1/4"'),
-    (800,  800,  '50,8 x 9,5',   '2" x 3/8"'),
-    (1000, 1000, '63,5 x 9,5',   '2.1/2" x 3/8"'),
-    (1200, 1200, '76,2 x 9,5',   '3" x 3/8"'),
+    (100,  100),
+    (125,  125),
+    (150,  150),
+    (160,  160),
+    (175,  175),
+    (200,  200),
+    (225,  225),
+    (250,  250),
+    (300,  300),
+    (350,  350),
+    (400,  400),
+    (450,  450),
+    (500,  500),
+    (600,  600),
 ]
 
 # Tabela 14 - Condutor de Aterramento (BT)
@@ -142,13 +164,16 @@ def _escolher_bitola_condutor(i, isolacao):
     return 240
 
 def _escolher_disjuntor(i):
-    for lim, disj, barra_mm, barra_pol in TABELA12_DISJ:
+    for lim, disj in TABELA12_DISJ:
         if i <= lim:
-            return disj, barra_mm, barra_pol
-    return 1200, '76,2 x 9,5', '3" x 3/8"'
+            return disj
+    return 600
 
-def _escolher_barramento(i_total):
-    return _escolher_disjuntor(i_total)
+def _escolher_barramento(demanda_kva):
+    for lim, barra_mm, barra_pol in TABELA12_BARRAMENTO:
+        if demanda_kva <= lim:
+            return barra_mm, barra_pol
+    return '127 x 12,7', '5" x 1/2"'
 
 def _escolher_aterramento(demanda_kva):
     for lim, cobre, aluminio in TABELA14_ATER:
@@ -169,19 +194,23 @@ def _escolher_eletroduto(secao_fase):
 def demanda_individual_qm(dados):
     total_med = int(dados.get('total_medidores', 0))
     limite_qm = int(dados.get('limite_por_qm', 18))
+    medidores_list = dados.get('medidores_list', None)
     area_apto = float(dados.get('area_apto', 0))
     chuveiro_w = float(dados.get('chuveiro_w', 5500))
     microondas_w = float(dados.get('microondas_w', 1500))
     fogao_w = float(dados.get('fogao_w', 2000))
     ar_w = float(dados.get('ar_w', 1400))
 
-    if total_med <= 0 or limite_qm <= 0:
-        return {'erro': 'Total de medidores ou limite invalido'}
-
-    k = math.ceil(total_med / limite_qm)
-    base = total_med // k
-    resto = total_med % k
-    qm_list = [base + (1 if i < resto else 0) for i in range(k)]
+    if medidores_list and isinstance(medidores_list, list) and len(medidores_list) > 0:
+        qm_list = [int(x) for x in medidores_list if int(x) > 0]
+        k = len(qm_list)
+    else:
+        if total_med <= 0 or limite_qm <= 0:
+            return {'erro': 'Total de medidores ou limite invalido'}
+        k = math.ceil(total_med / limite_qm)
+        base = total_med // k
+        resto = total_med % k
+        qm_list = [base + (1 if i < resto else 0) for i in range(k)]
 
     resultado_qms = []
     for i, n_med in enumerate(qm_list):
@@ -268,7 +297,12 @@ def disjuntor_qm(dados):
     resultado = []
     for qm in qms:
         i = float(qm.get('corrente_A', 0))
-        disj, barra_mm, barra_pol = _escolher_disjuntor(i)
+        disj = _escolher_disjuntor(i)
+        qm_kva = float(qm.get('dapt_kva', 0))
+        if qm_kva > 0:
+            barra_mm, barra_pol = _escolher_barramento(qm_kva)
+        else:
+            barra_mm, barra_pol = '25,4 x 6,4', '1" x 1/4"'
         resultado.append({
             'qm': qm.get('qm', 0),
             'corrente_A': round(i, 2),
@@ -330,7 +364,8 @@ def barramento_cd(dados):
     if corrente_total_A <= 0 and demanda_total_kva > 0:
         corrente_total_A = demanda_total_kva * 1000 / (380 * math.sqrt(3))
 
-    disj, barra_mm, barra_pol = _escolher_barramento(corrente_total_A)
+    disj = _escolher_disjuntor(corrente_total_A)
+    barra_mm, barra_pol = _escolher_barramento(demanda_total_kva)
 
     return {
         'corrente_total_A': round(corrente_total_A, 2),
