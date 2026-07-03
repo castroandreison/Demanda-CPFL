@@ -854,98 +854,7 @@
     </div>
 </div>
 
-<div class="card" style="margin-top:16px;">
-    <div class="card-header">Dimensionamento do CD/QM (GED-119)</div>
-    <div class="sub-tabs" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;background:var(--bg-alt);border-bottom:1px solid var(--border);">
-        <button class="sub-tab-btn active" data-subtab="cdqm-demanda">Demanda Individual</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-condutores">Condutores</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-disjuntor">Disjuntores</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-queda">Queda de Tensão</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-barramento">Barramento</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-aterramento">Aterramento</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-eletroduto">Eletroduto</button>
-        <button class="sub-tab-btn" data-subtab="cdqm-memorial">Memorial</button>
-    </div>
 
-        <div class="sub-tab-content active" id="cdqm-demanda">
-            <div class="form-grid col-3" style="padding:12px;">
-                <div class="form-group"><label>Total de Medidores</label><input type="number" id="cdqm_total_med" min="1" value="36"></div>
-                <div class="form-group"><label>Limite por QM</label><input type="number" id="cdqm_limite_qm" min="1" value="18"></div>
-                <div class="form-group"><label>Área do Apartamento (m²)</label><input type="number" id="cdqm_area_apto" min="0" step="0.1" value="0"></div>
-                <div class="form-group"><label>Chuveiro (W/apt)</label><input type="number" id="cdqm_chuveiro_w" min="0" step="1" value="5500" title="Potência do chuveiro por apartamento"></div>
-                <div class="form-group"><label>Micro-ondas (W/apt)</label><input type="number" id="cdqm_microondas_w" min="0" step="1" value="1500" title="Potência do micro-ondas por apartamento"></div>
-                <div class="form-group"><label>Fogão (W/apt)</label><input type="number" id="cdqm_fogao_w" min="0" step="1" value="2000" title="Potência do fogão/cooktop por apartamento"></div>
-                <div class="form-group"><label>Ar Condicionado (W/apt)</label><input type="number" id="cdqm_ar_w" min="0" step="1" value="1400" title="Potência média de ar condicionado por apartamento (potência total AC / nº aptos)"></div>
-                <div class="form-group" style="justify-content:flex-end;grid-column:span 2;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="autoPreencherCDQM()">🔄 Buscar do Projeto</button><button class="btn btn-primary" onclick="calcDemandaIndividualQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-dados-projeto" class="result-area" style="padding:4px 12px;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border);"></div>
-            <div id="cdqm-demanda-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-condutores">
-            <div class="form-grid col-3" style="padding:12px;">
-                <div class="form-group"><label>Isolação</label><select id="cdqm_isolacao"><option value="EPR" selected>EPR/XLPE 90°C</option><option value="PVC">PVC 70°C 750V</option></select></div>
-                <div class="form-group"><label>Fator de Temperatura</label><input type="number" id="cdqm_fc_temp" min="0.1" max="1.0" step="0.01" value="1.0"></div>
-                <div class="form-group"><label>Fator de Agrupamento</label><input type="number" id="cdqm_fc_agrup" min="0.1" max="1.0" step="0.01" value="1.0"></div>
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('condutores')">🔄 QMs do Cálculo</button><button class="btn btn-primary" onclick="calcCondutoresCDQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-condutores-qms" style="padding:0 12px;"></div>
-            <div id="cdqm-condutores-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-disjuntor">
-            <div class="form-grid col-2" style="padding:12px;">
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('disjuntor')">🔄 QMs do Cálculo</button><button class="btn btn-primary" onclick="calcDisjuntorCDQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-disjuntor-qms" style="padding:0 12px;"></div>
-            <div id="cdqm-disjuntor-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-queda">
-            <div class="form-grid col-3" style="padding:12px;">
-                <div class="form-group"><label>Tensão (V)</label><input type="number" id="cdqm_tensao" min="0" value="380"></div>
-                <div class="form-group"><label>Comprimento (m)</label><input type="number" id="cdqm_comprimento" min="0" value="50"></div>
-                <div class="form-group"><label>Condutividade (Cu)</label><input type="number" id="cdqm_condutividade" min="0" value="56"></div>
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('queda')">🔄 QMs do Cálculo</button><button class="btn btn-primary" onclick="calcQuedaTensaoCDQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-queda-qms" style="padding:0 12px;"></div>
-            <div id="cdqm-queda-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-barramento">
-            <div class="form-grid col-3" style="padding:12px;">
-                <div class="form-group"><label>Demanda Total (kVA)</label><input type="number" id="cdqm_demanda_total_kva" step="0.01" min="0" placeholder="Auto"></div>
-                <div class="form-group"><label>Corrente Total (A)</label><input type="number" id="cdqm_corrente_total_a" step="0.01" min="0" placeholder="Auto"></div>
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherDemandaTotal()">🔄 Da Demanda Individual</button><button class="btn btn-primary" onclick="calcBarramentoCDQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-barramento-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-aterramento">
-            <div class="form-grid col-3" style="padding:12px;">
-                <div class="form-group"><label>Demanda (kVA)</label><input type="number" id="cdqm_aterr_demanda" step="0.01" min="0" placeholder="Auto"></div>
-                <div class="form-group"><label>Tensão</label><select id="cdqm_aterr_tensao"><option value="BT" selected>BT (Baixa Tensão)</option><option value="MT">MT (Média Tensão)</option></select></div>
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherAterr()">🔄 Da Demanda Individual</button><button class="btn btn-primary" onclick="calcAterramentoCDQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-aterramento-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-eletroduto">
-            <div class="form-grid col-2" style="padding:12px;">
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-sm" onclick="cdqmPreencherQMs('eletroduto')">🔄 QMs do Cálculo (bitolas)</button><button class="btn btn-primary" onclick="calcEletrodutoCDQM()">📐 Calcular</button></div></div>
-            </div>
-            <div id="cdqm-eletroduto-qms" style="padding:0 12px;"></div>
-            <div id="cdqm-eletroduto-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-
-        <div class="sub-tab-content" id="cdqm-memorial">
-            <div class="form-grid col-2" style="padding:12px;">
-                <div class="form-group" style="justify-content:flex-end;"><div class="btn-group" style="margin-top:18px;"><button class="btn btn-primary" onclick="calcMemorialCDQM()">📐 Gerar Memorial</button></div></div>
-            </div>
-            <div id="cdqm-memorial-result" class="result-area" style="padding:0 12px 12px;"></div>
-        </div>
-    </div>
-</div>
 
 <style>
 .sub-tab-btn { padding:6px 14px; border:1px solid var(--border); background:var(--bg-alt); color:var(--text); border-radius:4px; cursor:pointer; font-size:13px; }
@@ -1248,6 +1157,11 @@ function carregarProjeto(projetoId) {
                 ultimoResultado = p.resultados.ged119;
                 mostrarResultado(p.resultados.ged119);
                 mostrarLimites(p.resultados.ged119);
+                // Auto-fill qm_dg from result Dg if empty
+                var qmDgEl = document.getElementById('qm_dg');
+                if (qmDgEl && p.resultados.ged119.Dg && (!qmDgEl.value || parseFloat(qmDgEl.value) === 0)) {
+                    qmDgEl.value = p.resultados.ged119.Dg.toFixed(2);
+                }
             }
             if (p.resultados.transformador) {
                 ultimoResultadoTransformador = p.resultados.transformador;
@@ -2486,7 +2400,7 @@ function autoPreencherQM() {
         if (ultimoResultado.aptos && !qmUserEdit['qm_aptos']) {
             aptosEl.value = ultimoResultado.aptos;
         }
-        if (ultimoResultado.Dg && !parseFloat(document.getElementById('qm_dg').value) && !qmUserEdit['qm_dg']) {
+        if (ultimoResultado.Dg && !qmUserEdit['qm_dg']) {
             document.getElementById('qm_dg').value = ultimoResultado.Dg.toFixed(2);
         }
     }
@@ -2945,20 +2859,27 @@ function calcularQM() {
     h += '<input type="number" id="layout_acrescimo" value="0" min="0" max="100" step="5" style="width:60px;padding:2px 4px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;font-size:12px;">';
     h += '<span id="layout_area_final" style="font-size:12px;color:#8b949e;"></span></div>';
     h += '</div>';
-    h += '<hr class="result-divider">';
-    h += '<div class="result-section" id="dim-individual-section">';
-    h += '<div class="result-title">Dimensionamento Individual dos QMs</div>';
-    h += '<div class="result-subtitle" style="color:#8b949e;">Informe a distância do CD até cada QM e calcule condutor, disjuntor, queda de tensão, barramento, aterramento e eletroduto.</div>';
-    h += '<div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding:8px 0;">';
-    for (var i = 0; i < qms; i++) {
-        h += '<div class="form-group"><label>Dist. CD ao QM ' + (i+1) + ' (m)</label>';
-        h += '<input type="number" id="qm_dist_' + (i+1) + '" class="qm-dist-input" min="0" step="0.5" value="10" style="width:80px;"></div>';
+    if (qms > 1) {
+        h += '<hr class="result-divider">';
+        h += '<div class="result-section" id="dim-individual-section">';
+        h += '<div class="result-title">Dimensionamento Individual dos QMs</div>';
+        h += '<div class="result-subtitle" style="color:#8b949e;">Informe a distância do CD até cada QM e calcule condutor, disjuntor, queda de tensão, barramento, aterramento e eletroduto.</div>';
+        h += '<div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;padding:8px 0;">';
+        h += '<div class="form-group"><label>Isolação</label><select id="qm_ind_isolacao" style="width:100%;"><option value="EPR" selected>EPR/XLPE 90°C</option><option value="PVC">PVC 70°C 750V</option></select></div>';
+        h += '<div class="form-group"><label>Fator de Temperatura</label><input type="number" id="qm_ind_fc_temp" min="0.1" max="1.0" step="0.01" value="1.0" style="width:80px;"></div>';
+        h += '<div class="form-group"><label>Fator de Agrupamento</label><input type="number" id="qm_ind_fc_agrup" min="0.1" max="1.0" step="0.01" value="1.0" style="width:80px;"></div>';
+        h += '</div>';
+        h += '<div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding:0 0 8px 0;">';
+        for (var i = 0; i < qms; i++) {
+            h += '<div class="form-group"><label>Dist. CD ao QM ' + (i+1) + ' (m)</label>';
+            h += '<input type="number" id="qm_dist_' + (i+1) + '" class="qm-dist-input" min="0" step="0.5" value="10" style="width:80px;"></div>';
+        }
+        h += '</div>';
+        h += '<div class="btn-group" style="margin-top:4px;"><button class="btn btn-primary btn-sm" onclick="calcularDimensionamentoIndividualQM()">📐 Calcular Dimensionamento Individual</button></div>';
+        h += '<div id="dim-individual-result" style="margin-top:8px;"></div>';
+        h += '</div>';
+        h += '<hr class="result-divider">';
     }
-    h += '</div>';
-    h += '<div class="btn-group" style="margin-top:4px;"><button class="btn btn-primary btn-sm" onclick="calcularDimensionamentoIndividualQM()">📐 Calcular Dimensionamento Individual</button></div>';
-    h += '<div id="dim-individual-result" style="margin-top:8px;"></div>';
-    h += '</div>';
-    h += '<hr class="result-divider">';
     h += '<div class="result-final"><div class="label">Configuração Recomendada</div>';
     h += '<div class="value">' + qms + '× QM (' + material + ')' + (cdNecessaria && cd ? ' + CD tipo ' + cd.tipo : '') + ' + Caixa DPS</div></div>';
     h += '</div>';
@@ -2969,13 +2890,21 @@ function calcularQM() {
 }
 
 function calcularDimensionamentoIndividualQM() {
+    try {
     var el = function(id) { return document.getElementById(id); };
-    var aptos = parseInt(el('qm_aptos').value) || 0;
+    var aptosEl = el('qm_aptos');
+    if (!aptosEl) { alert('Elementos do formulário não encontrados. Calcule os QMs primeiro.'); return; }
+    var aptos = parseInt(aptosEl.value) || 0;
     var adm = parseInt(el('qm_adm').value) || 0;
     var totalMed = aptos + adm;
     if (totalMed < 1) { alert('Calcule o dimensionamento dos QMs primeiro.'); return; }
-    var cdqmVals = getCdqmProjectValues();
-    var limite = parseInt(el('cdqm_limite_qm') ? el('cdqm_limite_qm').value : 18) || 18;
+    var limite = Math.min(Math.max(totalMed, 1), 36);
+
+    var areaApto = parseFloat(el('area_apto') ? el('area_apto').value : 0) || 0;
+    var chuveiroW = parseFloat(el('chuveiro_kw') ? el('chuveiro_kw').value * 1000 : 5500) || 5500;
+    var microondasW = 1500;
+    var fogaoW = 2000;
+    var arW = 1400;
 
     var resultEl = el('dim-individual-result');
     resultEl.innerHTML = '<div class="result-line" style="color:var(--text-muted);">Calculando...</div>';
@@ -2983,11 +2912,11 @@ function calcularDimensionamentoIndividualQM() {
     apiPost('/api/ged119/cd_qm/demanda_individual', {
         total_medidores: totalMed,
         limite_por_qm: limite,
-        area_apto: cdqmVals.area_apto,
-        chuveiro_w: cdqmVals.chuveiro_w,
-        microondas_w: cdqmVals.microondas_w,
-        fogao_w: cdqmVals.fogao_w,
-        ar_w: cdqmVals.ar_w,
+        area_apto: areaApto,
+        chuveiro_w: chuveiroW,
+        microondas_w: microondasW,
+        fogao_w: fogaoW,
+        ar_w: arW,
     }, function(r1) {
         if (!r1.success) { resultEl.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: '+(r1.error||'desconhecido')+'</div>'; return; }
         var data = r1.data;
@@ -2999,11 +2928,11 @@ function calcularDimensionamentoIndividualQM() {
             distancias.push(dist);
         });
 
-        var isolacao = el('cdqm_isolacao') ? el('cdqm_isolacao').value : 'EPR';
-        var fcTemp = parseFloat(el('cdqm_fc_temp') ? el('cdqm_fc_temp').value : 1.0) || 1.0;
-        var fcAgrup = parseFloat(el('cdqm_fc_agrup') ? el('cdqm_fc_agrup').value : 1.0) || 1.0;
-        var tensao = parseFloat(el('cdqm_tensao') ? el('cdqm_tensao').value : 380) || 380;
-        var condutividade = parseFloat(el('cdqm_condutividade') ? el('cdqm_condutividade').value : 56) || 56;
+        var isolacao = el('qm_ind_isolacao') ? el('qm_ind_isolacao').value : 'EPR';
+        var fcTemp = parseFloat(el('qm_ind_fc_temp') ? el('qm_ind_fc_temp').value : 1.0) || 1.0;
+        var fcAgrup = parseFloat(el('qm_ind_fc_agrup') ? el('qm_ind_fc_agrup').value : 1.0) || 1.0;
+        var tensao = 380;
+        var condutividade = 56;
 
         apiPost('/api/ged119/cd_qm/condutores', {
             qms: data.qms,
@@ -3055,7 +2984,7 @@ function calcularDimensionamentoIndividualQM() {
                                 }
                                 h += '<div class="result-line" style="font-size:12px;color:var(--text-muted);margin-top:4px;">Condutor EPR/XLPE 90°C | Queda de tensão limite: 3% | Aterramento BT</div>';
 
-                                resultEl.innerHTML = h;
+                                    resultEl.innerHTML = h;
                                 resultEl.scrollIntoView({behavior:'smooth',block:'nearest'});
                             });
                         });
@@ -3064,6 +2993,7 @@ function calcularDimensionamentoIndividualQM() {
             });
         });
     });
+    } catch(e) { var resultEl = document.getElementById('dim-individual-result'); if(resultEl) resultEl.innerHTML = '<div class="result-line" style="color:var(--danger);">Erro: ' + e.message + '</div>'; }
 }
 
 // Recalcula dimensões com acréscimo percentual no perímetro
